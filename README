@@ -6,6 +6,24 @@ One window shows the previous, current and next slides while another window
 only shows the current slide. That additional window can be moved to an
 external screen (such as a beamer) -- use your window manager to set this
 window to fullscreen. Thus, you can present your slides on a beamer while
-keeping overview of what's coming next.
+keeping an eye on what's coming up next.
 
-pdfPres uses GTK+ 2.0 and poppler-glib to render the PDF file.
+pdfPres uses GTK+ v2 and poppler-glib to render the PDF file.
+
+
+KEYS:
+- Use the cursor keys to navigate ([Space], [Return] also go the next slide).
+- [w] switches to "fit to width" mode, [h] switches to "fit to height" mode.
+- [F5] does a dumb refresh.
+- [Escape], [q] quit the program.
+
+
+TODO:
+- Initial rendering on startup (for now, you'll have to press F5 once).
+- Automatic redraw on resize.
+- Automatic conversion from regular pathes to URI's. For now, you'll have to
+  launch the program like this:
+
+  	./pdfPres file:///home/whoever/work/slides.pdf
+
+- ... some cosmetic stuff ...
