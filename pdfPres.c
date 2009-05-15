@@ -66,6 +66,7 @@ static void renderToPixbuf(struct viewport *pp)
 	double w = 0, h = 0;
 	double page_ratio = 1, scale = 1;
 	GdkPixbuf *targetBuf = NULL;
+	gchar *title = NULL;
 
 	/* no valid target size? */
 	if (pp->width <= 0 || pp->height <= 0)
@@ -75,11 +76,24 @@ static void renderToPixbuf(struct viewport *pp)
 	mypage_i = doc_page + pp->offset;
 	if (mypage_i < 0 || mypage_i >= doc_n_pages)
 	{
-		/* TODO: Render empty page */
+		/* clear image and remove frame title */
+		gtk_image_clear(GTK_IMAGE(pp->image));
+
+		if (GTK_IS_FRAME(pp->image->parent))
+			gtk_frame_set_label(GTK_FRAME(pp->image->parent), NULL);
+
 		return;
 	}
-
-	/* TODO: Render black background */
+	else
+	{
+		/* update frame title */
+		if (GTK_IS_FRAME(pp->image->parent))
+		{
+			title = g_strdup_printf("Slide %d", mypage_i + 1);
+			gtk_frame_set_label(GTK_FRAME(pp->image->parent), title);
+			free(title);
+		}
+	}
 
 	/* get this page and its ratio */
 	PopplerPage *page = poppler_document_get_page(doc, mypage_i);
@@ -130,7 +144,7 @@ static void refreshPorts(void)
 	}
 }
 
-static gpointer onKeyPressed(GtkWidget *widg, gpointer user_data)
+static void onKeyPressed(GtkWidget *widg, gpointer user_data)
 {
 	GdkEventKey *ev = user_data;
 	gboolean changed = TRUE;
@@ -177,11 +191,9 @@ static gpointer onKeyPressed(GtkWidget *widg, gpointer user_data)
 	{
 		refreshPorts();
 	}
-
-	return NULL;
 }
 
-void af_resize_cb(GtkWidget *widg, GtkAllocation *al, struct viewport *port)
+static void onResize(GtkWidget *widg, GtkAllocation *al, struct viewport *port)
 {
 	int w, h;
 
@@ -206,7 +218,6 @@ int main(int argc, char **argv)
 	GtkWidget *win_preview, *win_beamer;
 	GdkColor black, highlight;
 	struct viewport *thisport;
-	gchar *title;
 
 	gtk_init(&argc, &argv);
 
@@ -272,9 +283,7 @@ int main(int argc, char **argv)
 		transIndex = i - (int)((double)NUM_FRAMES / 2.0);
 
 		/* create the widget */
-		title = g_strdup_printf("Slide %d", transIndex);
-		frame = gtk_frame_new(title);
-		free(title);
+		frame = gtk_frame_new(NULL);
 
 		/* create a new drawing area - the pdf will be rendered in there */
 		image = gtk_image_new();
@@ -309,7 +318,7 @@ int main(int argc, char **argv)
 		ports = g_list_append(ports, thisport);
 
 		/* resize callback */
-		g_signal_connect(G_OBJECT(frame), "size_allocate", G_CALLBACK(af_resize_cb), thisport);
+		g_signal_connect(G_OBJECT(frame), "size_allocate", G_CALLBACK(onResize), thisport);
 	}
 
 	gtk_container_add(GTK_CONTAINER(win_preview), hbox);
@@ -331,7 +340,7 @@ int main(int argc, char **argv)
 	ports = g_list_append(ports, thisport);
 
 	/* connect the on-resize-callback directly to the window */
-	g_signal_connect(G_OBJECT(win_beamer), "size_allocate", G_CALLBACK(af_resize_cb), thisport);
+	g_signal_connect(G_OBJECT(win_beamer), "size_allocate", G_CALLBACK(onResize), thisport);
 
 
 	/* show the windows */
