@@ -1,0 +1,11 @@
+README for pdfPres
+==================
+
+pdfPres is (going to be) a presentation program for PDF files. It uses a
+"dual head"-layout: One window shows the previous, current and next
+slide while another window only shows the current slide. That additional
+window can be moved to an external screen (such as a beamer) -- use your
+window manager to set this window to fullscreen. Thus, you can present
+your slides on a beamer while keeping overview of what's coming next.
+
+pdfPres uses GTK+ 2.0 and poppler-glib to render the PDF file.
