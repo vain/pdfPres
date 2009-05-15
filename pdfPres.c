@@ -30,23 +30,27 @@
 struct viewport
 {
 	int offset;
-	GtkWidget *aspectFrame;
+	int width;
+	int height;
+
+	GtkWidget *frame;
 	GtkWidget *image;
 };
 
-GList *ports = NULL;
-GList *frames = NULL;
-
-static GtkWidget *win_preview;
-static GtkWidget *win_beamer;
+static GList *ports = NULL;
+static GList *frames = NULL;
 
 static PopplerDocument *doc;
 
 static int doc_n_pages;
 static int doc_page = 0;
 
+#define FIT_WIDTH 0
+#define FIT_HEIGHT 1
+static int fitmode = FIT_WIDTH;
 
-void dieOnNull(void * ptr, int line)
+
+static void dieOnNull(void * ptr, int line)
 {
 	if (ptr == NULL)
 	{
@@ -55,59 +59,71 @@ void dieOnNull(void * ptr, int line)
 	}
 }
 
-void dumpPorts(void)
-{
-	GList *it = ports;
-	while (it)
-	{
-		printf("Offset: %d\n", ((struct viewport *)(it->data))->offset);
-		printf("Aspect: %p\n", ((struct viewport *)(it->data))->aspectFrame);
-		printf("Image : %p\n", ((struct viewport *)(it->data))->image);
-
-		it = g_list_next(it);
-	}
-}
-
-void renderToPixbuf(struct viewport *pp)
+static void renderToPixbuf(struct viewport *pp)
 {
 	int mypage_i;
-	double w = 0, h = 0, ratio = 1;
+	double pw = 0, ph = 0;
+	double w = 0, h = 0;
+	double page_ratio = 1, scale = 1;
 	GdkPixbuf *targetBuf = NULL;
 
-	printf("%d: %p, %p\n", pp->offset, pp->aspectFrame, pp->image);
+	printf("%d: %p, %p\n", pp->offset, pp->frame, pp->image);
+
+	/* no valid target size? */
+	if (pp->width <= 0 || pp->height <= 0)
+		return;
 
 	/* decide which page to render - if any */
 	mypage_i = doc_page + pp->offset;
 	if (mypage_i < 0 || mypage_i >= doc_n_pages)
+	{
+		/* TODO: Render empty page */
 		return;
+	}
+
+	/* TODO: Render black background */
 
 	/* get this page and its ratio */
 	PopplerPage *page = poppler_document_get_page(doc, mypage_i);
-	poppler_page_get_size(page, &w, &h);
-	ratio = w / h;
+	poppler_page_get_size(page, &pw, &ph);
+	page_ratio = pw / ph;
 
-	/* adjust the widgets height to fit this aspect ratio */
-	gtk_aspect_frame_set(GTK_ASPECT_FRAME(pp->aspectFrame), 0.0, 0.0, ratio, FALSE);
+	switch (fitmode)
+	{
+		case FIT_HEIGHT:
+			/* fit height */
+			h = pp->height;
+			w = h * page_ratio;
+			scale = h / ph;
+			break;
 
-	/* allocate a pixbuf */
-	w = 640;
-	h = w / ratio;
+		case FIT_WIDTH:
+			/* fit width */
+			w = pp->width;
+			h = w / page_ratio;
+			scale = w / pw;
+			break;
+	}
 
-	targetBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, (int)w, (int)h);
+	printf("w = %lf, h = %lf, pw = %lf, ph = %lf, scale = %lf\n", w, h, pw, ph, scale);
+
+	/* render to a pixbuf */
+	targetBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, w, h);
 	dieOnNull(targetBuf, __LINE__);
 
-	/* render it */
-	poppler_page_render_to_pixbuf(page, 0, 0, (int)w, (int)h, 1.0, 0, targetBuf);
+	poppler_page_render_to_pixbuf(page, 0, 0, pw, ph, scale, 0, targetBuf);
 	gtk_image_set_from_pixbuf(GTK_IMAGE(pp->image), targetBuf);
 
-	/* cleanup */
 	gdk_pixbuf_unref(targetBuf);
+	g_object_unref(G_OBJECT(page));
 }
 
-void refreshPorts(void)
+static void refreshPorts(void)
 {
 	struct viewport *pp = NULL;
 	GList *it = ports;
+
+	printf("Refreshing...\n");
 	while (it)
 	{
 		pp = (struct viewport *)(it->data);
@@ -116,12 +132,80 @@ void refreshPorts(void)
 	}
 }
 
+static gpointer onKeyPressed(GtkWidget *widg, gpointer user_data)
+{
+	GdkEventKey* ev = user_data;
+	gboolean changed = TRUE;
+
+	printf("Key pressed.\n");
+
+	switch (ev->keyval)
+	{
+		case GDK_Right:
+		case GDK_Return:
+		case GDK_space:
+			doc_page++;
+			doc_page %= doc_n_pages;
+			break;
+
+		case GDK_Left:
+			doc_page--;
+			doc_page = (doc_page < 0 ? doc_n_pages - 1 : doc_page);
+			break;
+
+		case GDK_F5:
+			/* do nothing -- especially do not clear the flag
+			 * --> redraw */
+			break;
+
+		case GDK_w:
+			fitmode = FIT_WIDTH;
+			break;
+
+		case GDK_h:
+			fitmode = FIT_HEIGHT;
+			break;
+
+		case GDK_Escape:
+		case GDK_q:
+			gtk_main_quit();
+			break;
+
+		default:
+			changed = FALSE;
+	}
+
+	if (changed == TRUE)
+	{
+		refreshPorts();
+	}
+
+	return NULL;
+}
+
+void af_resize_cb(GtkWidget *widg, GtkAllocation *al, struct viewport *port)
+{
+	int w, h;
+
+	w = al->width;
+	h = al->height;
+	printf("NEW w = %d, h = %d\n", w, h);
+
+	port->width = al->width;
+	port->height = al->height;
+
+	/* TODO: Find a way to auto-refresh on resize-events. This will
+	 * include the very first resize-event --> initial rendering
+	 * on startup*/
+}
+
 int main(int argc, char **argv)
 {
 	int i = 0;
 	GtkWidget *hbox;
 	GError* err = NULL;
 	GtkWidget *widg, *widg2;
+	GtkWidget *win_preview, *win_beamer;
 	GList *it;
 	struct viewport *thisport;
 
@@ -163,6 +247,9 @@ int main(int argc, char **argv)
 	g_signal_connect(G_OBJECT(win_beamer),  "delete_event", G_CALLBACK(gtk_main_quit), NULL);
 	g_signal_connect(G_OBJECT(win_beamer),  "destroy",      G_CALLBACK(gtk_main_quit), NULL);
 
+	g_signal_connect(G_OBJECT(win_preview), "key_press_event", G_CALLBACK(onKeyPressed), NULL);
+	g_signal_connect(G_OBJECT(win_beamer),  "key_press_event", G_CALLBACK(onKeyPressed), NULL);
+
 	gtk_container_set_border_width(GTK_CONTAINER(win_preview), 10);
 	gtk_container_set_border_width(GTK_CONTAINER(win_beamer),  0);
 
@@ -172,13 +259,14 @@ int main(int argc, char **argv)
 
 	/* xalign: 0.0, 0.5, 1.0 controls their sizes when there's
 	 * not enough space available. */
-	widg = gtk_aspect_frame_new("Previous", 0.0, 0.0, 1.0, FALSE);
+	widg = gtk_frame_new("Previous");
 	frames = g_list_append(frames, widg);
 
-	widg = gtk_aspect_frame_new("Current",  0.5, 0.0, 1.0, FALSE);
+	/* TODO: Somehow "highlight" the current slide */
+	widg = gtk_frame_new("Current");
 	frames = g_list_append(frames, widg);
 
-	widg = gtk_aspect_frame_new("Next",     1.0, 0.0, 1.0, FALSE);
+	widg = gtk_frame_new("Next");
 	frames = g_list_append(frames, widg);
 
 	i = 0;
@@ -188,7 +276,7 @@ int main(int argc, char **argv)
 
 		/* create a new drawing area - the pdf will be rendered in there */
 		widg = gtk_image_new();
-		gtk_widget_set_size_request(widg, 200, 200);
+		gtk_widget_set_size_request(widg, 100, 100);
 
 		/* add widgets to their parents */
 		gtk_container_add(GTK_CONTAINER(widg2), widg);
@@ -201,9 +289,12 @@ int main(int argc, char **argv)
 		thisport = (struct viewport *)malloc(sizeof(struct viewport));
 		dieOnNull(thisport, __LINE__);
 		thisport->offset = i - 1; /* TODO: allow more than 3 frames */
-		thisport->aspectFrame = widg2;
+		thisport->frame = widg2;
 		thisport->image = widg;
 		ports = g_list_append(ports, thisport);
+
+		/* resize callback */
+		g_signal_connect(G_OBJECT(widg2), "size_allocate", G_CALLBACK(af_resize_cb), thisport);
 
 		i++;
 	}
@@ -212,11 +303,12 @@ int main(int argc, char **argv)
 	gtk_widget_show(hbox);
 
 
-	/* add a rendering area in an aspect frame to the beamer window */
+	/* add a rendering area in a frame to the beamer window */
+	/* TODO: Kill the frame. */
 	widg = gtk_image_new();
-	gtk_widget_set_size_request(widg, 200, 200);
+	gtk_widget_set_size_request(widg, 100, 100);
 
-	widg2 = gtk_aspect_frame_new(NULL, 0.0, 0.0, 1.0, FALSE);
+	widg2 = gtk_frame_new(NULL);
 	gtk_container_add(GTK_CONTAINER(widg2), widg);
 	gtk_container_add(GTK_CONTAINER(win_beamer), widg2);
 	gtk_widget_show(widg);
@@ -226,13 +318,10 @@ int main(int argc, char **argv)
 	thisport = (struct viewport *)malloc(sizeof(struct viewport));
 	dieOnNull(thisport, __LINE__);
 	thisport->offset = 0;
-	thisport->aspectFrame = widg2;
+	thisport->frame = widg2;
 	thisport->image = widg;
 	ports = g_list_append(ports, thisport);
-
-
-	dumpPorts();
-	refreshPorts();
+	g_signal_connect(G_OBJECT(widg2), "size_allocate", G_CALLBACK(af_resize_cb), thisport);
 
 
 	/* show the windows */
