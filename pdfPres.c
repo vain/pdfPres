@@ -33,12 +33,10 @@ struct viewport
 	int width;
 	int height;
 
-	GtkWidget *frame;
 	GtkWidget *image;
 };
 
 static GList *ports = NULL;
-static GList *frames = NULL;
 
 static PopplerDocument *doc;
 
@@ -66,8 +64,6 @@ static void renderToPixbuf(struct viewport *pp)
 	double w = 0, h = 0;
 	double page_ratio = 1, scale = 1;
 	GdkPixbuf *targetBuf = NULL;
-
-	printf("%d: %p, %p\n", pp->offset, pp->frame, pp->image);
 
 	/* no valid target size? */
 	if (pp->width <= 0 || pp->height <= 0)
@@ -206,7 +202,7 @@ int main(int argc, char **argv)
 	GError* err = NULL;
 	GtkWidget *widg, *widg2;
 	GtkWidget *win_preview, *win_beamer;
-	GList *it;
+	GList *frames = NULL, *it;
 	struct viewport *thisport;
 
 	gtk_init(&argc, &argv);
@@ -289,7 +285,6 @@ int main(int argc, char **argv)
 		thisport = (struct viewport *)malloc(sizeof(struct viewport));
 		dieOnNull(thisport, __LINE__);
 		thisport->offset = i - 1; /* TODO: allow more than 3 frames */
-		thisport->frame = widg2;
 		thisport->image = widg;
 		ports = g_list_append(ports, thisport);
 
@@ -308,20 +303,18 @@ int main(int argc, char **argv)
 	widg = gtk_image_new();
 	gtk_widget_set_size_request(widg, 100, 100);
 
-	widg2 = gtk_frame_new(NULL);
-	gtk_container_add(GTK_CONTAINER(widg2), widg);
-	gtk_container_add(GTK_CONTAINER(win_beamer), widg2);
+	gtk_container_add(GTK_CONTAINER(win_beamer), widg);
 	gtk_widget_show(widg);
-	gtk_widget_show(widg2);
 
 	/* save info of this rendering port */
 	thisport = (struct viewport *)malloc(sizeof(struct viewport));
 	dieOnNull(thisport, __LINE__);
 	thisport->offset = 0;
-	thisport->frame = widg2;
 	thisport->image = widg;
 	ports = g_list_append(ports, thisport);
-	g_signal_connect(G_OBJECT(widg2), "size_allocate", G_CALLBACK(af_resize_cb), thisport);
+
+	/* connect the on-resize-callback directly to the window */
+	g_signal_connect(G_OBJECT(win_beamer), "size_allocate", G_CALLBACK(af_resize_cb), thisport);
 
 
 	/* show the windows */
