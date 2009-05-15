@@ -47,8 +47,10 @@ static int doc_page = 0;
 #define FIT_HEIGHT 1
 static int fitmode = FIT_WIDTH;
 
+#define NUM_FRAMES 5
 
-static void dieOnNull(void * ptr, int line)
+
+static void dieOnNull(void *ptr, int line)
 {
 	if (ptr == NULL)
 	{
@@ -130,7 +132,7 @@ static void refreshPorts(void)
 
 static gpointer onKeyPressed(GtkWidget *widg, gpointer user_data)
 {
-	GdkEventKey* ev = user_data;
+	GdkEventKey *ev = user_data;
 	gboolean changed = TRUE;
 
 	printf("Key pressed.\n");
@@ -197,13 +199,14 @@ void af_resize_cb(GtkWidget *widg, GtkAllocation *al, struct viewport *port)
 
 int main(int argc, char **argv)
 {
-	int i = 0;
+	int i = 0, transIndex = 0;
 	GtkWidget *hbox;
 	GError* err = NULL;
-	GtkWidget *widg, *widg2;
+	GtkWidget *image, *frame, *dummy;
 	GtkWidget *win_preview, *win_beamer;
-	GList *frames = NULL, *it;
+	GdkColor black, highlight;
 	struct viewport *thisport;
+	gchar *title;
 
 	gtk_init(&argc, &argv);
 
@@ -231,6 +234,13 @@ int main(int argc, char **argv)
 	}
 
 
+	/* init colors */
+	if (gdk_color_parse("#000000", &black) != TRUE)
+		fprintf(stderr, "Could not resolve color \"black\".\n");
+	if (gdk_color_parse("#FFFFFF", &highlight) != TRUE)
+		fprintf(stderr, "Could not resolve color \"highlight\".\n");
+
+
 	/* init our two windows */
 	win_preview = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	win_beamer  = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -249,49 +259,57 @@ int main(int argc, char **argv)
 	gtk_container_set_border_width(GTK_CONTAINER(win_preview), 10);
 	gtk_container_set_border_width(GTK_CONTAINER(win_beamer),  0);
 
+	gtk_widget_modify_bg(win_beamer, GTK_STATE_NORMAL, &black);
+
 
 	/* init containers for "preview" */
 	hbox = gtk_hbox_new(TRUE, 0);
 
-	/* xalign: 0.0, 0.5, 1.0 controls their sizes when there's
-	 * not enough space available. */
-	widg = gtk_frame_new("Previous");
-	frames = g_list_append(frames, widg);
-
-	/* TODO: Somehow "highlight" the current slide */
-	widg = gtk_frame_new("Current");
-	frames = g_list_append(frames, widg);
-
-	widg = gtk_frame_new("Next");
-	frames = g_list_append(frames, widg);
-
-	i = 0;
-	for (it = frames; it; it = g_list_next(it))
+	/* dynamically create all the frames */
+	for (i = 0; i < NUM_FRAMES; i++)
 	{
-		widg2 = (GtkWidget *)(it->data);
+		/* calc the offset for this frame */
+		transIndex = i - (int)((double)NUM_FRAMES / 2.0);
+
+		/* create the widget */
+		title = g_strdup_printf("Slide %d", transIndex);
+		frame = gtk_frame_new(title);
+		free(title);
 
 		/* create a new drawing area - the pdf will be rendered in there */
-		widg = gtk_image_new();
-		gtk_widget_set_size_request(widg, 100, 100);
+		image = gtk_image_new();
+		gtk_widget_set_size_request(image, 100, 100);
 
 		/* add widgets to their parents */
-		gtk_container_add(GTK_CONTAINER(widg2), widg);
-		gtk_box_pack_start(GTK_BOX(hbox), widg2, TRUE, TRUE, 5);
+		gtk_container_add(GTK_CONTAINER(frame), image);
+		if (transIndex == 0)
+		{
+			/* the "current" frame will be place in an eventbox
+			 * so we can set a background color */
+			dummy = gtk_event_box_new();
+			gtk_container_add(GTK_CONTAINER(dummy), frame);
+			gtk_box_pack_start(GTK_BOX(hbox), dummy, TRUE, TRUE, 5);
+			gtk_widget_show(dummy);
 
-		gtk_widget_show(widg);
-		gtk_widget_show(widg2);
+			gtk_widget_modify_bg(dummy, GTK_STATE_NORMAL, &highlight);
+		}
+		else
+		{
+			gtk_box_pack_start(GTK_BOX(hbox), frame, TRUE, TRUE, 5);
+		}
+
+		gtk_widget_show(image);
+		gtk_widget_show(frame);
 
 		/* save info of this rendering port */
 		thisport = (struct viewport *)malloc(sizeof(struct viewport));
 		dieOnNull(thisport, __LINE__);
-		thisport->offset = i - 1; /* TODO: allow more than 3 frames */
-		thisport->image = widg;
+		thisport->offset = transIndex;
+		thisport->image = image;
 		ports = g_list_append(ports, thisport);
 
 		/* resize callback */
-		g_signal_connect(G_OBJECT(widg2), "size_allocate", G_CALLBACK(af_resize_cb), thisport);
-
-		i++;
+		g_signal_connect(G_OBJECT(frame), "size_allocate", G_CALLBACK(af_resize_cb), thisport);
 	}
 
 	gtk_container_add(GTK_CONTAINER(win_preview), hbox);
@@ -299,18 +317,17 @@ int main(int argc, char **argv)
 
 
 	/* add a rendering area in a frame to the beamer window */
-	/* TODO: Kill the frame. */
-	widg = gtk_image_new();
-	gtk_widget_set_size_request(widg, 100, 100);
+	image = gtk_image_new();
+	gtk_widget_set_size_request(image, 100, 100);
 
-	gtk_container_add(GTK_CONTAINER(win_beamer), widg);
-	gtk_widget_show(widg);
+	gtk_container_add(GTK_CONTAINER(win_beamer), image);
+	gtk_widget_show(image);
 
 	/* save info of this rendering port */
 	thisport = (struct viewport *)malloc(sizeof(struct viewport));
 	dieOnNull(thisport, __LINE__);
 	thisport->offset = 0;
-	thisport->image = widg;
+	thisport->image = image;
 	ports = g_list_append(ports, thisport);
 
 	/* connect the on-resize-callback directly to the window */
