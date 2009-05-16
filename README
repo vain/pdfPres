@@ -23,6 +23,10 @@ TODO:
 - Automatic conversion from regular pathes to URI's. For now, you'll have to
   launch the program like this:
 
-  	./pdfPres file:///home/whoever/work/slides.pdf
+    ./pdfPres -f file:///home/whoever/work/slides.pdf [-s <slides>]
+
+  The optional parameter "-s" allows you to specify how many slides
+  before/after the current slide you wish to see, i.e. "3" means "preview the
+  next 3 slides while still showing the previous 3 slides". The default is "2".
 
 - ... some cosmetic stuff ...

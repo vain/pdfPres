@@ -20,14 +20,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkkeysyms.h>
 #include <glib/poppler.h>
 
-
-int redrawcalls = 0;
 
 struct viewport
 {
@@ -52,8 +51,6 @@ static int doc_page = 0;
 #define FIT_PAGE 2
 static int fitmode = FIT_PAGE;
 
-#define NUM_FRAMES 5
-
 
 static void dieOnNull(void *ptr, int line)
 {
@@ -73,8 +70,6 @@ static void renderToPixbuf(struct viewport *pp)
 	GdkPixbuf *targetBuf = NULL;
 	PopplerPage *page = NULL;
 	gchar *title = NULL;
-
-	printf("******************************************************* %d\n", ++redrawcalls);
 
 	/* no valid target size? */
 	if (pp->width <= 0 || pp->height <= 0)
@@ -168,8 +163,6 @@ static gboolean onKeyPressed(GtkWidget *widg, gpointer user_data)
 	GdkEventKey *ev = user_data;
 	gboolean changed = TRUE;
 
-	printf("Key pressed.\n");
-
 	switch (ev->keyval)
 	{
 		case GDK_Right:
@@ -235,12 +228,18 @@ static void onResize(GtkWidget *widg, GtkAllocation *al, struct viewport *port)
 	}
 }
 
+static void usage(char *exe)
+{
+	fprintf(stderr, "Usage: %s [-s <slides>] -f <file>\n", exe);
+}
+
 int main(int argc, char **argv)
 {
-	int i = 0, transIndex = 0;
+	int i = 0, transIndex = 0, numframes;
+	char *filename;
 	GtkWidget *hbox;
-	GError* err = NULL;
-	GtkWidget *image, *frame, *evbox, *dummy;
+	GError *err = NULL;
+	GtkWidget *image, *frame, *evbox, *outerevbox;
 	GtkWidget *win_preview, *win_beamer;
 	GdkColor black, highlight;
 	struct viewport *thisport;
@@ -248,14 +247,45 @@ int main(int argc, char **argv)
 	gtk_init(&argc, &argv);
 
 
-	/* try to load the file */
-	if (argc != 2)
+	/* defaults */
+	filename = NULL;
+	numframes = 5;
+
+	/* get options via getopt */
+	while ((i = getopt(argc, argv, "s:f:")) != -1)
 	{
-		fprintf(stderr, "Usage: %s <file-uri>\n", argv[0]);
+		switch (i)
+		{
+			case 's':
+				numframes = 2 * atoi(optarg) + 1;
+				if (numframes <= 1)
+				{
+					fprintf(stderr, "Invalid slide count specified.\n");
+					usage(argv[0]);
+					exit(EXIT_FAILURE);
+				}
+				break;
+
+			case 'f':
+				filename = optarg;
+				break;
+
+			case '?':
+				exit(EXIT_FAILURE);
+				break;
+		}
+	}
+
+	if (filename == NULL)
+	{
+		fprintf(stderr, "Invalid file uri specified.\n");
+		usage(argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
-	doc = poppler_document_new_from_file(argv[1], NULL, &err);
+
+	/* try to load the file */
+	doc = poppler_document_new_from_file(filename, NULL, &err);
 	if (!doc)
 	{
 		fprintf(stderr, "%s\n", err->message);
@@ -303,10 +333,10 @@ int main(int argc, char **argv)
 	hbox = gtk_hbox_new(TRUE, 0);
 
 	/* dynamically create all the frames */
-	for (i = 0; i < NUM_FRAMES; i++)
+	for (i = 0; i < numframes; i++)
 	{
 		/* calc the offset for this frame */
-		transIndex = i - (int)((double)NUM_FRAMES / 2.0);
+		transIndex = i - (int)((double)numframes / 2.0);
 
 		/* create the widget - note that it is important not to
 		 * set the title to NULL. this would cause a lot more
@@ -331,12 +361,12 @@ int main(int argc, char **argv)
 		{
 			/* the "current" frame will be placed in another eventbox
 			 * so we can set a background color */
-			dummy = gtk_event_box_new();
-			gtk_container_add(GTK_CONTAINER(dummy), frame);
-			gtk_box_pack_start(GTK_BOX(hbox), dummy, TRUE, TRUE, 5);
-			gtk_widget_show(dummy);
+			outerevbox = gtk_event_box_new();
+			gtk_container_add(GTK_CONTAINER(outerevbox), frame);
+			gtk_box_pack_start(GTK_BOX(hbox), outerevbox, TRUE, TRUE, 5);
+			gtk_widget_show(outerevbox);
 
-			gtk_widget_modify_bg(dummy, GTK_STATE_NORMAL, &highlight);
+			gtk_widget_modify_bg(outerevbox, GTK_STATE_NORMAL, &highlight);
 		}
 		else
 		{
@@ -368,7 +398,7 @@ int main(int argc, char **argv)
 	gtk_widget_show(hbox);
 
 
-	/* add a rendering area in a frame to the beamer window */
+	/* add a rendering area to the beamer window */
 	image = gtk_image_new();
 	gtk_widget_set_size_request(image, 320, 240);
 
@@ -394,5 +424,5 @@ int main(int argc, char **argv)
 	gtk_widget_show(win_beamer);
 
 	gtk_main();
-	return 0;
+	exit(EXIT_SUCCESS);
 }
