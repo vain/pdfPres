@@ -131,14 +131,12 @@ static void renderToPixbuf(struct viewport *pp)
 	switch (myfitmode)
 	{
 		case FIT_HEIGHT:
-			/* fit height */
 			h = pp->height;
 			w = h * page_ratio;
 			scale = h / ph;
 			break;
 
 		case FIT_WIDTH:
-			/* fit width */
 			w = pp->width;
 			h = w / page_ratio;
 			scale = w / pw;
@@ -325,14 +323,17 @@ static gboolean onKeyPressed(GtkWidget *widg, gpointer user_data)
 
 		case GDK_w:
 			fitmode = FIT_WIDTH;
+			clearAllCaches();
 			break;
 
 		case GDK_h:
 			fitmode = FIT_HEIGHT;
+			clearAllCaches();
 			break;
 
 		case GDK_p:
 			fitmode = FIT_PAGE;
+			clearAllCaches();
 			break;
 
 		case GDK_Escape:
