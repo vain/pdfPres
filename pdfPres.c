@@ -27,6 +27,8 @@
 #include <glib/poppler.h>
 
 
+int redrawcalls = 0;
+
 struct viewport
 {
 	int offset;
@@ -68,6 +70,8 @@ static void renderToPixbuf(struct viewport *pp)
 	GdkPixbuf *targetBuf = NULL;
 	gchar *title = NULL;
 
+	printf("******************************************************* %d\n", ++redrawcalls);
+
 	/* no valid target size? */
 	if (pp->width <= 0 || pp->height <= 0)
 		return;
@@ -76,11 +80,11 @@ static void renderToPixbuf(struct viewport *pp)
 	mypage_i = doc_page + pp->offset;
 	if (mypage_i < 0 || mypage_i >= doc_n_pages)
 	{
-		/* clear image and remove frame title */
+		/* clear image and reset frame title */
 		gtk_image_clear(GTK_IMAGE(pp->image));
 
 		if (GTK_IS_FRAME(pp->image->parent))
-			gtk_frame_set_label(GTK_FRAME(pp->image->parent), NULL);
+			gtk_frame_set_label(GTK_FRAME(pp->image->parent), "X");
 
 		return;
 	}
@@ -117,8 +121,6 @@ static void renderToPixbuf(struct viewport *pp)
 			break;
 	}
 
-	printf("w = %lf, h = %lf, pw = %lf, ph = %lf, scale = %lf\n", w, h, pw, ph, scale);
-
 	/* render to a pixbuf */
 	targetBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, w, h);
 	dieOnNull(targetBuf, __LINE__);
@@ -135,7 +137,6 @@ static void refreshPorts(void)
 	struct viewport *pp = NULL;
 	GList *it = ports;
 
-	printf("Refreshing...\n");
 	while (it)
 	{
 		pp = (struct viewport *)(it->data);
@@ -144,7 +145,7 @@ static void refreshPorts(void)
 	}
 }
 
-static void onKeyPressed(GtkWidget *widg, gpointer user_data)
+static gboolean onKeyPressed(GtkWidget *widg, gpointer user_data)
 {
 	GdkEventKey *ev = user_data;
 	gboolean changed = TRUE;
@@ -180,6 +181,7 @@ static void onKeyPressed(GtkWidget *widg, gpointer user_data)
 
 		case GDK_Escape:
 		case GDK_q:
+			changed = FALSE;
 			gtk_main_quit();
 			break;
 
@@ -191,22 +193,24 @@ static void onKeyPressed(GtkWidget *widg, gpointer user_data)
 	{
 		refreshPorts();
 	}
+
+	return TRUE;
 }
 
 static void onResize(GtkWidget *widg, GtkAllocation *al, struct viewport *port)
 {
-	int w, h;
-
-	w = al->width;
-	h = al->height;
-	printf("NEW w = %d, h = %d\n", w, h);
+	int wOld = port->width;
+	int hOld = port->height;
 
 	port->width = al->width;
 	port->height = al->height;
 
-	/* TODO: Find a way to auto-refresh on resize-events. This will
-	 * include the very first resize-event --> initial rendering
-	 * on startup*/
+	/* if the new size differs from the old size, then
+	 * re-render this particular viewport. */
+	if (wOld != port->width || hOld != port->height)
+	{
+		renderToPixbuf(port);
+	}
 }
 
 int main(int argc, char **argv)
@@ -248,7 +252,7 @@ int main(int argc, char **argv)
 	/* init colors */
 	if (gdk_color_parse("#000000", &black) != TRUE)
 		fprintf(stderr, "Could not resolve color \"black\".\n");
-	if (gdk_color_parse("#FFFFFF", &highlight) != TRUE)
+	if (gdk_color_parse("#BBFFBB", &highlight) != TRUE)
 		fprintf(stderr, "Could not resolve color \"highlight\".\n");
 
 
@@ -282,8 +286,11 @@ int main(int argc, char **argv)
 		/* calc the offset for this frame */
 		transIndex = i - (int)((double)NUM_FRAMES / 2.0);
 
-		/* create the widget */
-		frame = gtk_frame_new(NULL);
+		/* create the widget - note that it is important not to
+		 * set the title to NULL. this would cause a lot more
+		 * redraws on startup because the frame will get re-
+		 * allocated when the title changes. */
+		frame = gtk_frame_new("");
 
 		/* create a new drawing area - the pdf will be rendered in there */
 		image = gtk_image_new();
@@ -315,6 +322,8 @@ int main(int argc, char **argv)
 		dieOnNull(thisport, __LINE__);
 		thisport->offset = transIndex;
 		thisport->image = image;
+		thisport->width = -1;
+		thisport->height = -1;
 		ports = g_list_append(ports, thisport);
 
 		/* resize callback */
@@ -327,7 +336,7 @@ int main(int argc, char **argv)
 
 	/* add a rendering area in a frame to the beamer window */
 	image = gtk_image_new();
-	gtk_widget_set_size_request(image, 100, 100);
+	gtk_widget_set_size_request(image, 320, 240);
 
 	gtk_container_add(GTK_CONTAINER(win_beamer), image);
 	gtk_widget_show(image);
@@ -337,6 +346,8 @@ int main(int argc, char **argv)
 	dieOnNull(thisport, __LINE__);
 	thisport->offset = 0;
 	thisport->image = image;
+	thisport->width = -1;
+	thisport->height = -1;
 	ports = g_list_append(ports, thisport);
 
 	/* connect the on-resize-callback directly to the window */

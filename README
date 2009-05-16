@@ -19,8 +19,6 @@ KEYS:
 
 
 TODO:
-- Initial rendering on startup (for now, you'll have to press F5 once).
-- Automatic redraw on resize.
 - Automatic conversion from regular pathes to URI's. For now, you'll have to
   launch the program like this:
 
