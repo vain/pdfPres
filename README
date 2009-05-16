@@ -23,10 +23,26 @@ TODO:
 - Automatic conversion from regular pathes to URI's. For now, you'll have to
   launch the program like this:
 
-    ./pdfPres -f file:///home/whoever/work/slides.pdf [-s <slides>]
+    $ ./pdfPres -f file:///home/whoever/work/slides.pdf [-s <slides>]
 
   The optional parameter "-s" allows you to specify how many slides
   before/after the current slide you wish to see, i.e. "3" means "preview the
   next 3 slides while still showing the previous 3 slides". The default is "2".
 
 - ... some cosmetic stuff ...
+
+
+Build instructions
+==================
+
+To build the binary you need SConstruct <http://www.scons.org/> which should be
+included in most linux distributions. Once that's installed, just grab the
+source and type:
+
+    $ cd /path/to/sources
+    $ scons
+
+That's it. Furthermore, the following external libraries are required:
+
+- gtk2 >= 2.16.1            <http://www.gtk.org>
+- poppler-glib >= 0.10.6    <http://poppler.freedesktop.org>
