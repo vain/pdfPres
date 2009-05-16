@@ -37,6 +37,8 @@ struct viewport
 
 	GtkWidget *image;
 	GtkWidget *frame;
+
+	GdkPixbuf *cache;
 };
 
 static GList *ports = NULL;
@@ -98,6 +100,15 @@ static void renderToPixbuf(struct viewport *pp)
 		}
 	}
 
+	/* pixbuf still cached? */
+	if (pp->cache != NULL)
+	{
+		gtk_image_set_from_pixbuf(GTK_IMAGE(pp->image), pp->cache);
+		return;
+	}
+
+	/* cache is empty. we have to render from scratch. */
+
 	/* get this page and its ratio */
 	page = poppler_document_get_page(doc, mypage_i);
 	poppler_page_get_size(page, &pw, &ph);
@@ -141,8 +152,10 @@ static void renderToPixbuf(struct viewport *pp)
 	poppler_page_render_to_pixbuf(page, 0, 0, pw, ph, scale, 0, targetBuf);
 	gtk_image_set_from_pixbuf(GTK_IMAGE(pp->image), targetBuf);
 
-	gdk_pixbuf_unref(targetBuf);
 	g_object_unref(G_OBJECT(page));
+
+	/* cache the rendered pixbuf */
+	pp->cache = targetBuf;
 }
 
 static void refreshPorts(void)
@@ -158,6 +171,137 @@ static void refreshPorts(void)
 	}
 }
 
+static void clearAllCaches(void)
+{
+	struct viewport *pp = NULL;
+	GList *it = ports;
+
+	while (it)
+	{
+		pp = (struct viewport *)(it->data);
+
+		if (pp->cache != NULL)
+			gdk_pixbuf_unref(pp->cache);
+
+		pp->cache = NULL;
+
+		it = g_list_next(it);
+	}
+}
+
+static void nextSlide(void)
+{
+	/* a note on caching:
+	 *
+	 * every viewport holds a pointer to a pixbuf. if we
+	 * change to another slide, those pointers will be
+	 * exchanged so that already existing images won't
+	 * get rendered again.
+	 *
+	 * we do NOT have to care about over- or underruns.
+	 * every viewport will see for itself if it's about
+	 * to render a valid page or not.
+	 *
+	 * so all we have to do is exchange the pointers and
+	 * clear those which *must* be rendered.
+	 */
+
+	int i;
+	GList *a = NULL, *b = NULL;
+	struct viewport *aPort = NULL, *bPort = NULL;
+
+	/* update global counter */
+	doc_page++;
+	doc_page %= doc_n_pages;
+
+	/* important! unref unused pixbufs:
+	 * - the very first frame to the left
+	 * - the cache of the beamer port
+	 */
+	a = g_list_first(ports);
+	aPort = (struct viewport *)(a->data);
+	if (aPort->cache != NULL)
+		gdk_pixbuf_unref(aPort->cache);
+
+	a = g_list_last(ports);
+	aPort = (struct viewport *)(a->data);
+	if (aPort->cache != NULL)
+		gdk_pixbuf_unref(aPort->cache);
+
+	/* update cache - we expect the g_list to be ordered.
+	 * hence, we can omit the very last item which is
+	 * the beamer port. */
+	for (i = 0; i < g_list_length(ports) - 2; i++)
+	{
+		a = g_list_nth(ports, i);
+		b = g_list_nth(ports, i + 1);
+
+		aPort = (struct viewport *)(a->data);
+		bPort = (struct viewport *)(b->data);
+
+		aPort->cache = bPort->cache;
+	}
+
+	/* clear the last two caches: the beamer port and
+	 * the preview frame to the very right. */
+	a = g_list_last(ports);
+	aPort = (struct viewport *)(a->data);
+	aPort->cache = NULL;
+
+	a = g_list_previous(a);
+	aPort = (struct viewport *)(a->data);
+	aPort->cache = NULL;
+}
+
+static void prevSlide(void)
+{
+	int i;
+	GList *a = NULL, *b = NULL;
+	struct viewport *aPort = NULL, *bPort = NULL;
+
+	/* update global counter */
+	doc_page--;
+	doc_page = (doc_page < 0 ? doc_n_pages - 1 : doc_page);
+
+	/* important! unref unused pixbufs:
+	 * - the cache of the beamer port
+	 * - the very last frame to the right
+	 */
+	a = g_list_last(ports);
+	aPort = (struct viewport *)(a->data);
+	if (aPort->cache != NULL)
+		gdk_pixbuf_unref(aPort->cache);
+
+	a = g_list_previous(a);
+	aPort = (struct viewport *)(a->data);
+	if (aPort->cache != NULL)
+		gdk_pixbuf_unref(aPort->cache);
+
+	/* update cache - we expect the g_list to be ordered.
+	 * hence, we can omit the very last item which is
+	 * the beamer port. */
+	for (i = g_list_length(ports) - 2; i >= 0; i--)
+	{
+		a = g_list_nth(ports, i);
+		b = g_list_nth(ports, i + 1);
+
+		aPort = (struct viewport *)(a->data);
+		bPort = (struct viewport *)(b->data);
+
+		bPort->cache = aPort->cache;
+	}
+
+	/* clear cache of the first item */
+	a = g_list_first(ports);
+	aPort = (struct viewport *)(a->data);
+	aPort->cache = NULL;
+
+	/* clear the beamer cache */
+	a = g_list_last(ports);
+	aPort = (struct viewport *)(a->data);
+	aPort->cache = NULL;
+}
+
 static gboolean onKeyPressed(GtkWidget *widg, gpointer user_data)
 {
 	GdkEventKey *ev = user_data;
@@ -168,18 +312,15 @@ static gboolean onKeyPressed(GtkWidget *widg, gpointer user_data)
 		case GDK_Right:
 		case GDK_Return:
 		case GDK_space:
-			doc_page++;
-			doc_page %= doc_n_pages;
+			nextSlide();
 			break;
 
 		case GDK_Left:
-			doc_page--;
-			doc_page = (doc_page < 0 ? doc_n_pages - 1 : doc_page);
+			prevSlide();
 			break;
 
 		case GDK_F5:
-			/* do nothing -- especially do not clear the flag
-			 * --> redraw */
+			clearAllCaches();
 			break;
 
 		case GDK_w:
@@ -224,6 +365,12 @@ static void onResize(GtkWidget *widg, GtkAllocation *al, struct viewport *port)
 	 * re-render this particular viewport. */
 	if (wOld != port->width || hOld != port->height)
 	{
+		/* clear cache */
+		if (port->cache != NULL)
+			gdk_pixbuf_unref(port->cache);
+
+		port->cache = NULL;
+
 		renderToPixbuf(port);
 	}
 }
@@ -386,6 +533,7 @@ int main(int argc, char **argv)
 		thisport->offset = transIndex;
 		thisport->image = image;
 		thisport->frame = frame;
+		thisport->cache = NULL;
 		thisport->width = -1;
 		thisport->height = -1;
 		ports = g_list_append(ports, thisport);
@@ -411,6 +559,7 @@ int main(int argc, char **argv)
 	thisport->offset = 0;
 	thisport->image = image;
 	thisport->frame = NULL;
+	thisport->cache = NULL;
 	thisport->width = -1;
 	thisport->height = -1;
 	ports = g_list_append(ports, thisport);
