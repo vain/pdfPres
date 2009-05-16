@@ -32,10 +32,12 @@ int redrawcalls = 0;
 struct viewport
 {
 	int offset;
+
 	int width;
 	int height;
 
 	GtkWidget *image;
+	GtkWidget *frame;
 };
 
 static GList *ports = NULL;
@@ -83,18 +85,18 @@ static void renderToPixbuf(struct viewport *pp)
 		/* clear image and reset frame title */
 		gtk_image_clear(GTK_IMAGE(pp->image));
 
-		if (GTK_IS_FRAME(pp->image->parent))
-			gtk_frame_set_label(GTK_FRAME(pp->image->parent), "X");
+		if (pp->frame != NULL)
+			gtk_frame_set_label(GTK_FRAME(pp->frame), "X");
 
 		return;
 	}
 	else
 	{
 		/* update frame title */
-		if (GTK_IS_FRAME(pp->image->parent))
+		if (pp->frame != NULL)
 		{
 			title = g_strdup_printf("Slide %d", mypage_i + 1);
-			gtk_frame_set_label(GTK_FRAME(pp->image->parent), title);
+			gtk_frame_set_label(GTK_FRAME(pp->frame), title);
 			free(title);
 		}
 	}
@@ -218,7 +220,7 @@ int main(int argc, char **argv)
 	int i = 0, transIndex = 0;
 	GtkWidget *hbox;
 	GError* err = NULL;
-	GtkWidget *image, *frame, *dummy;
+	GtkWidget *image, *frame, *evbox, *dummy;
 	GtkWidget *win_preview, *win_beamer;
 	GdkColor black, highlight;
 	struct viewport *thisport;
@@ -296,11 +298,18 @@ int main(int argc, char **argv)
 		image = gtk_image_new();
 		gtk_widget_set_size_request(image, 100, 100);
 
-		/* add widgets to their parents */
-		gtk_container_add(GTK_CONTAINER(frame), image);
+		/* add widgets to their parents. the image is placed in an eventbox,
+		 * the box's size_allocate signal will be handled. so, we know the
+		 * exact width/height we can render into. (placing the image into the
+		 * frame would create the need of knowing the frame's border size...)
+		 */
+		evbox = gtk_event_box_new();
+		gtk_container_add(GTK_CONTAINER(evbox), image);
+		gtk_container_add(GTK_CONTAINER(frame), evbox);
+
 		if (transIndex == 0)
 		{
-			/* the "current" frame will be place in an eventbox
+			/* the "current" frame will be placed in another eventbox
 			 * so we can set a background color */
 			dummy = gtk_event_box_new();
 			gtk_container_add(GTK_CONTAINER(dummy), frame);
@@ -314,7 +323,11 @@ int main(int argc, char **argv)
 			gtk_box_pack_start(GTK_BOX(hbox), frame, TRUE, TRUE, 5);
 		}
 
+		/* make the eventbox "transparent" */
+		gtk_event_box_set_visible_window(GTK_EVENT_BOX(evbox), FALSE);
+
 		gtk_widget_show(image);
+		gtk_widget_show(evbox);
 		gtk_widget_show(frame);
 
 		/* save info of this rendering port */
@@ -322,12 +335,13 @@ int main(int argc, char **argv)
 		dieOnNull(thisport, __LINE__);
 		thisport->offset = transIndex;
 		thisport->image = image;
+		thisport->frame = frame;
 		thisport->width = -1;
 		thisport->height = -1;
 		ports = g_list_append(ports, thisport);
 
 		/* resize callback */
-		g_signal_connect(G_OBJECT(frame), "size_allocate", G_CALLBACK(onResize), thisport);
+		g_signal_connect(G_OBJECT(evbox), "size_allocate", G_CALLBACK(onResize), thisport);
 	}
 
 	gtk_container_add(GTK_CONTAINER(win_preview), hbox);
@@ -346,6 +360,7 @@ int main(int argc, char **argv)
 	dieOnNull(thisport, __LINE__);
 	thisport->offset = 0;
 	thisport->image = image;
+	thisport->frame = NULL;
 	thisport->width = -1;
 	thisport->height = -1;
 	ports = g_list_append(ports, thisport);
