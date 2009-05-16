@@ -49,7 +49,8 @@ static int doc_page = 0;
 
 #define FIT_WIDTH 0
 #define FIT_HEIGHT 1
-static int fitmode = FIT_WIDTH;
+#define FIT_PAGE 2
+static int fitmode = FIT_PAGE;
 
 #define NUM_FRAMES 5
 
@@ -65,11 +66,12 @@ static void dieOnNull(void *ptr, int line)
 
 static void renderToPixbuf(struct viewport *pp)
 {
-	int mypage_i;
+	int mypage_i, myfitmode;
 	double pw = 0, ph = 0;
 	double w = 0, h = 0;
-	double page_ratio = 1, scale = 1;
+	double page_ratio = 1, screen_ratio = 1, scale = 1;
 	GdkPixbuf *targetBuf = NULL;
+	PopplerPage *page = NULL;
 	gchar *title = NULL;
 
 	printf("******************************************************* %d\n", ++redrawcalls);
@@ -102,11 +104,25 @@ static void renderToPixbuf(struct viewport *pp)
 	}
 
 	/* get this page and its ratio */
-	PopplerPage *page = poppler_document_get_page(doc, mypage_i);
+	page = poppler_document_get_page(doc, mypage_i);
 	poppler_page_get_size(page, &pw, &ph);
 	page_ratio = pw / ph;
+	screen_ratio = (double)pp->width / (double)pp->height;
 
-	switch (fitmode)
+	/* select fit mode */
+	if (fitmode == FIT_PAGE)
+	{
+		/* that's it: compare screen and page ratio. this
+		 * will cover all 4 cases that could happen. */
+		if (screen_ratio > page_ratio)
+			myfitmode = FIT_HEIGHT;
+		else
+			myfitmode = FIT_WIDTH;
+	}
+	else
+		myfitmode = fitmode;
+
+	switch (myfitmode)
 	{
 		case FIT_HEIGHT:
 			/* fit height */
@@ -179,6 +195,10 @@ static gboolean onKeyPressed(GtkWidget *widg, gpointer user_data)
 
 		case GDK_h:
 			fitmode = FIT_HEIGHT;
+			break;
+
+		case GDK_p:
+			fitmode = FIT_PAGE;
 			break;
 
 		case GDK_Escape:
