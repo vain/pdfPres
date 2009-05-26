@@ -54,6 +54,8 @@ static int doc_page_beamer = 0;
 
 static gboolean beamer_active = TRUE;
 
+static GdkColor col_current, col_marked;
+
 #define FIT_WIDTH 0
 #define FIT_HEIGHT 1
 #define FIT_PAGE 2
@@ -166,6 +168,43 @@ static void renderToPixbuf(struct viewport *pp)
 	pp->cache = targetBuf;
 }
 
+static void refreshFrames(void)
+{
+	struct viewport *pp = NULL;
+	GList *it = ports;
+
+	while (it)
+	{
+		pp = (struct viewport *)(it->data);
+
+		/* the beamer has no frame */
+		if (pp->isBeamer == FALSE)
+		{
+			/* reset background color */
+			gtk_widget_modify_bg(pp->frame->parent, GTK_STATE_NORMAL, NULL);
+
+			/* lock mode: highlight the marked/saved page */
+			if (beamer_active == FALSE)
+			{
+				if (doc_page + pp->offset == doc_page_mark)
+				{
+					gtk_widget_modify_bg(pp->frame->parent, GTK_STATE_NORMAL, &col_marked);
+				}
+			}
+			/* normal mode: highlight the "current" frame */
+			else
+			{
+				if (pp->offset == 0)
+				{
+					gtk_widget_modify_bg(pp->frame->parent, GTK_STATE_NORMAL, &col_current);
+				}
+			}
+		}
+
+		it = g_list_next(it);
+	}
+}
+
 static void refreshPorts(void)
 {
 	struct viewport *pp = NULL;
@@ -177,6 +216,8 @@ static void refreshPorts(void)
 		renderToPixbuf(pp);
 		it = g_list_next(it);
 	}
+
+	refreshFrames();
 }
 
 static void clearAllCaches(void)
@@ -388,7 +429,6 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_dat
 
 		case GDK_l:
 			current_fixate();
-			changed = FALSE;
 			break;
 
 		case GDK_L:
@@ -469,7 +509,7 @@ int main(int argc, char **argv)
 	GError *err = NULL;
 	GtkWidget *image, *frame, *evbox, *outerevbox;
 	GtkWidget *win_preview, *win_beamer;
-	GdkColor black, highlight;
+	GdkColor black;
 	struct viewport *thisport;
 
 	gtk_init(&argc, &argv);
@@ -532,8 +572,10 @@ int main(int argc, char **argv)
 	/* init colors */
 	if (gdk_color_parse("#000000", &black) != TRUE)
 		fprintf(stderr, "Could not resolve color \"black\".\n");
-	if (gdk_color_parse("#BBFFBB", &highlight) != TRUE)
-		fprintf(stderr, "Could not resolve color \"highlight\".\n");
+	if (gdk_color_parse("#BBFFBB", &col_current) != TRUE)
+		fprintf(stderr, "Could not resolve color \"col_current\".\n");
+	if (gdk_color_parse("#FFBBBB", &col_marked) != TRUE)
+		fprintf(stderr, "Could not resolve color \"col_marked\".\n");
 
 
 	/* init our two windows */
@@ -593,28 +635,20 @@ int main(int argc, char **argv)
 		gtk_container_add(GTK_CONTAINER(evbox), image);
 		gtk_container_add(GTK_CONTAINER(frame), evbox);
 
-		if (transIndex == 0)
-		{
-			/* the "current" frame will be placed in another eventbox
-			 * so we can set a background color */
-			outerevbox = gtk_event_box_new();
-			gtk_container_add(GTK_CONTAINER(outerevbox), frame);
-			gtk_box_pack_start(GTK_BOX(hbox), outerevbox, TRUE, TRUE, 5);
-			gtk_widget_show(outerevbox);
-
-			gtk_widget_modify_bg(outerevbox, GTK_STATE_NORMAL, &highlight);
-		}
-		else
-		{
-			gtk_box_pack_start(GTK_BOX(hbox), frame, TRUE, TRUE, 5);
-		}
+		/* every frame will be placed in another eventbox so we can set a
+		 * background color */
+		outerevbox = gtk_event_box_new();
+		gtk_container_add(GTK_CONTAINER(outerevbox), frame);
+		gtk_box_pack_start(GTK_BOX(hbox), outerevbox, TRUE, TRUE, 5);
 
 		/* make the eventbox "transparent" */
 		gtk_event_box_set_visible_window(GTK_EVENT_BOX(evbox), FALSE);
 
+		/* show 'em all */
 		gtk_widget_show(image);
 		gtk_widget_show(evbox);
 		gtk_widget_show(frame);
+		gtk_widget_show(outerevbox);
 
 		/* save info of this rendering port */
 		thisport = (struct viewport *)malloc(sizeof(struct viewport));
@@ -634,6 +668,9 @@ int main(int argc, char **argv)
 
 	gtk_container_add(GTK_CONTAINER(win_preview), hbox);
 	gtk_widget_show(hbox);
+
+	/* in order to set the initially highlighted frame */
+	refreshFrames();
 
 
 	/* add a rendering area to the beamer window */
