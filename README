@@ -23,6 +23,7 @@ KEYS:
   the audience. So fixating the current slide on the beamer while still
   allowing free navigation in the preview window should be quite handy. Lock it
   by pressing [l] and unlock it with [L] (capital "l").
+- In locked mode, press [J] (shift!) to jump to the currently selected slide.
 
 
 TODO:

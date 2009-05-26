@@ -54,7 +54,7 @@ static int doc_page_beamer = 0;
 
 static gboolean beamer_active = TRUE;
 
-static GdkColor col_current, col_marked;
+static GdkColor col_current, col_marked, col_dim;
 
 #define FIT_WIDTH 0
 #define FIT_HEIGHT 1
@@ -183,12 +183,16 @@ static void refreshFrames(void)
 			/* reset background color */
 			gtk_widget_modify_bg(pp->frame->parent, GTK_STATE_NORMAL, NULL);
 
-			/* lock mode: highlight the marked/saved page */
+			/* lock mode: highlight the saved/current page */
 			if (beamer_active == FALSE)
 			{
 				if (doc_page + pp->offset == doc_page_mark)
 				{
 					gtk_widget_modify_bg(pp->frame->parent, GTK_STATE_NORMAL, &col_marked);
+				}
+				else if (pp->offset == 0)
+				{
+					gtk_widget_modify_bg(pp->frame->parent, GTK_STATE_NORMAL, &col_dim);
 				}
 			}
 			/* normal mode: highlight the "current" frame */
@@ -251,17 +255,23 @@ static void current_fixate(void)
 	beamer_active = FALSE;
 }
 
-static void current_release(void)
+static void current_release(gboolean jump)
 {
 	/* skip if not fixated */
 	if (beamer_active == TRUE)
 		return;
 
-	/* reload saved page */
-	doc_page = doc_page_mark;
+	/* reload saved page if we are not about to jump.
+	 * otherwise, the currently selected slide will
+	 * become active. */
+	if (jump == FALSE)
+	{
+		doc_page = doc_page_mark;
+	}
 
 	/* re-activate beamer */
 	beamer_active = TRUE;
+	doc_page_beamer = doc_page;
 
 	/* caches will most probably end up inconsistent */
 	clearAllCaches();
@@ -432,7 +442,11 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_dat
 			break;
 
 		case GDK_L:
-			current_release();
+			current_release(FALSE);
+			break;
+
+		case GDK_J:
+			current_release(TRUE);
 			break;
 
 		case GDK_Escape:
@@ -576,6 +590,8 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Could not resolve color \"col_current\".\n");
 	if (gdk_color_parse("#FFBBBB", &col_marked) != TRUE)
 		fprintf(stderr, "Could not resolve color \"col_marked\".\n");
+	if (gdk_color_parse("#BBBBBB", &col_dim) != TRUE)
+		fprintf(stderr, "Could not resolve color \"col_dim\".\n");
 
 
 	/* init our two windows */
