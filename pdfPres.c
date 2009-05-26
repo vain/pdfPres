@@ -354,6 +354,27 @@ static gboolean onKeyPressed(GtkWidget *widg, gpointer user_data)
 	return TRUE;
 }
 
+static gboolean onMouseReleased(GtkWidget *widg, GdkEventButton *ev, gpointer user_data)
+{
+	/* forward on left click, backward on right click */
+
+	if (ev->type == GDK_BUTTON_RELEASE)
+	{
+		if (ev->button == 1)
+		{
+			nextSlide();
+			refreshPorts();
+		}
+		else if (ev->button == 3)
+		{
+			prevSlide();
+			refreshPorts();
+		}
+	}
+
+	return TRUE;
+}
+
 static void onResize(GtkWidget *widg, GtkAllocation *al, struct viewport *port)
 {
 	int wOld = port->width;
@@ -470,6 +491,14 @@ int main(int argc, char **argv)
 
 	g_signal_connect(G_OBJECT(win_preview), "key_press_event", G_CALLBACK(onKeyPressed), NULL);
 	g_signal_connect(G_OBJECT(win_beamer),  "key_press_event", G_CALLBACK(onKeyPressed), NULL);
+
+	gtk_widget_add_events(win_beamer, GDK_BUTTON_PRESS_MASK);
+	gtk_widget_add_events(win_beamer, GDK_BUTTON_RELEASE_MASK);
+	g_signal_connect(G_OBJECT(win_beamer), "button_release_event", G_CALLBACK(onMouseReleased), NULL);
+
+	gtk_widget_add_events(win_preview, GDK_BUTTON_PRESS_MASK);
+	gtk_widget_add_events(win_preview, GDK_BUTTON_RELEASE_MASK);
+	g_signal_connect(G_OBJECT(win_preview), "button_release_event", G_CALLBACK(onMouseReleased), NULL);
 
 	gtk_container_set_border_width(GTK_CONTAINER(win_preview), 10);
 	gtk_container_set_border_width(GTK_CONTAINER(win_beamer),  0);
