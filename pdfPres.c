@@ -300,9 +300,8 @@ static void prevSlide(void)
 	aPort->cache = NULL;
 }
 
-static gboolean onKeyPressed(GtkWidget *widg, gpointer user_data)
+static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_data)
 {
-	GdkEventKey *ev = user_data;
 	gboolean changed = TRUE;
 
 	switch (ev->keyval)
