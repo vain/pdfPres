@@ -19,13 +19,13 @@ KEYS:
 - [Escape], [q] quit the program.
 - [left mouse] switches to the next slide, [right mouse] switches to the
   previous slide.
+- Sometimes you need to browse your slides but that would, inevitably, confuse
+  the audience. So fixating the current slide on the beamer while still
+  allowing free navigation in the preview window should be quite handy. Lock it
+  by pressing [l] and unlock it with [L] (capital "l").
 
 
 TODO:
-- Sometimes you need to browse your slides but that would, inevitably, confuse
-  the audience. So fixating the current slide on the beamer while still
-  allowing free navigation in the preview window would be handy.
-
 - Automatic conversion from regular pathes to URI's. For now, you'll have to
   launch the program like this:
 

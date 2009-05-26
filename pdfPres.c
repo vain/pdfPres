@@ -39,6 +39,8 @@ struct viewport
 	GtkWidget *frame;
 
 	GdkPixbuf *cache;
+
+	gboolean isBeamer;
 };
 
 static GList *ports = NULL;
@@ -47,6 +49,10 @@ static PopplerDocument *doc;
 
 static int doc_n_pages;
 static int doc_page = 0;
+static int doc_page_mark = 0;
+static int doc_page_beamer = 0;
+
+static gboolean beamer_active = TRUE;
 
 #define FIT_WIDTH 0
 #define FIT_HEIGHT 1
@@ -78,7 +84,11 @@ static void renderToPixbuf(struct viewport *pp)
 		return;
 
 	/* decide which page to render - if any */
-	mypage_i = doc_page + pp->offset;
+	if (pp->isBeamer == FALSE)
+		mypage_i = doc_page + pp->offset;
+	else
+		mypage_i = doc_page_beamer + pp->offset;
+
 	if (mypage_i < 0 || mypage_i >= doc_n_pages)
 	{
 		/* clear image and reset frame title */
@@ -187,6 +197,35 @@ static void clearAllCaches(void)
 	}
 }
 
+static void current_fixate(void)
+{
+	/* skip if already fixated */
+	if (beamer_active == FALSE)
+		return;
+
+	/* save current page */
+	doc_page_mark = doc_page;
+
+	/* deactivate refresh on beamer */
+	beamer_active = FALSE;
+}
+
+static void current_release(void)
+{
+	/* skip if not fixated */
+	if (beamer_active == TRUE)
+		return;
+
+	/* reload saved page */
+	doc_page = doc_page_mark;
+
+	/* re-activate beamer */
+	beamer_active = TRUE;
+
+	/* caches will most probably end up inconsistent */
+	clearAllCaches();
+}
+
 static void nextSlide(void)
 {
 	/* a note on caching:
@@ -212,9 +251,13 @@ static void nextSlide(void)
 	doc_page++;
 	doc_page %= doc_n_pages;
 
+	/* update beamer counter if it's active */
+	if (beamer_active == TRUE)
+		doc_page_beamer = doc_page;
+
 	/* important! unref unused pixbufs:
 	 * - the very first frame to the left
-	 * - the cache of the beamer port
+	 * - the cache of the beamer port (only if active)
 	 */
 	a = g_list_first(ports);
 	aPort = (struct viewport *)(a->data);
@@ -223,7 +266,7 @@ static void nextSlide(void)
 
 	a = g_list_last(ports);
 	aPort = (struct viewport *)(a->data);
-	if (aPort->cache != NULL)
+	if (aPort->cache != NULL && beamer_active == TRUE)
 		gdk_pixbuf_unref(aPort->cache);
 
 	/* update cache - we expect the g_list to be ordered.
@@ -244,7 +287,8 @@ static void nextSlide(void)
 	 * the preview frame to the very right. */
 	a = g_list_last(ports);
 	aPort = (struct viewport *)(a->data);
-	aPort->cache = NULL;
+	if (beamer_active == TRUE)
+		aPort->cache = NULL;
 
 	a = g_list_previous(a);
 	aPort = (struct viewport *)(a->data);
@@ -261,13 +305,17 @@ static void prevSlide(void)
 	doc_page--;
 	doc_page = (doc_page < 0 ? doc_n_pages - 1 : doc_page);
 
+	/* update beamer counter if it's active */
+	if (beamer_active == TRUE)
+		doc_page_beamer = doc_page;
+
 	/* important! unref unused pixbufs:
-	 * - the cache of the beamer port
+	 * - the cache of the beamer port (only if active)
 	 * - the very last frame to the right
 	 */
 	a = g_list_last(ports);
 	aPort = (struct viewport *)(a->data);
-	if (aPort->cache != NULL)
+	if (aPort->cache != NULL && beamer_active == TRUE)
 		gdk_pixbuf_unref(aPort->cache);
 
 	a = g_list_previous(a);
@@ -278,7 +326,7 @@ static void prevSlide(void)
 	/* update cache - we expect the g_list to be ordered.
 	 * hence, we can omit the very last item which is
 	 * the beamer port. */
-	for (i = g_list_length(ports) - 2; i >= 0; i--)
+	for (i = g_list_length(ports) - 3; i >= 0; i--)
 	{
 		a = g_list_nth(ports, i);
 		b = g_list_nth(ports, i + 1);
@@ -294,10 +342,13 @@ static void prevSlide(void)
 	aPort = (struct viewport *)(a->data);
 	aPort->cache = NULL;
 
-	/* clear the beamer cache */
-	a = g_list_last(ports);
-	aPort = (struct viewport *)(a->data);
-	aPort->cache = NULL;
+	/* clear the beamer cache if active */
+	if (beamer_active == TRUE)
+	{
+		a = g_list_last(ports);
+		aPort = (struct viewport *)(a->data);
+		aPort->cache = NULL;
+	}
 }
 
 static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_data)
@@ -333,6 +384,15 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_dat
 		case GDK_p:
 			fitmode = FIT_PAGE;
 			clearAllCaches();
+			break;
+
+		case GDK_l:
+			current_fixate();
+			changed = FALSE;
+			break;
+
+		case GDK_L:
+			current_release();
 			break;
 
 		case GDK_Escape:
@@ -565,6 +625,7 @@ int main(int argc, char **argv)
 		thisport->cache = NULL;
 		thisport->width = -1;
 		thisport->height = -1;
+		thisport->isBeamer = FALSE;
 		ports = g_list_append(ports, thisport);
 
 		/* resize callback */
@@ -591,6 +652,7 @@ int main(int argc, char **argv)
 	thisport->cache = NULL;
 	thisport->width = -1;
 	thisport->height = -1;
+	thisport->isBeamer = TRUE;
 	ports = g_list_append(ports, thisport);
 
 	/* connect the on-resize-callback directly to the window */
