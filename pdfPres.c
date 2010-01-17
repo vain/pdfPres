@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -519,6 +520,9 @@ int main(int argc, char **argv)
 {
 	int i = 0, transIndex = 0, numframes;
 	char *filename;
+	FILE *fp;
+	struct stat statbuf;
+	char *databuf;
 	GtkWidget *hbox;
 	GError *err = NULL;
 	GtkWidget *image, *frame, *evbox, *outerevbox;
@@ -567,7 +571,35 @@ int main(int argc, char **argv)
 
 
 	/* try to load the file */
-	doc = poppler_document_new_from_file(filename, NULL, &err);
+	if (stat(filename, &statbuf) == -1)
+	{
+		perror("Could not stat file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* note: this buffer must not be freed, it'll be used by poppler
+	 * later on. */
+	databuf = (char *)malloc(statbuf.st_size);
+	dieOnNull(databuf, __LINE__);
+
+	fp = fopen(filename, "rb");
+	if (!fp)
+	{
+		perror("Could not open file");
+		exit(EXIT_FAILURE);
+	}
+
+	if (fread(databuf, 1, statbuf.st_size, fp) != statbuf.st_size)
+	{
+		fprintf(stderr, "Unexpected end of file.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	fclose(fp);
+
+	/* get document from data */
+	doc = poppler_document_new_from_data(databuf, statbuf.st_size,
+			NULL, &err);
 	if (!doc)
 	{
 		fprintf(stderr, "%s\n", err->message);
