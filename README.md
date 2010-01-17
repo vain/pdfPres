@@ -1,5 +1,5 @@
-README for pdfPres
-==================
+pdfPres -- a dual head PDF presenter
+====================================
 
 pdfPres is a presentation program for PDF files. It uses a "dual
 head"-layout: One window shows the previous, current and next slides
@@ -26,10 +26,8 @@ Keys
 * Sometimes you need to browse your slides but that would, inevitably,
   confuse the audience. So fixating the current slide on the beamer
   while still allowing free navigation in the preview window should be
-  quite handy. Lock it by pressing [l] and unlock it with [L] (capital
-  "l").
-* In locked mode, press [J] (shift!) to jump to the currently selected
-  slide.
+  quite handy. Lock it by pressing [l] and unlock it with a capital [L].
+* In locked mode, press [J] to jump to the currently selected slide.
 
 
 Launching
@@ -52,7 +50,7 @@ application.
 Build instructions
 ------------------
 
-To build the binary you need SConstruct <http://www.scons.org/> which
+To build the binary you need [SConstruct](http://www.scons.org/) which
 should be included in most linux distributions. Once that's installed,
 just grab the source and type:
 
