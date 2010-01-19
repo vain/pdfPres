@@ -530,7 +530,7 @@ static void onResize(GtkWidget *widg, GtkAllocation *al, struct viewport *port)
 
 static void usage(char *exe)
 {
-	fprintf(stderr, "Usage: %s [-s <slides>] [-w] -f <file>\n", exe);
+	fprintf(stderr, "Usage: %s [-s <slides>] [-w] <file>\n", exe);
 }
 
 int main(int argc, char **argv)
@@ -555,7 +555,7 @@ int main(int argc, char **argv)
 	numframes = 3;
 
 	/* get options via getopt */
-	while ((i = getopt(argc, argv, "s:f:w")) != -1)
+	while ((i = getopt(argc, argv, "s:w")) != -1)
 	{
 		switch (i)
 		{
@@ -569,10 +569,6 @@ int main(int argc, char **argv)
 				}
 				break;
 
-			case 'f':
-				filename = optarg;
-				break;
-
 			case 'w':
 				do_wrapping = TRUE;
 				break;
@@ -583,9 +579,15 @@ int main(int argc, char **argv)
 		}
 	}
 
+	/* retrieve file name via first non-option argument */
+	if (optind < argc)
+	{
+		filename = argv[optind];
+	}
+
 	if (filename == NULL)
 	{
-		fprintf(stderr, "Invalid file uri specified.\n");
+		fprintf(stderr, "Invalid file path specified.\n");
 		usage(argv[0]);
 		exit(EXIT_FAILURE);
 	}
