@@ -552,7 +552,7 @@ int main(int argc, char **argv)
 
 	/* defaults */
 	filename = NULL;
-	numframes = 5;
+	numframes = 3;
 
 	/* get options via getopt */
 	while ((i = getopt(argc, argv, "s:f:w")) != -1)

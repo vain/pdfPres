@@ -40,7 +40,7 @@ Issue something like:
 The optional parameter "-s" allows you to specify how many slides
 before/after the current slide you wish to see, i.e. "3" means
 "preview the next 3 slides while still showing the previous 3 slides".
-The default is "2".
+The default is "1".
 
 The optional parameter "-w" enables wrapping. When you're on the last
 slide and wrapping is enabled, switching to the "next" slide actually
