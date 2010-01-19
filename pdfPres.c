@@ -160,7 +160,7 @@ static void renderToPixbuf(struct viewport *pp)
 	targetBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, w, h);
 	dieOnNull(targetBuf, __LINE__);
 
-	poppler_page_render_to_pixbuf(page, 0, 0, pw, ph, scale, 0, targetBuf);
+	poppler_page_render_to_pixbuf(page, 0, 0, w, h, scale, 0, targetBuf);
 	gtk_image_set_from_pixbuf(GTK_IMAGE(pp->image), targetBuf);
 
 	g_object_unref(G_OBJECT(page));
