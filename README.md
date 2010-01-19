@@ -35,7 +35,7 @@ Launching
 
 Issue something like:
 
-    $ ./pdfPres -f path/to/slides.pdf [-s <slides>] [-w]
+    $ ./pdfPres [-s <slides>] [-w] path/to/slides.pdf
 
 The optional parameter "-s" allows you to specify how many slides
 before/after the current slide you wish to see, i.e. "3" means
@@ -45,6 +45,8 @@ The default is "1".
 The optional parameter "-w" enables wrapping. When you're on the last
 slide and wrapping is enabled, switching to the "next" slide actually
 switches to the very first slide.
+
+The path has to be the last argument.
 
 Note: It is no longer needed to specify file pathes with URI's like
 "file:///home/user/...". You can use regular pathes like in any other
