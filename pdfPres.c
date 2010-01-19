@@ -108,9 +108,10 @@ static void renderToPixbuf(struct viewport *pp)
 		/* update frame title */
 		if (pp->frame != NULL)
 		{
-			title = g_strdup_printf("Slide %d", mypage_i + 1);
+			title = g_strdup_printf("Slide %d / %d", mypage_i + 1,
+					doc_n_pages);
 			gtk_frame_set_label(GTK_FRAME(pp->frame), title);
-			free(title);
+			g_free(title);
 		}
 	}
 
