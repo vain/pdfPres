@@ -54,6 +54,7 @@ static int doc_page_mark = 0;
 static int doc_page_beamer = 0;
 
 static gboolean beamer_active = TRUE;
+static gboolean do_wrapping = FALSE;
 
 static GdkColor col_current, col_marked, col_dim;
 
@@ -299,6 +300,14 @@ static void nextSlide(void)
 	GList *a = NULL, *b = NULL;
 	struct viewport *aPort = NULL, *bPort = NULL;
 
+	if (!do_wrapping)
+	{
+		if (doc_page == doc_n_pages - 1)
+		{
+			return;
+		}
+	}
+
 	/* update global counter */
 	doc_page++;
 	doc_page %= doc_n_pages;
@@ -352,6 +361,14 @@ static void prevSlide(void)
 	int i;
 	GList *a = NULL, *b = NULL;
 	struct viewport *aPort = NULL, *bPort = NULL;
+
+	if (!do_wrapping)
+	{
+		if (doc_page == 0)
+		{
+			return;
+		}
+	}
 
 	/* update global counter */
 	doc_page--;
@@ -513,7 +530,7 @@ static void onResize(GtkWidget *widg, GtkAllocation *al, struct viewport *port)
 
 static void usage(char *exe)
 {
-	fprintf(stderr, "Usage: %s [-s <slides>] -f <file>\n", exe);
+	fprintf(stderr, "Usage: %s [-s <slides>] [-w] -f <file>\n", exe);
 }
 
 int main(int argc, char **argv)
@@ -538,7 +555,7 @@ int main(int argc, char **argv)
 	numframes = 5;
 
 	/* get options via getopt */
-	while ((i = getopt(argc, argv, "s:f:")) != -1)
+	while ((i = getopt(argc, argv, "s:f:w")) != -1)
 	{
 		switch (i)
 		{
@@ -554,6 +571,10 @@ int main(int argc, char **argv)
 
 			case 'f':
 				filename = optarg;
+				break;
+
+			case 'w':
+				do_wrapping = TRUE;
 				break;
 
 			case '?':
