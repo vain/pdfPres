@@ -55,6 +55,7 @@ static int doc_page_beamer = 0;
 
 static gboolean beamer_active = TRUE;
 static gboolean do_wrapping = FALSE;
+static gboolean do_notectrl = FALSE;
 
 static GdkColor col_current, col_marked, col_dim;
 
@@ -113,6 +114,19 @@ static void renderToPixbuf(struct viewport *pp)
 			gtk_frame_set_label(GTK_FRAME(pp->frame), title);
 			g_free(title);
 		}
+	}
+
+	/* if note-control is active, print current page number if on
+	 * "main" frame. (don't do this on the beamer because it could be
+	 * locked.)
+	 * this allows you to attach any kind of other program or script
+	 * which can show notes for a specific slide. simply pipe the
+	 * output of pdfPres to your other tool.
+	 */
+	if (pp->offset == 0 && !pp->isBeamer && do_notectrl)
+	{
+		printf("%d\n", doc_page + 1);
+		fflush(stdout);
 	}
 
 	/* pixbuf still cached? */
@@ -531,7 +545,7 @@ static void onResize(GtkWidget *widg, GtkAllocation *al, struct viewport *port)
 
 static void usage(char *exe)
 {
-	fprintf(stderr, "Usage: %s [-s <slides>] [-w] <file>\n", exe);
+	fprintf(stderr, "Usage: %s [-s <slides>] [-n] [-w] <file>\n", exe);
 }
 
 int main(int argc, char **argv)
@@ -556,7 +570,7 @@ int main(int argc, char **argv)
 	numframes = 3;
 
 	/* get options via getopt */
-	while ((i = getopt(argc, argv, "s:w")) != -1)
+	while ((i = getopt(argc, argv, "s:wn")) != -1)
 	{
 		switch (i)
 		{
@@ -572,6 +586,10 @@ int main(int argc, char **argv)
 
 			case 'w':
 				do_wrapping = TRUE;
+				break;
+
+			case 'n':
+				do_notectrl = TRUE;
 				break;
 
 			case '?':
