@@ -8,6 +8,12 @@ window can be moved to an external screen (such as a beamer) -- use your
 window manager to set this window to fullscreen. Thus, you can present
 your slides on a beamer while keeping an eye on what's coming up next.
 
+Optionally, an external program can be attached via a pipe. The number
+of the slide which is currently shown will be written to that pipe. So,
+your external program or script can do additional things depending on
+the current slide -- it can show your private notes, trigger sound
+events or whatever.
+
 pdfPres uses GTK+ v2 and poppler-glib to render the PDF file.
 
 
@@ -35,7 +41,7 @@ Launching
 
 Issue something like:
 
-    $ ./pdfPres [-s <slides>] [-w] path/to/slides.pdf
+    $ ./pdfPres [-s <slides>] [-w] [-n] path/to/slides.pdf
 
 The optional parameter "-s" allows you to specify how many slides
 before/after the current slide you wish to see, i.e. "3" means
@@ -51,6 +57,28 @@ The path has to be the last argument.
 Note: It is no longer needed to specify file pathes with URI's like
 "file:///home/user/...". You can use regular pathes like in any other
 application.
+
+By providing the parameter "-n" the slide which is currently shown will
+be written to stdout. You can pipe this information to another program.
+That'll allow you to do fancy things. "private-notes.py" is an example
+of what you could do ("example" meaning "quick and dirty"):
+
+    $ ./pdfPres [-s <slides>] [-w] -n path/to/slides.pdf | ./private-notes.py ~/presentation/my-notes.txt
+
+This will attach the script to pdfPres. Currently, the script expects a
+file formatted like this:
+
+	-- 1
+	This text will be shown on the first slide.
+
+	-- 2
+	... notes for second slide ...
+
+	-- 23
+	Here be dragons. Shown on slide 23.
+
+To be more precise, a line containing "-- [n]" indicates that the
+following lines shall be displayed on the n'th slide.
 
 
 Build instructions
