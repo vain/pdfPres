@@ -790,6 +790,13 @@ int main(int argc, char **argv)
 	gtk_widget_show(win_preview);
 	gtk_widget_show(win_beamer);
 
+
+	/* now, as the real gdk window exists, hide mouse cursor in the
+	 * beamer window */
+	gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(win_beamer)),
+			gdk_cursor_new(GDK_BLANK_CURSOR));
+
+
 	gtk_main();
 	exit(EXIT_SUCCESS);
 }
