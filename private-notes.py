@@ -38,6 +38,9 @@ rawtokens = content.split("-- ")[1:]
 for i in rawtokens:
 	lines = i.split("\n")
 	number = lines[0]
+	# Filter out commented lines.
+	lines = [e for e in lines if (e != "" and e[0] != "#") or e == ""]
+	# Set notes for this slide.
 	slides[number] = "\n".join(lines[1:]).strip()
 
 # Setup terminal.
@@ -54,9 +57,7 @@ while True:
 	sys.stdout.write(curses.tigetstr("clear"))
 
 	# Announce current slide.
-	print ""
 	print "\t" + number
-	print ""
 	print ""
 
 	# Print notes -- if any.
