@@ -26,6 +26,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkkeysyms.h>
+#include <glib.h>
 #include <glib/poppler.h>
 
 
@@ -58,6 +59,8 @@ static gboolean do_wrapping = FALSE;
 static gboolean do_notectrl = FALSE;
 
 static gboolean isFullScreen = FALSE;
+
+static GTimer *timer = NULL;
 
 static GdkColor col_current, col_marked, col_dim;
 
@@ -457,6 +460,47 @@ static void toggleFullScreen(void)
 
 }
 
+/* Starts and continues the timer */
+static void startTimer()
+{
+        printf("starting timer");
+        fflush(stdout);
+    timer = g_timer_new();
+    /* if(!timer)
+    {
+    } else {
+        g_timer_continue (timer);
+    } */
+}
+
+static void stopTimer()
+{
+    g_timer_stop(timer);
+}
+
+static void resetTimer()
+{
+    g_timer_reset(timer);
+}
+
+static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel){
+    int timeElapsed;
+    char timeToSet[10];
+
+
+    if(timer != NULL){
+        timeElapsed = (int) g_timer_elapsed(timer,NULL);
+        printf("Seconds elapsed: %d\n",timeElapsed);
+        fflush(stdout);
+        //sprintf(timeToSet, "%d", timeElapsed);
+        int min = (int) timeElapsed/60.0;
+        int sec = timeElapsed%60; 
+        sprintf(timeToSet, "%02d:%02d", min, sec);
+        gtk_label_set_text(GTK_LABEL(timeElapsedLabel),timeToSet);
+    }
+    return TRUE;
+}
+
 static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_data)
 {
 	gboolean changed = TRUE;
@@ -506,6 +550,10 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_dat
 
         case GDK_f:
             toggleFullScreen();
+            break;
+
+        case GDK_s:
+            startTimer();
             break;
 
 		case GDK_Escape:
@@ -586,6 +634,7 @@ int main(int argc, char **argv)
 	GtkWidget *image, *frame, *evbox, *outerevbox;
 	GtkWidget *win_preview, *win_beamer;
 	GdkColor black;
+    GtkWidget *timeElapsedLabel;
 	struct viewport *thisport;
 
 	gtk_init(&argc, &argv);
@@ -782,6 +831,12 @@ int main(int argc, char **argv)
 		g_signal_connect(G_OBJECT(evbox), "size_allocate", G_CALLBACK(onResize), thisport);
 	}
 
+    //frame = gtk_frame_new("");
+    timeElapsedLabel = gtk_label_new("00:00");
+    //gtk_container_add(GTK_CONTAINER(frame), timeElapsedLabel);
+    gtk_box_pack_start(GTK_BOX(hbox), timeElapsedLabel, TRUE, TRUE, 5);
+    gtk_widget_show(timeElapsedLabel);
+
 	gtk_container_add(GTK_CONTAINER(win_preview), hbox);
 	gtk_widget_show(hbox);
 
@@ -822,6 +877,7 @@ int main(int argc, char **argv)
 	gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(win_beamer)),
 			gdk_cursor_new(GDK_BLANK_CURSOR));
 
+    g_timeout_add(500, (GSourceFunc) printTimeElapsed, (gpointer) timeElapsedLabel);
 
 	gtk_main();
 	exit(EXIT_SUCCESS);
