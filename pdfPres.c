@@ -437,7 +437,7 @@ static void prevSlide(void)
 	}
 }
 
-static void toggleFullScreen(GtkWidget *widg)
+static void toggleFullScreen(void)
 {
 	GList *p = NULL;
 	struct viewport *beamerPort = NULL;
@@ -505,7 +505,7 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_dat
 			break;
 
         case GDK_f:
-            toggleFullScreen(widg);
+            toggleFullScreen();
             break;
 
 		case GDK_Escape:
