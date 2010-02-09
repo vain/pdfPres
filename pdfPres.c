@@ -57,6 +57,8 @@ static gboolean beamer_active = TRUE;
 static gboolean do_wrapping = FALSE;
 static gboolean do_notectrl = FALSE;
 
+static gboolean isFullScreen = FALSE;
+
 static GdkColor col_current, col_marked, col_dim;
 
 #define FIT_WIDTH 0
@@ -435,6 +437,26 @@ static void prevSlide(void)
 	}
 }
 
+static void toggleFullScreen(GtkWidget *widg)
+{
+	GList *p = NULL;
+	struct viewport *beamerPort = NULL;
+
+    /* Assuming that beamer port is the last item in Glist */
+	p = g_list_last(ports);
+	beamerPort = (struct viewport *)(p->data);
+
+
+    if(isFullScreen == FALSE){
+        gdk_window_fullscreen(gtk_widget_get_window(gtk_widget_get_parent(beamerPort->image)));
+        isFullScreen = TRUE;
+    } else {
+        gdk_window_unfullscreen(gtk_widget_get_window(gtk_widget_get_parent(beamerPort->image)));
+        isFullScreen = FALSE;
+    }
+
+}
+
 static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_data)
 {
 	gboolean changed = TRUE;
@@ -481,6 +503,10 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_dat
 		case GDK_J:
 			current_release(TRUE);
 			break;
+
+        case GDK_f:
+            toggleFullScreen(widg);
+            break;
 
 		case GDK_Escape:
 		case GDK_q:
