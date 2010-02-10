@@ -62,6 +62,8 @@ static gboolean isFullScreen = FALSE;
 
 static GTimer *timer = NULL;
 static int timerMode = 0; /* 0 = stopped, 1 = running, 2 = paused */
+static GtkWidget *startButton, *resetButton;
+
 
 static GdkColor col_current, col_marked, col_dim;
 
@@ -471,14 +473,17 @@ static void toggleTimer()
         case 0:
             timer = g_timer_new();
             timerMode = 1;
+            gtk_button_set_label(GTK_BUTTON(startButton), "Pause");
             break;
         case 1:
             g_timer_stop(timer);
             timerMode = 2;
+            gtk_button_set_label(GTK_BUTTON(startButton), "Continue");
             break;
         case 2:
             g_timer_continue (timer);
             timerMode = 1;
+            gtk_button_set_label(GTK_BUTTON(startButton), "Pause");
             break;
     } 
 }
@@ -487,6 +492,7 @@ static void resetTimer()
 {
     g_timer_destroy(timer);
     timerMode = 0;
+    gtk_button_set_label(GTK_BUTTON(startButton), "Start");
 }
 
 static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel){
@@ -515,6 +521,17 @@ static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel){
     }
 
     return TRUE;
+}
+
+static void onStartButtonReleased(GtkWidget *widget, gpointer data)
+{
+    toggleTimer();
+
+}
+
+static void onResetButtonReleased(GtkWidget *widget, gpointer data)
+{
+    resetTimer();
 }
 
 static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_data)
@@ -649,9 +666,9 @@ int main(int argc, char **argv)
 	FILE *fp;
 	struct stat statbuf;
 	char *databuf;
-	GtkWidget *hbox;
+	GtkWidget *hbox, *buttonBox, *timeBox, *leftBox;
 	GError *err = NULL;
-	GtkWidget *image, *frame, *evbox, *outerevbox;
+	GtkWidget *image, *frame, *evbox, *outerevbox, *timeFrame;
 	GtkWidget *win_preview, *win_beamer;
 	GdkColor black;
     GtkWidget *timeElapsedLabel;
@@ -671,15 +688,15 @@ int main(int argc, char **argv)
 	{
 		switch (i)
 		{
-			case 's':
-				numframes = 2 * atoi(optarg) + 1;
-				if (numframes <= 1)
-				{
-					fprintf(stderr, "Invalid slide count specified.\n");
-					usage(argv[0]);
-					exit(EXIT_FAILURE);
-				}
-				break;
+//			case 's':
+//				numframes = 2 * atoi(optarg) + 1;
+//				if (numframes <= 1)
+//				{
+//					fprintf(stderr, "Invalid slide count specified.\n");
+//					usage(argv[0]);
+//					exit(EXIT_FAILURE);
+//				}
+//				break;
 
 			case 'w':
 				do_wrapping = TRUE;
@@ -794,11 +811,50 @@ int main(int argc, char **argv)
 	gtk_widget_modify_bg(win_beamer, GTK_STATE_NORMAL, &black);
 
 
+
+    /* make buttons */
+	buttonBox = gtk_hbox_new(TRUE, 3);
+
+    startButton = gtk_button_new();
+    gtk_widget_set_size_request(startButton, 70, 30);
+    gtk_button_set_label(GTK_BUTTON(startButton), "Start");
+	g_signal_connect(G_OBJECT(startButton), "button_release_event", G_CALLBACK(onStartButtonReleased), NULL);
+
+    resetButton = gtk_button_new();
+    gtk_widget_set_size_request(resetButton, 70, 30);
+    gtk_button_set_label(GTK_BUTTON(resetButton), "Reset");
+	g_signal_connect(G_OBJECT(resetButton), "button_release_event", G_CALLBACK(onResetButtonReleased), NULL);
+
+    gtk_box_pack_start(GTK_BOX(buttonBox), startButton, FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(buttonBox), resetButton, FALSE, FALSE, 5);
+
+
+
+    /* setting text size for time label*/
+    textSize = g_markup_printf_escaped ("<span font=\"%d\">%s</span>", FONT_SIZE, "00:00");
+    timeElapsedLabel = gtk_label_new(NULL);
+    gtk_label_set_markup (GTK_LABEL (timeElapsedLabel),textSize);
+
+    /* creating timer */
+    timeBox = gtk_vbox_new(FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(timeBox), timeElapsedLabel, TRUE, TRUE, 5);
+    gtk_box_pack_start(GTK_BOX(timeBox), buttonBox, FALSE, FALSE, 5);
+
+    timeFrame = gtk_frame_new("");
+    gtk_container_add(GTK_CONTAINER(timeFrame), timeBox);
+    gtk_widget_show(timeElapsedLabel);
+    gtk_widget_show(startButton);
+    gtk_widget_show(resetButton);
+    gtk_widget_show(buttonBox);
+    gtk_widget_show(timeBox);
+    gtk_widget_show(timeFrame);
+
 	/* init containers for "preview" */
 	hbox = gtk_hbox_new(TRUE, 0);
 
 	/* dynamically create all the frames */
-	for (i = 0; i < numframes; i++)
+	/* for (i = 0; i < numframes; i++) */
+	for (i = 0; i < 3; i++)
 	{
 		/* calc the offset for this frame */
 		transIndex = i - (int)((double)numframes / 2.0);
@@ -826,7 +882,18 @@ int main(int argc, char **argv)
 		 * background color */
 		outerevbox = gtk_event_box_new();
 		gtk_container_add(GTK_CONTAINER(outerevbox), frame);
-		gtk_box_pack_start(GTK_BOX(hbox), outerevbox, TRUE, TRUE, 5);
+
+        if(i>0)
+        {
+            gtk_box_pack_start(GTK_BOX(hbox), outerevbox, TRUE, TRUE, 5);
+        } else {
+            leftBox = gtk_vbox_new(FALSE, 5);
+            gtk_box_pack_start(GTK_BOX(leftBox), timeFrame, FALSE, FALSE, 5);
+            gtk_box_pack_start(GTK_BOX(leftBox), outerevbox, TRUE, TRUE, 5);
+            gtk_box_pack_start(GTK_BOX(hbox), leftBox, TRUE, TRUE, 5);
+            gtk_widget_show(leftBox);
+        }
+
 
 		/* make the eventbox "transparent" */
 		gtk_event_box_set_visible_window(GTK_EVENT_BOX(evbox), FALSE);
@@ -853,17 +920,8 @@ int main(int argc, char **argv)
 		g_signal_connect(G_OBJECT(evbox), "size_allocate", G_CALLBACK(onResize), thisport);
 	}
 
-    /* Setting Text size */
-    textSize = g_markup_printf_escaped ("<span font=\"%d\">%s</span>", FONT_SIZE, "00:00");
 
 
-    frame = gtk_frame_new("");
-    timeElapsedLabel = gtk_label_new(NULL);
-    gtk_label_set_markup (GTK_LABEL (timeElapsedLabel),textSize);
-    gtk_container_add(GTK_CONTAINER(frame), timeElapsedLabel);
-    gtk_box_pack_start(GTK_BOX(hbox), frame, TRUE, TRUE, 5);
-    gtk_widget_show(timeElapsedLabel);
-	gtk_widget_show(frame);
 
 	gtk_container_add(GTK_CONTAINER(win_preview), hbox);
 	gtk_widget_show(hbox);
