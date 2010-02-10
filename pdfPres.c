@@ -62,7 +62,7 @@ static gboolean isFullScreen = FALSE;
 
 static GTimer *timer = NULL;
 static int timerMode = 0; /* 0 = stopped, 1 = running, 2 = paused */
-static GtkWidget *startButton, *resetButton;
+static GtkWidget *startButton, *notePad;
 
 
 static GdkColor col_current, col_marked, col_dim;
@@ -666,13 +666,16 @@ int main(int argc, char **argv)
 	FILE *fp;
 	struct stat statbuf;
 	char *databuf;
-	GtkWidget *hbox, *buttonBox, *timeBox, *leftBox;
+	GtkWidget *hbox, *buttonBox, *timeBox, *leftBox, *rightBox;
 	GError *err = NULL;
 	GtkWidget *image, *frame, *evbox, *outerevbox, *timeFrame;
 	GtkWidget *win_preview, *win_beamer;
 	GdkColor black;
-    GtkWidget *timeElapsedLabel;
+    GtkWidget *timeElapsedLabel, *resetButton;
+    GtkWidget *notePadFrame;
     char *textSize;
+    GtkTextBuffer *noteBuffer;
+    GtkTextIter iter;
 
 	struct viewport *thisport;
 
@@ -812,7 +815,7 @@ int main(int argc, char **argv)
 
 
 
-    /* make buttons */
+    /* create buttons */
 	buttonBox = gtk_hbox_new(TRUE, 3);
 
     startButton = gtk_button_new();
@@ -835,12 +838,13 @@ int main(int argc, char **argv)
     timeElapsedLabel = gtk_label_new(NULL);
     gtk_label_set_markup (GTK_LABEL (timeElapsedLabel),textSize);
 
-    /* creating timer */
+    /* create timer */
     timeBox = gtk_vbox_new(FALSE, 5);
     gtk_box_pack_start(GTK_BOX(timeBox), timeElapsedLabel, TRUE, TRUE, 5);
     gtk_box_pack_start(GTK_BOX(timeBox), buttonBox, FALSE, FALSE, 5);
 
     timeFrame = gtk_frame_new("");
+    //gtk_widget_set_size_request(timeFrame, 300, 250);
     gtk_container_add(GTK_CONTAINER(timeFrame), timeBox);
     gtk_widget_show(timeElapsedLabel);
     gtk_widget_show(startButton);
@@ -848,6 +852,19 @@ int main(int argc, char **argv)
     gtk_widget_show(buttonBox);
     gtk_widget_show(timeBox);
     gtk_widget_show(timeFrame);
+
+    /* create note pad */
+    notePadFrame = gtk_frame_new("");
+    notePad = gtk_text_view_new();
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad),TRUE);
+    gtk_widget_set_size_request(notePad, 300, 250);
+    gtk_container_add(GTK_CONTAINER(notePadFrame), notePad);
+
+    noteBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(notePad));
+    gtk_text_buffer_create_tag(noteBuffer, "lmarg", "left_margin", 5, NULL);
+    gtk_text_buffer_create_tag(noteBuffer, "bigsize", "font", "12", NULL);
+    gtk_text_buffer_get_iter_at_offset(noteBuffer, &iter, 0);
+    gtk_text_buffer_insert_with_tags_by_name(noteBuffer, &iter, "This is a description text.\n", -1, "bigsize", "lmarg", NULL);
 
 	/* init containers for "preview" */
 	hbox = gtk_hbox_new(TRUE, 0);
@@ -882,15 +899,30 @@ int main(int argc, char **argv)
 		outerevbox = gtk_event_box_new();
 		gtk_container_add(GTK_CONTAINER(outerevbox), frame);
 
-        if(i>0)
+        if(i == 0)
         {
-            gtk_box_pack_start(GTK_BOX(hbox), outerevbox, TRUE, TRUE, 5);
-        } else {
             leftBox = gtk_vbox_new(FALSE, 5);
-            gtk_box_pack_start(GTK_BOX(leftBox), timeFrame, FALSE, FALSE, 5);
+            gtk_box_pack_start(GTK_BOX(leftBox), notePadFrame, TRUE, TRUE, 5);
             gtk_box_pack_start(GTK_BOX(leftBox), outerevbox, TRUE, TRUE, 5);
             gtk_box_pack_start(GTK_BOX(hbox), leftBox, TRUE, TRUE, 5);
+            gtk_widget_show(notePad);
+            gtk_widget_show(notePadFrame);
             gtk_widget_show(leftBox);
+        }  
+        else 
+        {
+            if(i == numframes-1) 
+            {
+                rightBox = gtk_vbox_new(FALSE, 5);
+                gtk_box_pack_start(GTK_BOX(rightBox), outerevbox, TRUE, TRUE, 5);
+                gtk_box_pack_start(GTK_BOX(rightBox), timeFrame, TRUE, TRUE, 5);
+                gtk_box_pack_start(GTK_BOX(hbox), rightBox, TRUE, TRUE, 5);
+                gtk_widget_show(rightBox);
+            } 
+            else 
+            {
+                gtk_box_pack_start(GTK_BOX(hbox), outerevbox, TRUE, TRUE, 5);
+            }
         }
 
 
