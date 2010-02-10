@@ -61,12 +61,15 @@ static gboolean do_notectrl = FALSE;
 static gboolean isFullScreen = FALSE;
 
 static GTimer *timer = NULL;
+static int timerMode = 0; /* 0 = stopped, 1 = running, 2 = paused */
 
 static GdkColor col_current, col_marked, col_dim;
 
 #define FIT_WIDTH 0
 #define FIT_HEIGHT 1
 #define FIT_PAGE 2
+
+#define FONT_SIZE 50
 static int fitmode = FIT_PAGE;
 
 
@@ -460,44 +463,57 @@ static void toggleFullScreen(void)
 
 }
 
-/* Starts and continues the timer */
-static void startTimer()
+/* Starts, pauses  and continues the timer */
+static void toggleTimer()
 {
-        printf("starting timer");
-        fflush(stdout);
-    timer = g_timer_new();
-    /* if(!timer)
+    switch(timerMode)
     {
-    } else {
-        g_timer_continue (timer);
-    } */
-}
-
-static void stopTimer()
-{
-    g_timer_stop(timer);
+        case 0:
+            timer = g_timer_new();
+            timerMode = 1;
+            break;
+        case 1:
+            g_timer_stop(timer);
+            timerMode = 2;
+            break;
+        case 2:
+            g_timer_continue (timer);
+            timerMode = 1;
+            break;
+    } 
 }
 
 static void resetTimer()
 {
-    g_timer_reset(timer);
+    g_timer_destroy(timer);
+    timerMode = 0;
 }
 
 static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel){
     int timeElapsed;
     char timeToSet[10];
+    char *textSize;
 
 
-    if(timer != NULL){
+    if(timerMode > 0){
         timeElapsed = (int) g_timer_elapsed(timer,NULL);
-        printf("Seconds elapsed: %d\n",timeElapsed);
-        fflush(stdout);
-        //sprintf(timeToSet, "%d", timeElapsed);
+
+        //printf("Seconds elapsed: %d\n",timeElapsed);
+        //fflush(stdout);
+
         int min = (int) timeElapsed/60.0;
         int sec = timeElapsed%60; 
         sprintf(timeToSet, "%02d:%02d", min, sec);
-        gtk_label_set_text(GTK_LABEL(timeElapsedLabel),timeToSet);
+
+        textSize = g_markup_printf_escaped ("<span font=\"%d\">%s</span>", FONT_SIZE, timeToSet);
+        gtk_label_set_markup (GTK_LABEL (timeElapsedLabel),textSize);
+        g_free(textSize);
+    } else {
+        textSize = g_markup_printf_escaped ("<span font=\"%d\">%s</span>", FONT_SIZE, "00:00");
+        gtk_label_set_markup (GTK_LABEL (timeElapsedLabel),textSize);
+        g_free(textSize);
     }
+
     return TRUE;
 }
 
@@ -553,7 +569,11 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_dat
             break;
 
         case GDK_s:
-            startTimer();
+            toggleTimer();
+            break;
+
+        case GDK_r:
+            resetTimer();
             break;
 
 		case GDK_Escape:
@@ -635,6 +655,8 @@ int main(int argc, char **argv)
 	GtkWidget *win_preview, *win_beamer;
 	GdkColor black;
     GtkWidget *timeElapsedLabel;
+    char *textSize;
+
 	struct viewport *thisport;
 
 	gtk_init(&argc, &argv);
@@ -831,11 +853,17 @@ int main(int argc, char **argv)
 		g_signal_connect(G_OBJECT(evbox), "size_allocate", G_CALLBACK(onResize), thisport);
 	}
 
-    //frame = gtk_frame_new("");
-    timeElapsedLabel = gtk_label_new("00:00");
-    //gtk_container_add(GTK_CONTAINER(frame), timeElapsedLabel);
-    gtk_box_pack_start(GTK_BOX(hbox), timeElapsedLabel, TRUE, TRUE, 5);
+    /* Setting Text size */
+    textSize = g_markup_printf_escaped ("<span font=\"%d\">%s</span>", FONT_SIZE, "00:00");
+
+
+    frame = gtk_frame_new("");
+    timeElapsedLabel = gtk_label_new(NULL);
+    gtk_label_set_markup (GTK_LABEL (timeElapsedLabel),textSize);
+    gtk_container_add(GTK_CONTAINER(frame), timeElapsedLabel);
+    gtk_box_pack_start(GTK_BOX(hbox), frame, TRUE, TRUE, 5);
     gtk_widget_show(timeElapsedLabel);
+	gtk_widget_show(frame);
 
 	gtk_container_add(GTK_CONTAINER(win_preview), hbox);
 	gtk_widget_show(hbox);
