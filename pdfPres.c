@@ -688,15 +688,15 @@ int main(int argc, char **argv)
 	{
 		switch (i)
 		{
-//			case 's':
-//				numframes = 2 * atoi(optarg) + 1;
-//				if (numframes <= 1)
-//				{
-//					fprintf(stderr, "Invalid slide count specified.\n");
-//					usage(argv[0]);
-//					exit(EXIT_FAILURE);
-//				}
-//				break;
+			case 's':
+				numframes = 2 * atoi(optarg) + 1;
+				if (numframes <= 1)
+				{
+					fprintf(stderr, "Invalid slide count specified.\n");
+					usage(argv[0]);
+					exit(EXIT_FAILURE);
+				}
+				break;
 
 			case 'w':
 				do_wrapping = TRUE;
@@ -853,8 +853,7 @@ int main(int argc, char **argv)
 	hbox = gtk_hbox_new(TRUE, 0);
 
 	/* dynamically create all the frames */
-	/* for (i = 0; i < numframes; i++) */
-	for (i = 0; i < 3; i++)
+	for (i = 0; i < numframes; i++) 
 	{
 		/* calc the offset for this frame */
 		transIndex = i - (int)((double)numframes / 2.0);
