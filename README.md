@@ -5,8 +5,10 @@ pdfPres is a presentation program for PDF files. It uses a "dual
 head"-layout: One window shows the previous, current and next slides
 while another window only shows the current slide. That additional
 window can be moved to an external screen (such as a beamer) -- use your
-window manager to set this window to fullscreen. Thus, you can present
+window manager to set this window to fullscreen (or press [f]). Thus, you can present
 your slides on a beamer while keeping an eye on what's coming up next.
+
+Keeping an eye on the time during your presentations is now possible with a timer.
 
 Optionally, an external program can be attached via a pipe. The number
 of the slide which is currently shown will be written to that pipe. So,
@@ -34,6 +36,9 @@ Keys
   while still allowing free navigation in the preview window should be
   quite handy. Lock it by pressing [l] and unlock it with a capital [L].
 * In locked mode, press [J] to jump to the currently selected slide.
+* To switch to fullscreen, press [f]. In gnome [F11] does not work.
+* [s] starts the timer, pauses it and continues if paused. [r] resets
+  the timer
 
 
 Launching
