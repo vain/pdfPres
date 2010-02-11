@@ -929,12 +929,7 @@ int main(int argc, char **argv)
     timeFrame = gtk_frame_new("");
     //gtk_widget_set_size_request(timeFrame, 300, 250);
     gtk_container_add(GTK_CONTAINER(timeFrame), timeBox);
-    gtk_widget_show(timeElapsedLabel);
-    gtk_widget_show(startButton);
-    gtk_widget_show(resetButton);
-    gtk_widget_show(buttonBox);
-    gtk_widget_show(timeBox);
-    gtk_widget_show(timeFrame);
+
 
     /* create note pad */
     notePadBox = gtk_vbox_new(FALSE, 5);
@@ -963,11 +958,6 @@ int main(int argc, char **argv)
     gtk_box_pack_start(GTK_BOX(notePadBox), toolbar, FALSE, FALSE, 5);
     gtk_container_add(GTK_CONTAINER(notePadFrame), notePadBox);
 
-    gtk_widget_show(notePad);
-    gtk_widget_show(notePadFrame);
-    gtk_widget_show(GTK_WIDGET(openButton));
-    gtk_widget_show(toolbar);
-    gtk_widget_show(notePadBox);
 
 	/* init containers for "preview" */
 	hbox = gtk_hbox_new(TRUE, 0);
@@ -1008,7 +998,6 @@ int main(int argc, char **argv)
             gtk_box_pack_start(GTK_BOX(leftBox), notePadFrame, TRUE, TRUE, 5);
             gtk_box_pack_start(GTK_BOX(leftBox), outerevbox, TRUE, TRUE, 5);
             gtk_box_pack_start(GTK_BOX(hbox), leftBox, TRUE, TRUE, 5);
-            gtk_widget_show(leftBox);
         }  
         else 
         {
@@ -1018,7 +1007,6 @@ int main(int argc, char **argv)
                 gtk_box_pack_start(GTK_BOX(rightBox), outerevbox, TRUE, TRUE, 5);
                 gtk_box_pack_start(GTK_BOX(rightBox), timeFrame, TRUE, TRUE, 5);
                 gtk_box_pack_start(GTK_BOX(hbox), rightBox, TRUE, TRUE, 5);
-                gtk_widget_show(rightBox);
             } 
             else 
             {
@@ -1030,11 +1018,6 @@ int main(int argc, char **argv)
 		/* make the eventbox "transparent" */
 		gtk_event_box_set_visible_window(GTK_EVENT_BOX(evbox), FALSE);
 
-		/* show 'em all */
-		gtk_widget_show(image);
-		gtk_widget_show(evbox);
-		gtk_widget_show(frame);
-		gtk_widget_show(outerevbox);
 
 		/* save info of this rendering port */
 		thisport = (struct viewport *)malloc(sizeof(struct viewport));
@@ -1056,7 +1039,6 @@ int main(int argc, char **argv)
 
 
 	gtk_container_add(GTK_CONTAINER(win_preview), hbox);
-	gtk_widget_show(hbox);
 
 	/* in order to set the initially highlighted frame */
 	refreshFrames();
@@ -1067,7 +1049,6 @@ int main(int argc, char **argv)
 	gtk_widget_set_size_request(image, 320, 240);
 
 	gtk_container_add(GTK_CONTAINER(win_beamer), image);
-	gtk_widget_show(image);
 
 	/* save info of this rendering port */
 	thisport = (struct viewport *)malloc(sizeof(struct viewport));
@@ -1086,8 +1067,8 @@ int main(int argc, char **argv)
 
 
 	/* show the windows */
-	gtk_widget_show(win_preview);
-	gtk_widget_show(win_beamer);
+	gtk_widget_show_all(win_preview);
+	gtk_widget_show_all(win_beamer);
 
 
 	/* now, as the real gdk window exists, hide mouse cursor in the
