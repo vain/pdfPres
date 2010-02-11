@@ -10,6 +10,10 @@ your slides on a beamer while keeping an eye on what's coming up next.
 
 Keeping an eye on the time during your presentations is now possible with a timer.
 
+Private notes can be viewed in a notepad on the left side. A file containing 
+the notes can be loaded with the appropriate open-icon below the notepad.
+The format of the file is descibed later in this document.
+
 Optionally, an external program can be attached via a pipe. The number
 of the slide which is currently shown will be written to that pipe. So,
 your external program or script can do additional things depending on
@@ -70,7 +74,9 @@ of what you could do ("example" meaning "quick and dirty"):
 
     $ ./pdfPres [-s <slides>] [-w] -n path/to/slides.pdf | ./private-notes.py ~/presentation/my-notes.txt
 
-This will attach the script to pdfPres. Currently, the script expects a
+This will attach the script to pdfPres. 
+
+Currently, the script and the private notes function expect a
 file formatted like this:
 
 	-- 1
