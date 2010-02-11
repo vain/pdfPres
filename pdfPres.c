@@ -543,9 +543,6 @@ static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel){
     if(timerMode > 0){
         timeElapsed = (int) g_timer_elapsed(timer,NULL);
 
-        //printf("Seconds elapsed: %d\n",timeElapsed);
-        //fflush(stdout);
-
         int min = (int) timeElapsed/60.0;
         int sec = timeElapsed%60; 
         sprintf(timeToSet, "%02d:%02d", min, sec);
@@ -757,8 +754,7 @@ int main(int argc, char **argv)
     char *textSize;
 
     GtkWidget *toolbar;
-    GtkToolItem *openButton;
-    GtkToolItem *save;
+    GtkToolItem *openButton; /* ,saveButton; */
 
 	struct viewport *thisport;
 
@@ -927,7 +923,6 @@ int main(int argc, char **argv)
     gtk_box_pack_start(GTK_BOX(timeBox), buttonBox, FALSE, FALSE, 5);
 
     timeFrame = gtk_frame_new("");
-    //gtk_widget_set_size_request(timeFrame, 300, 250);
     gtk_container_add(GTK_CONTAINER(timeFrame), timeBox);
 
 
@@ -952,8 +947,10 @@ int main(int argc, char **argv)
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), openButton, -1);
     g_signal_connect(G_OBJECT(openButton), "clicked", G_CALLBACK(onOpenClicked), NULL);
 
+    /* TODO: implement save functionaltiy. 
     save = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), save, -1);
+    */
 
     gtk_box_pack_start(GTK_BOX(notePadBox), toolbar, FALSE, FALSE, 5);
     gtk_container_add(GTK_CONTAINER(notePadFrame), notePadBox);
