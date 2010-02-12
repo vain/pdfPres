@@ -110,6 +110,8 @@ static void printNote(int slideNum)
         word = strtok( tempLine, "\n" );
         if(word != NULL && atoi(word) == slideNum)
         {
+            printf("Slide %s:\n",word);
+            printf("%s\n",line);
             gtk_text_buffer_get_iter_at_offset(noteBuffer, &iter, 0);
             gtk_text_buffer_insert_with_tags_by_name(noteBuffer, &iter, "Slide ", -1, "bigsize", "lmarg", NULL);
             gtk_text_buffer_insert_with_tags_by_name(noteBuffer, &iter, line, -1, "bigsize", "lmarg", NULL);
@@ -169,12 +171,15 @@ static void renderToPixbuf(struct viewport *pp)
 	 * which can show notes for a specific slide. simply pipe the
 	 * output of pdfPres to your other tool.
 	 */
-	if (pp->offset == 0 && !pp->isBeamer && do_notectrl)
+	if (pp->offset == 0 && !pp->isBeamer)
 	{
-		printf("%d\n", doc_page + 1);
-		fflush(stdout);
+        printNote(doc_page + 1);
+        if(do_notectrl)
+        {
+            printf("%d\n", doc_page + 1);
+            fflush(stdout);
+        }
 	}
-    printNote(doc_page + 1);
 
 	/* pixbuf still cached? */
 	if (pp->cache != NULL)
