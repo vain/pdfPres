@@ -47,6 +47,8 @@ struct viewport
 };
 
 static GList *ports = NULL;
+static GtkWidget *win_preview = NULL;
+static GtkWidget *win_beamer = NULL;
 
 static PopplerDocument *doc;
 
@@ -504,21 +506,22 @@ static void toggleCurserVisibility()
 
 static void toggleFullScreen(void)
 {
-	GList *p = NULL;
-	struct viewport *beamerPort = NULL;
+	/* Could happen right after startup ... dunno, better check it. */
+	if (win_beamer == NULL)
+		return;
 
-    /* Assuming that beamer port is the last item in Glist */
-	p = g_list_last(ports);
-	beamerPort = (struct viewport *)(p->data);
-
-
-    if(isFullScreen == FALSE){
-        gdk_window_fullscreen(gtk_widget_get_window(gtk_widget_get_parent(beamerPort->image)));
-        isFullScreen = TRUE;
-    } else {
-        gdk_window_unfullscreen(gtk_widget_get_window(gtk_widget_get_parent(beamerPort->image)));
-        isFullScreen = FALSE;
-    }
+	/* We have global reference to the beamer window, so we know exactly
+	 * on which object fullscreen must be toggled. */
+	if (isFullScreen == FALSE)
+	{
+		gdk_window_fullscreen(gtk_widget_get_window(win_beamer));
+		isFullScreen = TRUE;
+	}
+	else
+	{
+		gdk_window_unfullscreen(gtk_widget_get_window(win_beamer));
+		isFullScreen = FALSE;
+	}
 }
 
 /* Starts, pauses  and continues the timer */
@@ -771,7 +774,6 @@ int main(int argc, char **argv)
 	GtkWidget *hbox, *buttonBox, *timeBox, *notePadBox, *leftBox, *rightBox;
 	GError *err = NULL;
 	GtkWidget *image, *frame, *evbox, *outerevbox, *timeFrame;
-	GtkWidget *win_preview, *win_beamer;
 	GdkColor black;
     GtkWidget *timeElapsedLabel, *resetButton;
     GtkWidget *notePadFrame, *notePad;
