@@ -560,8 +560,8 @@ static void resetTimer()
 
 static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel){
     int timeElapsed;
-    char timeToSet[10];
-    char *textSize;
+    gchar *timeToSet = NULL;
+    gchar *textSize = NULL;
 
 
     if(timerMode > 0){
@@ -569,11 +569,12 @@ static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel){
 
         int min = (int) timeElapsed/60.0;
         int sec = timeElapsed%60; 
-        sprintf(timeToSet, "%02d:%02d", min, sec);
+        timeToSet = g_strdup_printf("%02d:%02d", min, sec);
 
         textSize = g_markup_printf_escaped ("<span font=\"%d\">%s</span>", FONT_SIZE, timeToSet);
         gtk_label_set_markup (GTK_LABEL (timeElapsedLabel),textSize);
         g_free(textSize);
+        g_free(timeToSet);
     } else {
         textSize = g_markup_printf_escaped ("<span font=\"%d\">%s</span>", FONT_SIZE, "00:00");
         gtk_label_set_markup (GTK_LABEL (timeElapsedLabel),textSize);
@@ -778,7 +779,7 @@ int main(int argc, char **argv)
 	GdkColor black;
     GtkWidget *timeElapsedLabel, *resetButton;
     GtkWidget *notePadFrame, *notePad;
-    char *textSize;
+    gchar *textSize;
 
     GtkWidget *toolbar;
     GtkToolItem *openButton; /* ,saveButton; */
@@ -943,6 +944,7 @@ int main(int argc, char **argv)
     textSize = g_markup_printf_escaped ("<span font=\"%d\">%s</span>", FONT_SIZE, "00:00");
     timeElapsedLabel = gtk_label_new(NULL);
     gtk_label_set_markup (GTK_LABEL (timeElapsedLabel),textSize);
+	g_free(textSize);
 
     /* create timer */
     timeBox = gtk_vbox_new(FALSE, 5);
