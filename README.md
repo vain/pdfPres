@@ -10,6 +10,9 @@ your slides on a beamer while keeping an eye on what's coming up next.
 
 Keeping an eye on the time during your presentations is now possible with a timer.
 
+The visibility of the cursor in the presentation window is disabled by default. 
+In case there is no pointing device available the cursor can be set to visible.
+
 Optionally, an external program can be attached via a pipe. The number
 of the slide which is currently shown will be written to that pipe. So,
 your external program or script can do additional things depending on
@@ -39,6 +42,7 @@ Keys
 * To switch to fullscreen, press [f]. In gnome [F11] does not work.
 * [s] starts the timer, pauses it and continues if paused. [r] resets
   the timer
+* [c] toggles cursor visibility in presentation window.
 
 
 Launching

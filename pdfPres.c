@@ -60,6 +60,7 @@ static gboolean do_wrapping = FALSE;
 static gboolean do_notectrl = FALSE;
 
 static gboolean isFullScreen = FALSE;
+static gboolean isCurserVisible = FALSE;
 
 static GTimer *timer = NULL;
 static int timerMode = 0; /* 0 = stopped, 1 = running, 2 = paused */
@@ -481,6 +482,26 @@ static void prevSlide(void)
 	}
 }
 
+static void toggleCurserVisibility()
+{
+	GList *p = NULL;
+	struct viewport *beamerPort = NULL;
+
+    /* Assuming that beamer port is the last item in Glist */
+	p = g_list_last(ports);
+	beamerPort = (struct viewport *)(p->data);
+
+    if(isCurserVisible == FALSE){
+        gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(gtk_widget_get_parent(beamerPort->image))),
+			gdk_cursor_new(GDK_ARROW));
+        isCurserVisible = TRUE;
+    } else {
+        gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(gtk_widget_get_parent(beamerPort->image))),
+			gdk_cursor_new(GDK_BLANK_CURSOR));
+        isCurserVisible = FALSE;
+    }
+}
+
 static void toggleFullScreen(void)
 {
 	GList *p = NULL;
@@ -498,7 +519,6 @@ static void toggleFullScreen(void)
         gdk_window_unfullscreen(gtk_widget_get_window(gtk_widget_get_parent(beamerPort->image)));
         isFullScreen = FALSE;
     }
-
 }
 
 /* Starts, pauses  and continues the timer */
@@ -668,6 +688,10 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_dat
 
         case GDK_s:
             toggleTimer();
+            break;
+
+        case GDK_c:
+            toggleCurserVisibility();
             break;
 
         case GDK_r:
