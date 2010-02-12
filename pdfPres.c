@@ -598,7 +598,9 @@ static void readNotes(char *filename)
 		exit(EXIT_FAILURE);
 	}
 
-	databuf = (char *)malloc(statbuf.st_size);
+	/* allocate one additional byte so that we can store a null
+	 * terminator. */
+	databuf = (char *)malloc(statbuf.st_size + 1);
 	dieOnNull(databuf, __LINE__);
 
 	fp = fopen(filename, "r");
@@ -615,6 +617,10 @@ static void readNotes(char *filename)
 	}
 
 	fclose(fp);
+
+	/* terminate the string. otherwise, g_strsplit won't be able to
+	 * determine where it ends. */
+	databuf[statbuf.st_size] = 0;
 
 	/* if there were some notes before, kill em. */
 	if (notes != NULL)
