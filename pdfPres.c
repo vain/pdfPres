@@ -927,12 +927,12 @@ int main(int argc, char **argv)
     startButton = gtk_button_new();
     gtk_widget_set_size_request(startButton, 70, 30);
     gtk_button_set_label(GTK_BUTTON(startButton), "Start");
-	g_signal_connect(G_OBJECT(startButton), "button_release_event", G_CALLBACK(toggleTimer), NULL);
+	g_signal_connect(G_OBJECT(startButton), "clicked", G_CALLBACK(toggleTimer), NULL);
 
     resetButton = gtk_button_new();
     gtk_widget_set_size_request(resetButton, 70, 30);
     gtk_button_set_label(GTK_BUTTON(resetButton), "Reset");
-	g_signal_connect(G_OBJECT(resetButton), "button_release_event", G_CALLBACK(resetTimer), NULL);
+	g_signal_connect(G_OBJECT(resetButton), "clicked", G_CALLBACK(resetTimer), NULL);
 
     gtk_box_pack_start(GTK_BOX(buttonBox), startButton, FALSE, FALSE, 5);
     gtk_box_pack_start(GTK_BOX(buttonBox), resetButton, FALSE, FALSE, 5);
