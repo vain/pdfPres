@@ -957,8 +957,10 @@ int main(int argc, char **argv)
     notePadBox = gtk_vbox_new(FALSE, 2);
     notePadFrame = gtk_frame_new("");
     notePad = gtk_text_view_new();
-    gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad),FALSE);
-    //gtk_widget_set_size_request(notePad, -1, 250);
+    gtk_box_pack_start(GTK_BOX(notePadBox), notePad, FALSE, FALSE, 2);
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad),TRUE);
+    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(notePad),GTK_WRAP_WORD);
+    //gtk_widget_set_size_request(notePad, 300, 250);
     gtk_box_pack_start(GTK_BOX(notePadBox), notePad, FALSE, FALSE, 2);
 
     noteBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(notePad));
