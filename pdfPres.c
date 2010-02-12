@@ -486,22 +486,23 @@ static void prevSlide(void)
 
 static void toggleCurserVisibility()
 {
-	GList *p = NULL;
-	struct viewport *beamerPort = NULL;
+	/* Could happen right after startup ... dunno, better check it. */
+	if (win_beamer == NULL)
+		return;
 
-    /* Assuming that beamer port is the last item in Glist */
-	p = g_list_last(ports);
-	beamerPort = (struct viewport *)(p->data);
-
-    if(isCurserVisible == FALSE){
-        gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(gtk_widget_get_parent(beamerPort->image))),
-			gdk_cursor_new(GDK_ARROW));
-        isCurserVisible = TRUE;
-    } else {
-        gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(gtk_widget_get_parent(beamerPort->image))),
-			gdk_cursor_new(GDK_BLANK_CURSOR));
-        isCurserVisible = FALSE;
-    }
+	/* Toggle cursor visibility on beamer window. */
+	if (isCurserVisible == FALSE)
+	{
+		gdk_window_set_cursor(gtk_widget_get_window(win_beamer),
+				gdk_cursor_new(GDK_ARROW));
+		isCurserVisible = TRUE;
+	}
+	else
+	{
+		gdk_window_set_cursor(gtk_widget_get_window(win_beamer),
+				gdk_cursor_new(GDK_BLANK_CURSOR));
+		isCurserVisible = FALSE;
+	}
 }
 
 static void toggleFullScreen(void)
