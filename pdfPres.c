@@ -771,7 +771,7 @@ int main(int argc, char **argv)
 	FILE *fp;
 	struct stat statbuf;
 	char *databuf;
-	GtkWidget *hbox, *buttonBox, *timeBox, *notePadBox, *table;
+	GtkWidget *buttonBox, *timeBox, *notePadBox, *table;
 	GError *err = NULL;
 	GtkWidget *image, *frame, *evbox, *outerevbox, *timeFrame;
 	GtkWidget *win_preview, *win_beamer;
@@ -957,11 +957,9 @@ int main(int argc, char **argv)
     notePadBox = gtk_vbox_new(FALSE, 2);
     notePadFrame = gtk_frame_new("");
     notePad = gtk_text_view_new();
-    gtk_box_pack_start(GTK_BOX(notePadBox), notePad, FALSE, FALSE, 2);
     gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad),TRUE);
     gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(notePad),GTK_WRAP_WORD);
-    //gtk_widget_set_size_request(notePad, 300, 250);
-    gtk_box_pack_start(GTK_BOX(notePadBox), notePad, FALSE, FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(notePadBox), notePad, TRUE, TRUE, 2);
 
     noteBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(notePad));
     gtk_text_buffer_create_tag(noteBuffer, "lmarg", "left_margin", 5, NULL);
@@ -987,6 +985,7 @@ int main(int argc, char **argv)
 
 	/* init containers for "preview" */
 	table = gtk_table_new(numframes, numframes+1, TRUE);
+    gtk_table_set_col_spacings(GTK_TABLE(table), 5);
 
 	/* dynamically create all the frames */
 	for (i = 0; i < numframes; i++) 
@@ -1020,7 +1019,7 @@ int main(int argc, char **argv)
 
         if(i == 0)
         {
-            gtk_table_attach_defaults(GTK_TABLE(table),notePadFrame, 0,1,0,3);
+            gtk_table_attach_defaults(GTK_TABLE(table),notePadFrame, 0,1,0,numframes-1);
             gtk_table_attach_defaults(GTK_TABLE(table),outerevbox, 0,1,numframes-1,numframes);
         }  
         else 
