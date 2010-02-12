@@ -75,8 +75,7 @@ static GdkColor col_current, col_marked, col_dim;
 #define FIT_HEIGHT 1
 #define FIT_PAGE 2
 
-//#define FONT_SIZE 50
-#define FONT_SIZE 20
+#define FONT_SIZE 35
 static int fitmode = FIT_PAGE;
 
 
