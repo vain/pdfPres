@@ -75,7 +75,8 @@ static GdkColor col_current, col_marked, col_dim;
 #define FIT_HEIGHT 1
 #define FIT_PAGE 2
 
-#define FONT_SIZE 50
+//#define FONT_SIZE 50
+#define FONT_SIZE 20
 static int fitmode = FIT_PAGE;
 
 
@@ -416,6 +417,7 @@ static void nextSlide(void)
 	a = g_list_previous(a);
 	aPort = (struct viewport *)(a->data);
 	aPort->cache = NULL;
+    clearAllCaches();
 }
 
 static void prevSlide(void)
@@ -480,6 +482,7 @@ static void prevSlide(void)
 		aPort = (struct viewport *)(a->data);
 		aPort->cache = NULL;
 	}
+    clearAllCaches();
 }
 
 static void toggleCurserVisibility()
@@ -768,7 +771,7 @@ int main(int argc, char **argv)
 	FILE *fp;
 	struct stat statbuf;
 	char *databuf;
-	GtkWidget *hbox, *buttonBox, *timeBox, *notePadBox, *leftBox, *rightBox;
+	GtkWidget *hbox, *buttonBox, *timeBox, *notePadBox, *table;
 	GError *err = NULL;
 	GtkWidget *image, *frame, *evbox, *outerevbox, *timeFrame;
 	GtkWidget *win_preview, *win_beamer;
@@ -951,12 +954,12 @@ int main(int argc, char **argv)
 
 
     /* create note pad */
-    notePadBox = gtk_vbox_new(FALSE, 5);
+    notePadBox = gtk_vbox_new(FALSE, 2);
     notePadFrame = gtk_frame_new("");
     notePad = gtk_text_view_new();
-    gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad),TRUE);
-    gtk_widget_set_size_request(notePad, 300, 250);
-    gtk_box_pack_start(GTK_BOX(notePadBox), notePad, FALSE, FALSE, 5);
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad),FALSE);
+    //gtk_widget_set_size_request(notePad, -1, 250);
+    gtk_box_pack_start(GTK_BOX(notePadBox), notePad, FALSE, FALSE, 2);
 
     noteBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(notePad));
     gtk_text_buffer_create_tag(noteBuffer, "lmarg", "left_margin", 5, NULL);
@@ -976,12 +979,12 @@ int main(int argc, char **argv)
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), save, -1);
     */
 
-    gtk_box_pack_start(GTK_BOX(notePadBox), toolbar, FALSE, FALSE, 5);
+    gtk_box_pack_start(GTK_BOX(notePadBox), toolbar, FALSE, FALSE, 2);
     gtk_container_add(GTK_CONTAINER(notePadFrame), notePadBox);
 
 
 	/* init containers for "preview" */
-	hbox = gtk_hbox_new(TRUE, 0);
+	table = gtk_table_new(numframes, numframes+1, TRUE);
 
 	/* dynamically create all the frames */
 	for (i = 0; i < numframes; i++) 
@@ -1015,26 +1018,36 @@ int main(int argc, char **argv)
 
         if(i == 0)
         {
-            leftBox = gtk_vbox_new(FALSE, 5);
-            gtk_box_pack_start(GTK_BOX(leftBox), notePadFrame, TRUE, TRUE, 5);
-            gtk_box_pack_start(GTK_BOX(leftBox), outerevbox, TRUE, TRUE, 5);
-            gtk_box_pack_start(GTK_BOX(hbox), leftBox, TRUE, TRUE, 5);
+            gtk_table_attach_defaults(GTK_TABLE(table),notePadFrame, 0,1,0,3);
+            gtk_table_attach_defaults(GTK_TABLE(table),outerevbox, 0,1,numframes-1,numframes);
         }  
         else 
         {
             if(i == numframes-1) 
             {
-                rightBox = gtk_vbox_new(FALSE, 5);
-                gtk_box_pack_start(GTK_BOX(rightBox), outerevbox, TRUE, TRUE, 5);
-                gtk_box_pack_start(GTK_BOX(rightBox), timeFrame, TRUE, TRUE, 5);
-                gtk_box_pack_start(GTK_BOX(hbox), rightBox, TRUE, TRUE, 5);
+                gtk_table_attach_defaults(GTK_TABLE(table),outerevbox, numframes,numframes+1,0,1);
+                gtk_table_attach_defaults(GTK_TABLE(table),timeFrame, numframes,numframes+1,numframes-1,numframes);
             } 
             else 
             {
-                gtk_box_pack_start(GTK_BOX(hbox), outerevbox, TRUE, TRUE, 5);
+                if(i == (int) (numframes/2) )
+                {
+                    gtk_table_attach_defaults(GTK_TABLE(table),outerevbox, i,i+2,0,numframes);
+                }
+                else
+                {
+                    if(i < (int) (numframes/2))
+                    {
+                        gtk_table_attach_defaults(GTK_TABLE(table),outerevbox, i,i+1,numframes-i-1,numframes-i);
+                    }
+                    else
+                    {
+                        gtk_table_attach_defaults(GTK_TABLE(table),outerevbox, i+1,i+2,numframes-i-1,numframes-i);
+                    }
+                }
             }
         }
-
+        fflush(stdout);
 
 		/* make the eventbox "transparent" */
 		gtk_event_box_set_visible_window(GTK_EVENT_BOX(evbox), FALSE);
@@ -1059,7 +1072,7 @@ int main(int argc, char **argv)
 
 
 
-	gtk_container_add(GTK_CONTAINER(win_preview), hbox);
+	gtk_container_add(GTK_CONTAINER(win_preview), table);
 
 	/* in order to set the initially highlighted frame */
 	refreshFrames();
