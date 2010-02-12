@@ -68,7 +68,7 @@ static GTimer *timer = NULL;
 static int timerMode = 0; /* 0 = stopped, 1 = running, 2 = paused */
 static GtkWidget *startButton;
 static GtkTextBuffer *noteBuffer;
-static char **notes;
+static gchar **notes = NULL;
 
 
 static GdkColor col_current, col_marked, col_dim;
@@ -94,7 +94,7 @@ static void dieOnNull(void *ptr, int line)
 
 static void printNote(int slideNum)
 {
-    char *line, *tempLine, *word;
+    int thatSlide = -1;
     int i;
     GtkTextIter iter;
 
@@ -107,17 +107,14 @@ static void printNote(int slideNum)
 
     for(i=0;i<g_strv_length(notes);i++)
     {
-        line = notes[i];
-        tempLine = g_strdup(line);
-        word = strtok( tempLine, "\n" );
-        if(word != NULL && atoi(word) == slideNum)
+        sscanf(notes[i], "%d\n", &thatSlide);
+        if (thatSlide == slideNum)
         {
             gtk_text_buffer_get_iter_at_offset(noteBuffer, &iter, 0);
             gtk_text_buffer_insert_with_tags_by_name(noteBuffer, &iter, "Slide ", -1, "bigsize", "lmarg", NULL);
-            gtk_text_buffer_insert_with_tags_by_name(noteBuffer, &iter, line, -1, "bigsize", "lmarg", NULL);
-            continue;
+            gtk_text_buffer_insert_with_tags_by_name(noteBuffer, &iter, notes[i], -1, "bigsize", "lmarg", NULL);
+            return;
         }
-        g_free(tempLine);
     }
 
 }
@@ -176,6 +173,8 @@ static void renderToPixbuf(struct viewport *pp)
 		printf("%d\n", doc_page + 1);
 		fflush(stdout);
 	}
+
+	/* update the local notes widget in any case. */
     printNote(doc_page + 1);
 
 	/* pixbuf still cached? */
@@ -617,8 +616,15 @@ static void readNotes(char *filename)
 
 	fclose(fp);
 
+	/* if there were some notes before, kill em. */
+	if (notes != NULL)
+		g_strfreev(notes);
+
     notes = g_strsplit(databuf,"-- ",0);
     printNote(doc_page + 1);
+
+	/* that buffer isn't needed anymore: */
+	free(databuf);
 }
 
 static void onOpenClicked(GtkWidget *widget, gpointer data)
