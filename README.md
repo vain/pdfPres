@@ -10,6 +10,9 @@ your slides on a beamer while keeping an eye on what's coming up next.
 
 Keeping an eye on the time during your presentations is now possible with a timer.
 
+The visibility of the cursor in the presentation window is disabled by default. 
+In case there is no pointing device available the cursor can be set to visible.
+
 Private notes can be viewed in a notepad on the left side. A file containing 
 the notes can be loaded with the appropriate open-icon below the notepad.
 The format of the file is descibed later in this document.
@@ -43,6 +46,7 @@ Keys
 * To switch to fullscreen, press [f]. In gnome [F11] does not work.
 * [s] starts the timer, pauses it and continues if paused. [r] resets
   the timer
+* [c] toggles cursor visibility in presentation window.
 
 
 Launching
