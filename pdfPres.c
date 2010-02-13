@@ -42,6 +42,8 @@ struct viewport
 	GtkWidget *frame;
 
 	GdkPixbuf *cache;
+	GdkPixbuf *cacheNext;
+	GdkPixbuf *cachePrev;
 
 	gboolean isBeamer;
 };
@@ -119,14 +121,77 @@ static void printNote(int slideNum)
 
 }
 
-static void renderToPixbuf(struct viewport *pp)
+static GdkPixbuf * renderRawBuffer(struct viewport *pp, int mypage_i)
 {
-	int mypage_i, myfitmode;
+	int myfitmode = -1;
 	double pw = 0, ph = 0;
 	double w = 0, h = 0;
 	double page_ratio = 1, screen_ratio = 1, scale = 1;
 	GdkPixbuf *targetBuf = NULL;
 	PopplerPage *page = NULL;
+
+	/* limit boundaries of mypage_i -- just to be sure. */
+	if (mypage_i < 0)
+		mypage_i += doc_n_pages;
+	else
+		mypage_i %= doc_n_pages;
+
+	/* get this page and its ratio */
+	page = poppler_document_get_page(doc, mypage_i);
+	poppler_page_get_size(page, &pw, &ph);
+	page_ratio = pw / ph;
+	screen_ratio = (double)pp->width / (double)pp->height;
+
+	/* select fit mode */
+	if (fitmode == FIT_PAGE)
+	{
+		/* that's it: compare screen and page ratio. this
+		 * will cover all 4 cases that could happen. */
+		if (screen_ratio > page_ratio)
+			myfitmode = FIT_HEIGHT;
+		else
+			myfitmode = FIT_WIDTH;
+	}
+	else
+		myfitmode = fitmode;
+
+	switch (myfitmode)
+	{
+		case FIT_HEIGHT:
+			h = pp->height;
+			w = h * page_ratio;
+			scale = h / ph;
+			break;
+
+		case FIT_WIDTH:
+			w = pp->width;
+			h = w / page_ratio;
+			scale = w / pw;
+			break;
+	}
+
+	/* render to a pixbuf */
+	targetBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, w, h);
+	dieOnNull(targetBuf, __LINE__);
+	poppler_page_render_to_pixbuf(page, 0, 0, w, h, scale, 0, targetBuf);
+
+	/* cleanup */
+	g_object_unref(G_OBJECT(page));
+
+	return targetBuf;
+}
+
+static int pagenumForPort(struct viewport *pp)
+{
+	if (pp->isBeamer == FALSE)
+		return doc_page + pp->offset;
+	else
+		return doc_page_beamer + pp->offset;
+}
+
+static void renderToPixbuf(struct viewport *pp)
+{
+	int mypage_i;
 	gchar *title = NULL;
 
 	/* no valid target size? */
@@ -134,10 +199,7 @@ static void renderToPixbuf(struct viewport *pp)
 		return;
 
 	/* decide which page to render - if any */
-	if (pp->isBeamer == FALSE)
-		mypage_i = doc_page + pp->offset;
-	else
-		mypage_i = doc_page_beamer + pp->offset;
+	mypage_i = pagenumForPort(pp);
 
 	if (mypage_i < 0 || mypage_i >= doc_n_pages)
 	{
@@ -178,60 +240,12 @@ static void renderToPixbuf(struct viewport *pp)
         }
 	}
 
-	/* pixbuf still cached? */
-	if (pp->cache != NULL)
-	{
-		gtk_image_set_from_pixbuf(GTK_IMAGE(pp->image), pp->cache);
-		return;
-	}
+	/* check if current page is already rendered. if not, do it now. */
+	if (pp->cache == NULL)
+		pp->cache = renderRawBuffer(pp, mypage_i);
 
-	/* cache is empty. we have to render from scratch. */
-
-	/* get this page and its ratio */
-	page = poppler_document_get_page(doc, mypage_i);
-	poppler_page_get_size(page, &pw, &ph);
-	page_ratio = pw / ph;
-	screen_ratio = (double)pp->width / (double)pp->height;
-
-	/* select fit mode */
-	if (fitmode == FIT_PAGE)
-	{
-		/* that's it: compare screen and page ratio. this
-		 * will cover all 4 cases that could happen. */
-		if (screen_ratio > page_ratio)
-			myfitmode = FIT_HEIGHT;
-		else
-			myfitmode = FIT_WIDTH;
-	}
-	else
-		myfitmode = fitmode;
-
-	switch (myfitmode)
-	{
-		case FIT_HEIGHT:
-			h = pp->height;
-			w = h * page_ratio;
-			scale = h / ph;
-			break;
-
-		case FIT_WIDTH:
-			w = pp->width;
-			h = w / page_ratio;
-			scale = w / pw;
-			break;
-	}
-
-	/* render to a pixbuf */
-	targetBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, w, h);
-	dieOnNull(targetBuf, __LINE__);
-
-	poppler_page_render_to_pixbuf(page, 0, 0, w, h, scale, 0, targetBuf);
-	gtk_image_set_from_pixbuf(GTK_IMAGE(pp->image), targetBuf);
-
-	g_object_unref(G_OBJECT(page));
-
-	/* cache the rendered pixbuf */
-	pp->cache = targetBuf;
+	/* display the current page. */
+	gtk_image_set_from_pixbuf(GTK_IMAGE(pp->image), pp->cache);
 }
 
 static void refreshFrames(void)
@@ -279,7 +293,9 @@ static void refreshPorts(void)
 {
 	struct viewport *pp = NULL;
 	GList *it = ports;
+	int mypage_i = -1;
 
+	/* display. */
 	while (it)
 	{
 		pp = (struct viewport *)(it->data);
@@ -288,6 +304,29 @@ static void refreshPorts(void)
 	}
 
 	refreshFrames();
+
+	/* TODO: Remove me. */
+	printf("displayed.\n");
+
+	/* trigger prerendering of next slides. */
+	/* TODO: This must be done in the next idle phase. */
+	it = ports;
+	while (it)
+	{
+		pp = (struct viewport *)(it->data);
+		mypage_i = pagenumForPort(pp);
+
+		/* check which caches need to be rendered. */
+		if (pp->cacheNext == NULL)
+			pp->cacheNext = renderRawBuffer(pp, mypage_i + 1);
+		if (pp->cachePrev == NULL)
+			pp->cachePrev = renderRawBuffer(pp, mypage_i - 1);
+
+		it = g_list_next(it);
+	}
+
+	/* TODO: Remove me. */
+	printf("prerendered.\n");
 }
 
 static void clearAllCaches(void)
@@ -301,8 +340,15 @@ static void clearAllCaches(void)
 
 		if (pp->cache != NULL)
 			gdk_pixbuf_unref(pp->cache);
-
 		pp->cache = NULL;
+
+		if (pp->cacheNext != NULL)
+			gdk_pixbuf_unref(pp->cacheNext);
+		pp->cacheNext = NULL;
+
+		if (pp->cachePrev != NULL)
+			gdk_pixbuf_unref(pp->cachePrev);
+		pp->cachePrev = NULL;
 
 		it = g_list_next(it);
 	}
@@ -345,25 +391,11 @@ static void current_release(gboolean jump)
 
 static void nextSlide(void)
 {
-	/* a note on caching:
-	 *
-	 * every viewport holds a pointer to a pixbuf. if we
-	 * change to another slide, those pointers will be
-	 * exchanged so that already existing images won't
-	 * get rendered again.
-	 *
-	 * we do NOT have to care about over- or underruns.
-	 * every viewport will see for itself if it's about
-	 * to render a valid page or not.
-	 *
-	 * so all we have to do is exchange the pointers and
-	 * clear those which *must* be rendered.
-	 */
-
 	int i;
-	GList *a = NULL, *b = NULL;
-	struct viewport *aPort = NULL, *bPort = NULL;
+	GList *entry = NULL;
+	struct viewport *ePort = NULL;
 
+	/* stop if we're at the end and wrapping is disabled. */
 	if (!do_wrapping)
 	{
 		if (doc_page == doc_n_pages - 1)
@@ -380,53 +412,30 @@ static void nextSlide(void)
 	if (beamer_active == TRUE)
 		doc_page_beamer = doc_page;
 
-	/* important! unref unused pixbufs:
-	 * - the very first frame to the left
-	 * - the cache of the beamer port (only if active)
-	 */
-	a = g_list_first(ports);
-	aPort = (struct viewport *)(a->data);
-	if (aPort->cache != NULL)
-		gdk_pixbuf_unref(aPort->cache);
-
-	a = g_list_last(ports);
-	aPort = (struct viewport *)(a->data);
-	if (aPort->cache != NULL && beamer_active == TRUE)
-		gdk_pixbuf_unref(aPort->cache);
-
-	/* update cache - we expect the g_list to be ordered.
-	 * hence, we can omit the very last item which is
-	 * the beamer port. */
-	for (i = 0; i < g_list_length(ports) - 2; i++)
+	/* update all caches. simply shift the pointers. */
+	for (i = 0; i < g_list_length(ports); i++)
 	{
-		a = g_list_nth(ports, i);
-		b = g_list_nth(ports, i + 1);
+		entry = g_list_nth(ports, i);
+		ePort = (struct viewport *)(entry->data);
 
-		aPort = (struct viewport *)(a->data);
-		bPort = (struct viewport *)(b->data);
+		/* unref pixbuf that will get lost. */
+		if (ePort->cachePrev != NULL)
+			gdk_pixbuf_unref(ePort->cachePrev);
 
-		aPort->cache = bPort->cache;
+		/* shift pointers. */
+		ePort->cachePrev = ePort->cache;
+		ePort->cache     = ePort->cacheNext;
+		ePort->cacheNext = NULL;
 	}
-
-	/* clear the last two caches: the beamer port and
-	 * the preview frame to the very right. */
-	a = g_list_last(ports);
-	aPort = (struct viewport *)(a->data);
-	if (beamer_active == TRUE)
-		aPort->cache = NULL;
-
-	a = g_list_previous(a);
-	aPort = (struct viewport *)(a->data);
-	aPort->cache = NULL;
-    clearAllCaches();
 }
 
 static void prevSlide(void)
 {
 	int i;
-	GList *a = NULL, *b = NULL;
-	struct viewport *aPort = NULL, *bPort = NULL;
+	GList *entry = NULL;
+	struct viewport *ePort = NULL;
 
+	/* stop if we're at the beginning and wrapping is disabled. */
 	if (!do_wrapping)
 	{
 		if (doc_page == 0)
@@ -443,47 +452,21 @@ static void prevSlide(void)
 	if (beamer_active == TRUE)
 		doc_page_beamer = doc_page;
 
-	/* important! unref unused pixbufs:
-	 * - the cache of the beamer port (only if active)
-	 * - the very last frame to the right
-	 */
-	a = g_list_last(ports);
-	aPort = (struct viewport *)(a->data);
-	if (aPort->cache != NULL && beamer_active == TRUE)
-		gdk_pixbuf_unref(aPort->cache);
-
-	a = g_list_previous(a);
-	aPort = (struct viewport *)(a->data);
-	if (aPort->cache != NULL)
-		gdk_pixbuf_unref(aPort->cache);
-
-	/* update cache - we expect the g_list to be ordered.
-	 * hence, we can omit the very last item which is
-	 * the beamer port. */
-	for (i = g_list_length(ports) - 3; i >= 0; i--)
+	/* update all caches. simply shift the pointers. */
+	for (i = 0; i < g_list_length(ports); i++)
 	{
-		a = g_list_nth(ports, i);
-		b = g_list_nth(ports, i + 1);
+		entry = g_list_nth(ports, i);
+		ePort = (struct viewport *)(entry->data);
 
-		aPort = (struct viewport *)(a->data);
-		bPort = (struct viewport *)(b->data);
+		/* unref pixbuf that will get lost. */
+		if (ePort->cacheNext != NULL)
+			gdk_pixbuf_unref(ePort->cacheNext);
 
-		bPort->cache = aPort->cache;
+		/* shift pointers. */
+		ePort->cacheNext = ePort->cache;
+		ePort->cache     = ePort->cachePrev;
+		ePort->cachePrev = NULL;
 	}
-
-	/* clear cache of the first item */
-	a = g_list_first(ports);
-	aPort = (struct viewport *)(a->data);
-	aPort->cache = NULL;
-
-	/* clear the beamer cache if active */
-	if (beamer_active == TRUE)
-	{
-		a = g_list_last(ports);
-		aPort = (struct viewport *)(a->data);
-		aPort->cache = NULL;
-	}
-    clearAllCaches();
 }
 
 static void toggleCurserVisibility()
@@ -769,8 +752,15 @@ static void onResize(GtkWidget *widg, GtkAllocation *al, struct viewport *port)
 		/* clear cache */
 		if (port->cache != NULL)
 			gdk_pixbuf_unref(port->cache);
-
 		port->cache = NULL;
+
+		if (port->cacheNext != NULL)
+			gdk_pixbuf_unref(port->cacheNext);
+		port->cacheNext = NULL;
+
+		if (port->cachePrev != NULL)
+			gdk_pixbuf_unref(port->cachePrev);
+		port->cachePrev = NULL;
 
 		renderToPixbuf(port);
 	}
@@ -1078,6 +1068,8 @@ int main(int argc, char **argv)
 		thisport->image = image;
 		thisport->frame = frame;
 		thisport->cache = NULL;
+		thisport->cacheNext = NULL;
+		thisport->cachePrev = NULL;
 		thisport->width = -1;
 		thisport->height = -1;
 		thisport->isBeamer = FALSE;
@@ -1109,6 +1101,8 @@ int main(int argc, char **argv)
 	thisport->image = image;
 	thisport->frame = NULL;
 	thisport->cache = NULL;
+	thisport->cacheNext = NULL;
+	thisport->cachePrev = NULL;
 	thisport->width = -1;
 	thisport->height = -1;
 	thisport->isBeamer = TRUE;
