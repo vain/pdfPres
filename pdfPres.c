@@ -289,28 +289,14 @@ static void refreshFrames(void)
 	}
 }
 
-static void refreshPorts(void)
+static gboolean idleFillCaches(gpointer dummy)
 {
+	/* do prerendering of next slides. this will only happen when
+	 * there's nothing else to do. */
 	struct viewport *pp = NULL;
 	GList *it = ports;
 	int mypage_i = -1;
 
-	/* display. */
-	while (it)
-	{
-		pp = (struct viewport *)(it->data);
-		renderToPixbuf(pp);
-		it = g_list_next(it);
-	}
-
-	refreshFrames();
-
-	/* TODO: Remove me. */
-	printf("displayed.\n");
-
-	/* trigger prerendering of next slides. */
-	/* TODO: This must be done in the next idle phase. */
-	it = ports;
 	while (it)
 	{
 		pp = (struct viewport *)(it->data);
@@ -325,8 +311,27 @@ static void refreshPorts(void)
 		it = g_list_next(it);
 	}
 
-	/* TODO: Remove me. */
-	printf("prerendered.\n");
+	/* do not call me again. */
+	return FALSE;
+}
+
+static void refreshPorts(void)
+{
+	struct viewport *pp = NULL;
+	GList *it = ports;
+
+	/* display. */
+	while (it)
+	{
+		pp = (struct viewport *)(it->data);
+		renderToPixbuf(pp);
+		it = g_list_next(it);
+	}
+
+	refreshFrames();
+
+	/* queue prerendering of next slides. */
+	g_idle_add(idleFillCaches, NULL);
 }
 
 static void clearAllCaches(void)
@@ -427,6 +432,28 @@ static void nextSlide(void)
 		ePort->cache     = ePort->cacheNext;
 		ePort->cacheNext = NULL;
 	}
+
+	/* further notes on caching:
+	 *
+	 * all viewports hold pointers to their previous, current and next
+	 * "cache". this cache is a pixbuf which holds a prerendered image
+	 * of a pdf page.
+	 *
+	 * when the user hits "nextSlide" or "prevSlide", those pointers are
+	 * simply swapped -- on a per viewport basis. after everything has
+	 * been displayed (i.e. in the next idle phase), all "next" and
+	 * "prev" caches will get updated.
+	 *
+	 * thus, changing the slide will be quite fast because *nothing*
+	 * has to be rendered.
+	 *
+	 * every time a viewport hits an empty cache, it'll render that
+	 * slide immediately. this will happen if there was no idle phase
+	 * between two changes of slides (think of the user holding down a
+	 * cursor key).
+	 *
+	 * currently, caches are NOT exchanged between viewports.
+	 */
 }
 
 static void prevSlide(void)
