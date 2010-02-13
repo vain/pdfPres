@@ -66,6 +66,8 @@ static gboolean do_notectrl = FALSE;
 static gboolean isFullScreen = FALSE;
 static gboolean isCurserVisible = FALSE;
 
+static gboolean preQueued = FALSE;
+
 static GTimer *timer = NULL;
 static int timerMode = 0; /* 0 = stopped, 1 = running, 2 = paused */
 static GtkWidget *startButton;
@@ -311,6 +313,9 @@ static gboolean idleFillCaches(gpointer dummy)
 		it = g_list_next(it);
 	}
 
+	/* save state. */
+	preQueued = FALSE;
+
 	/* do not call me again. */
 	return FALSE;
 }
@@ -330,8 +335,18 @@ static void refreshPorts(void)
 
 	refreshFrames();
 
-	/* queue prerendering of next slides. */
-	g_idle_add(idleFillCaches, NULL);
+	/* queue prerendering of next slides unless this has already been
+	 * done.
+	 *
+	 * note: usually, it's not safe to use booleans for purposes like
+	 * this. however, we're in a singlethreaded program, so no other
+	 * thread can do concurrent modifications to this variable. hence
+	 * it's okay. */
+	if (!preQueued)
+	{
+		preQueued = TRUE;
+		g_idle_add(idleFillCaches, NULL);
+	}
 }
 
 static void clearAllCaches(void)
@@ -1150,6 +1165,10 @@ int main(int argc, char **argv)
 			gdk_cursor_new(GDK_BLANK_CURSOR));
 
     g_timeout_add(500, (GSourceFunc) printTimeElapsed, (gpointer) timeElapsedLabel);
+
+	/* queue initial prerendering. */
+	preQueued = TRUE;
+	g_idle_add(idleFillCaches, NULL);
 
 	gtk_main();
 	exit(EXIT_SUCCESS);
