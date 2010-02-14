@@ -1055,6 +1055,8 @@ int main(int argc, char **argv)
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad), TRUE);
 	gtk_scrolled_window_add_with_viewport(
 			GTK_SCROLLED_WINDOW(notePadScroll), notePad);
+	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(notePadScroll),
+			GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 	gtk_box_pack_start(GTK_BOX(notePadBox), notePadScroll, TRUE,
 			TRUE, 2);
 
