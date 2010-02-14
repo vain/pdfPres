@@ -1011,6 +1011,10 @@ static void onResize(GtkWidget *widg, GtkAllocation *al,
 	 * re-render this particular viewport. */
 	if (wOld != port->width || hOld != port->height)
 	{
+		/* be sure to save the current notes because the following
+		 * update will trigger a re-print of them. */
+		saveCurrentNote();
+
 		updatePortPixbuf(port);
 	}
 }
