@@ -845,7 +845,7 @@ int main(int argc, char **argv)
 	numframes = 3;
 
 	/* get options via getopt */
-	while ((i = getopt(argc, argv, "s:wn")) != -1)
+	while ((i = getopt(argc, argv, "s:wnc:")) != -1)
 	{
 		switch (i)
 		{
@@ -865,6 +865,12 @@ int main(int argc, char **argv)
 
 			case 'n':
 				do_notectrl = TRUE;
+				break;
+
+			case 'c':
+				/* don't care if that number is invalid. it'll get
+				 * re-adjusted anyway if it's too small. */
+				cache_max = atoi(optarg);
 				break;
 
 			case '?':

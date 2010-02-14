@@ -54,7 +54,7 @@ Launching
 
 Issue something like:
 
-    $ ./pdfPres [-s <slides>] [-w] [-n] path/to/slides.pdf
+    $ ./pdfPres [-s <slides>] [-c <cache>] [-w] [-n] path/to/slides.pdf
 
 The optional parameter "-s" allows you to specify how many slides
 before/after the current slide you wish to see, i.e. "3" means
@@ -68,6 +68,12 @@ slide and wrapping is enabled, switching to the "next" slide actually
 switches to the very first slide.
 
 The path has to be the last argument.
+
+"-c" allows you to specify the number of slides that can be
+cached/pre-rendered. Be aware, though, that this value will always be at
+least "number of pdf viewports" * 2. This is needed so that we can
+pre-render the current and next slide for each viewport. Hence,
+switching to the next (or previous) slides will always be instant.
 
 Note: It is no longer needed to specify file pathes with URI's like
 "file:///home/user/...". You can use regular pathes like in any other
