@@ -85,6 +85,7 @@ static gboolean preQueued = FALSE;
 static GTimer *timer = NULL;
 static int timerMode = 0; /* 0 = stopped, 1 = running, 2 = paused */
 static GtkWidget *startButton = NULL;
+static GtkWidget *notePadFrame = NULL;
 static GtkTextBuffer *noteBuffer = NULL;
 static gchar **notes = NULL;
 
@@ -111,6 +112,8 @@ static void printNote(int slideNum)
 {
 	int thatSlide = -1;
 	int i;
+	gchar *title = NULL;
+	char *onlyText = NULL;
 	GtkTextIter iter;
 
 	if (notes == NULL)
@@ -118,21 +121,33 @@ static void printNote(int slideNum)
 		return;
 	}
 
-	gtk_text_buffer_set_text(noteBuffer, " ", 1);
+	gtk_text_buffer_set_text(noteBuffer, "", 0);
 
 	for (i = 0; i < g_strv_length(notes); i++)
 	{
 		sscanf(notes[i], "%d\n", &thatSlide);
 		if (thatSlide == slideNum)
 		{
+			/* set frame's title */
+			title = g_strdup_printf("Slide %d", slideNum);
+			gtk_frame_set_label(GTK_FRAME(notePadFrame), title);
+			g_free(title);
+
+			/* skip slide number and line break */
+			/* FIXME: I bet there's a better way to do this. */
+			onlyText = strstr(notes[i], "\n");
+			onlyText += sizeof(char);
+
+			/* push text into buffer */
 			gtk_text_buffer_get_iter_at_offset(noteBuffer, &iter, 0);
 			gtk_text_buffer_insert_with_tags_by_name(noteBuffer, &iter,
-					"Slide ", -1, "bigsize", "lmarg", NULL);
-			gtk_text_buffer_insert_with_tags_by_name(noteBuffer, &iter,
-					notes[i], -1, "bigsize", "lmarg", NULL);
+					onlyText, -1, "bigsize", "lmarg", NULL);
 			return;
 		}
 	}
+
+	/* if we end up here, the slide hasn't been found */
+	gtk_frame_set_label(GTK_FRAME(notePadFrame), "X");
 }
 
 static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
@@ -864,7 +879,7 @@ int main(int argc, char **argv)
 			  *timeFrame = NULL;
 	GdkColor black;
 	GtkWidget *timeElapsedLabel = NULL, *resetButton = NULL;
-	GtkWidget *notePadFrame = NULL, *notePad = NULL;
+	GtkWidget *notePad = NULL;
 	gchar *textSize = NULL;
 
 	GtkWidget *toolbar = NULL;
@@ -1066,7 +1081,7 @@ int main(int argc, char **argv)
 	/* create note pad inside a scrolled window */
 	notePadBox = gtk_vbox_new(FALSE, 2);
 	notePadScroll = gtk_scrolled_window_new(NULL, NULL);
-	notePadFrame = gtk_frame_new("");
+	notePadFrame = gtk_frame_new("X");
 	notePad = gtk_text_view_new();
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad), TRUE);
 	gtk_scrolled_window_add_with_viewport(
