@@ -23,6 +23,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <errno.h>
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -675,12 +676,20 @@ static void readNotes(char *filename)
 	struct stat statbuf;
 	FILE *fp = NULL;
 	int thatSlide = -1, i = 0, splitAt = 0;
+	GtkWidget *dialog = NULL;
 
 	/* try to load the file */
 	if (stat(filename, &statbuf) == -1)
 	{
-		perror("Could not stat file");
-		exit(EXIT_FAILURE);
+		dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+				GTK_DIALOG_DESTROY_WITH_PARENT,
+				GTK_MESSAGE_ERROR,
+				GTK_BUTTONS_OK,
+				"Could not stat file: %s.",
+				g_strerror(errno));
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+		return;
 	}
 
 	/* allocate one additional byte so that we can store a null
@@ -691,14 +700,32 @@ static void readNotes(char *filename)
 	fp = fopen(filename, "r");
 	if (!fp)
 	{
-		perror("Could not open file");
-		exit(EXIT_FAILURE);
+		dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+				GTK_DIALOG_DESTROY_WITH_PARENT,
+				GTK_MESSAGE_ERROR,
+				GTK_BUTTONS_OK,
+				"Could not open file for reading: %s.",
+				g_strerror(errno));
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+
+		free(databuf);
+		return;
 	}
 
 	if (fread(databuf, 1, statbuf.st_size, fp) != statbuf.st_size)
 	{
-		fprintf(stderr, "Unexpected end of file.\n");
-		exit(EXIT_FAILURE);
+		dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+				GTK_DIALOG_DESTROY_WITH_PARENT,
+				GTK_MESSAGE_ERROR,
+				GTK_BUTTONS_OK,
+				"Unexpected end of file.");
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+
+		free(databuf);
+		fclose(fp);
+		return;
 	}
 
 	fclose(fp);
@@ -749,11 +776,19 @@ static void saveNotes(char *filename)
 {
 	int i;
 	FILE *fp = NULL;
+	GtkWidget *dialog = NULL;
 
 	fp = fopen(filename, "w");
 	if (!fp)
 	{
-		perror("Could not open file for writing");
+		dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+				GTK_DIALOG_DESTROY_WITH_PARENT,
+				GTK_MESSAGE_ERROR,
+				GTK_BUTTONS_OK,
+				"Could not open file for writing: %s.",
+				g_strerror(errno));
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
 		return;
 	}
 
@@ -764,7 +799,14 @@ static void saveNotes(char *filename)
 		{
 			if (fprintf(fp, "-- %d\n%s\n\n", (i + 1), notes[i]) < 0)
 			{
-				fprintf(stderr, "Could not write to file.\n");
+				dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+						GTK_DIALOG_DESTROY_WITH_PARENT,
+						GTK_MESSAGE_ERROR,
+						GTK_BUTTONS_OK,
+						"Could not write to file.");
+				gtk_dialog_run(GTK_DIALOG(dialog));
+				gtk_widget_destroy(dialog);
+
 				fclose(fp);
 				return;
 			}
@@ -772,8 +814,14 @@ static void saveNotes(char *filename)
 	}
 
 	fclose(fp);
-	/* TODO: Either quiet or message box. */
-	printf("File written.\n");
+
+	dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+			GTK_DIALOG_DESTROY_WITH_PARENT,
+			GTK_MESSAGE_INFO,
+			GTK_BUTTONS_OK,
+			"Notes saved.");
+	gtk_dialog_run(GTK_DIALOG(dialog));
+	gtk_widget_destroy(dialog);
 }
 
 static void onOpenClicked(GtkWidget *widget, gpointer data)
