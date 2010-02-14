@@ -65,7 +65,7 @@ static GList *cache = NULL;
  * according to the number of visible preview ports. */
 static int cache_max = 32;
 
-static PopplerDocument *doc;
+static PopplerDocument *doc = NULL;
 
 static int doc_n_pages;
 static int doc_page = 0;
@@ -83,8 +83,8 @@ static gboolean preQueued = FALSE;
 
 static GTimer *timer = NULL;
 static int timerMode = 0; /* 0 = stopped, 1 = running, 2 = paused */
-static GtkWidget *startButton;
-static GtkTextBuffer *noteBuffer;
+static GtkWidget *startButton = NULL;
+static GtkTextBuffer *noteBuffer = NULL;
 static gchar **notes = NULL;
 
 static GdkColor col_current, col_marked, col_dim;
@@ -641,9 +641,9 @@ static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel)
 
 static void readNotes(char *filename)
 {
-	char *databuf;
+	char *databuf = NULL;
 	struct stat statbuf;
-	FILE *fp;
+	FILE *fp = NULL;
 
 	/* try to load the file */
 	if (stat(filename, &statbuf) == -1)
@@ -689,7 +689,7 @@ static void readNotes(char *filename)
 
 static void onOpenClicked(GtkWidget *widget, gpointer data)
 {
-	GtkWidget *fileChooser;
+	GtkWidget *fileChooser = NULL;
 	fileChooser = gtk_file_chooser_dialog_new("Open File", NULL,
 			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_STOCK_CANCEL,
 			GTK_RESPONSE_CANCEL, GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
@@ -697,7 +697,7 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 
 	if (gtk_dialog_run(GTK_DIALOG(fileChooser)) == GTK_RESPONSE_ACCEPT)
 	{
-		char *filename;
+		char *filename = NULL;
 		filename = gtk_file_chooser_get_filename(
 				GTK_FILE_CHOOSER(fileChooser));
 		readNotes(filename);
@@ -833,22 +833,29 @@ static void usage(char *exe)
 int main(int argc, char **argv)
 {
 	int i = 0, transIndex = 0, numframes;
-	char *filename;
-	FILE *fp;
+	char *filename = NULL;
+	FILE *fp = NULL;
 	struct stat statbuf;
-	char *databuf;
-	GtkWidget *buttonBox, *timeBox, *notePadBox, *table;
+	char *databuf = NULL;
+	GtkWidget *buttonBox = NULL,
+			  *timeBox = NULL,
+			  *notePadBox = NULL,
+			  *table = NULL;
 	GError *err = NULL;
-	GtkWidget *image, *frame, *evbox, *outerevbox, *timeFrame;
+	GtkWidget *image = NULL,
+			  *frame = NULL,
+			  *evbox = NULL,
+			  *outerevbox = NULL,
+			  *timeFrame = NULL;
 	GdkColor black;
-	GtkWidget *timeElapsedLabel, *resetButton;
-	GtkWidget *notePadFrame, *notePad;
-	gchar *textSize;
+	GtkWidget *timeElapsedLabel = NULL, *resetButton = NULL;
+	GtkWidget *notePadFrame = NULL, *notePad = NULL;
+	gchar *textSize = NULL;
 
-	GtkWidget *toolbar;
-	GtkToolItem *openButton; /* ,saveButton; */
+	GtkWidget *toolbar = NULL;
+	GtkToolItem *openButton = NULL; /* ,saveButton = NULL; */
 
-	struct viewport *thisport;
+	struct viewport *thisport = NULL;
 
 	gtk_init(&argc, &argv);
 
