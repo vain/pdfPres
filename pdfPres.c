@@ -1148,7 +1148,6 @@ int main(int argc, char **argv)
 				}
 			}
 		}
-		fflush(stdout);
 
 		/* make the eventbox "transparent" */
 		gtk_event_box_set_visible_window(GTK_EVENT_BOX(evbox), FALSE);
