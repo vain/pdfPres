@@ -85,7 +85,7 @@ static gboolean preQueued = FALSE;
 static GTimer *timer = NULL;
 static int timerMode = 0; /* 0 = stopped, 1 = running, 2 = paused */
 static GtkWidget *startButton = NULL;
-static GtkWidget *notePadFrame = NULL;
+static GtkWidget *notePad = NULL, *notePadFrame = NULL;
 static GtkTextBuffer *noteBuffer = NULL;
 static gchar **notes = NULL;
 
@@ -820,9 +820,17 @@ static void onEditToggled(GtkWidget *widget, gpointer data)
 {
 	if (gtk_toggle_tool_button_get_active(
 				GTK_TOGGLE_TOOL_BUTTON(widget)))
+	{
 		isInsideNotePad = TRUE;
+		gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad), TRUE);
+		gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(notePad), TRUE);
+	}
 	else
+	{
 		isInsideNotePad = FALSE;
+		gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad), FALSE);
+		gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(notePad), FALSE);
+	}
 }
 
 static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
@@ -975,7 +983,6 @@ int main(int argc, char **argv)
 			  *timeFrame = NULL;
 	GdkColor black;
 	GtkWidget *timeElapsedLabel = NULL, *resetButton = NULL;
-	GtkWidget *notePad = NULL;
 	gchar *textSize = NULL;
 
 	GtkWidget *toolbar = NULL;
@@ -1176,15 +1183,17 @@ int main(int argc, char **argv)
 	gtk_box_pack_start(GTK_BOX(timeBox), buttonBox,
 			FALSE, FALSE, 5);
 
-	timeFrame = gtk_frame_new("");
+	timeFrame = gtk_frame_new("Timer");
 	gtk_container_add(GTK_CONTAINER(timeFrame), timeBox);
 
 	/* create note pad inside a scrolled window */
 	notePadBox = gtk_vbox_new(FALSE, 2);
 	notePadScroll = gtk_scrolled_window_new(NULL, NULL);
-	notePadFrame = gtk_frame_new("");
+	gtk_container_set_border_width(GTK_CONTAINER(notePadScroll), 5);
+	notePadFrame = gtk_frame_new("Notes for current slide");
 	notePad = gtk_text_view_new();
-	gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad), TRUE);
+	gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad), FALSE);
+	gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(notePad), FALSE);
 	gtk_scrolled_window_add_with_viewport(
 			GTK_SCROLLED_WINDOW(notePadScroll), notePad);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(notePadScroll),
@@ -1205,7 +1214,7 @@ int main(int argc, char **argv)
 	/* create toolbar */
 	toolbar = gtk_toolbar_new();
 	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
-	gtk_container_set_border_width(GTK_CONTAINER(toolbar), 2);
+	gtk_container_set_border_width(GTK_CONTAINER(toolbar), 5);
 
 	openButton = gtk_tool_button_new_from_stock(GTK_STOCK_OPEN);
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), openButton, -1);
