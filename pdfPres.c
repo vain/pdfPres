@@ -840,6 +840,7 @@ int main(int argc, char **argv)
 	GtkWidget *buttonBox = NULL,
 			  *timeBox = NULL,
 			  *notePadBox = NULL,
+			  *notePadScroll = NULL,
 			  *table = NULL;
 	GError *err = NULL;
 	GtkWidget *image = NULL,
@@ -1046,13 +1047,16 @@ int main(int argc, char **argv)
 	timeFrame = gtk_frame_new("");
 	gtk_container_add(GTK_CONTAINER(timeFrame), timeBox);
 
-	/* create note pad */
+	/* create note pad inside a scrolled window */
 	notePadBox = gtk_vbox_new(FALSE, 2);
+	notePadScroll = gtk_scrolled_window_new(NULL, NULL);
 	notePadFrame = gtk_frame_new("");
 	notePad = gtk_text_view_new();
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad), TRUE);
-	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(notePad), GTK_WRAP_WORD);
-	gtk_box_pack_start(GTK_BOX(notePadBox), notePad, TRUE, TRUE, 2);
+	gtk_scrolled_window_add_with_viewport(
+			GTK_SCROLLED_WINDOW(notePadScroll), notePad);
+	gtk_box_pack_start(GTK_BOX(notePadBox), notePadScroll, TRUE,
+			TRUE, 2);
 
 	noteBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(notePad));
 	gtk_text_buffer_create_tag(noteBuffer, "lmarg", "left_margin", 5,
