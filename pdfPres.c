@@ -78,6 +78,7 @@ static gboolean do_notectrl = FALSE;
 
 static gboolean isFullScreen = FALSE;
 static gboolean isCurserVisible = FALSE;
+static gboolean isInsideNotePad = FALSE;
 
 static gboolean preQueued = FALSE;
 
@@ -706,9 +707,22 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 	gtk_widget_destroy(fileChooser);
 }
 
+static void onEditToggled(GtkWidget *widget, gpointer data)
+{
+	if (gtk_toggle_tool_button_get_active(
+				GTK_TOGGLE_TOOL_BUTTON(widget)))
+		isInsideNotePad = TRUE;
+	else
+		isInsideNotePad = FALSE;
+}
+
 static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 		gpointer user_data)
 {
+	/* When inside the note pad, don't do anything here. */
+	if (isInsideNotePad)
+		return FALSE;
+
 	gboolean changed = TRUE;
 
 	switch (ev->keyval)
@@ -854,7 +868,9 @@ int main(int argc, char **argv)
 	gchar *textSize = NULL;
 
 	GtkWidget *toolbar = NULL;
-	GtkToolItem *openButton = NULL; /* ,saveButton = NULL; */
+	GtkToolItem *openButton = NULL,
+				/* *saveButton = NULL, */
+				*editButton = NULL;
 
 	struct viewport *thisport = NULL;
 
@@ -1075,9 +1091,17 @@ int main(int argc, char **argv)
 	g_signal_connect(G_OBJECT(openButton), "clicked",
 			G_CALLBACK(onOpenClicked), NULL);
 
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),
+			gtk_separator_tool_item_new(), -1);
+
+	editButton = gtk_toggle_tool_button_new_from_stock(GTK_STOCK_EDIT);
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), editButton, -1);
+	g_signal_connect(G_OBJECT(editButton), "toggled",
+			G_CALLBACK(onEditToggled), NULL);
+
 	/* TODO: implement save functionaltiy.
-	save = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE);
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), save, -1);
+	saveButton = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE);
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), saveButton, -1);
 	*/
 
 	gtk_box_pack_start(GTK_BOX(notePadBox), toolbar, FALSE, FALSE, 2);
