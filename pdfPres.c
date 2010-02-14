@@ -711,6 +711,7 @@ static void readNotes(char *filename)
 	initNotes();
 
 	/* split notes, parse slide numbers and replace entries */
+	/* TODO: Spit out a warning when there are more notes than slides */
 	splitNotes = g_strsplit(databuf, "-- ", 0);
 	for (i = 0; i < doc_n_pages; i++)
 	{
@@ -744,6 +745,37 @@ static void readNotes(char *filename)
 	free(databuf);
 }
 
+static void saveNotes(char *filename)
+{
+	int i;
+	FILE *fp = NULL;
+
+	fp = fopen(filename, "w");
+	if (!fp)
+	{
+		perror("Could not open file for writing");
+		return;
+	}
+
+	for (i = 0; i < doc_n_pages; i++)
+	{
+		/* if there's a note, write it to the file */
+		if (notes[i] != NULL && g_strcmp0("", notes[i]) != 0)
+		{
+			if (fprintf(fp, "-- %d\n%s\n\n", (i + 1), notes[i]) < 0)
+			{
+				fprintf(stderr, "Could not write to file.\n");
+				fclose(fp);
+				return;
+			}
+		}
+	}
+
+	fclose(fp);
+	/* TODO: Either quiet or message box. */
+	printf("File written.\n");
+}
+
 static void onOpenClicked(GtkWidget *widget, gpointer data)
 {
 	GtkWidget *fileChooser = NULL;
@@ -758,6 +790,27 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 		filename = gtk_file_chooser_get_filename(
 				GTK_FILE_CHOOSER(fileChooser));
 		readNotes(filename);
+		g_free(filename);
+	}
+	gtk_widget_destroy(fileChooser);
+}
+
+static void onSaveClicked(GtkWidget *widget, gpointer data)
+{
+	GtkWidget *fileChooser = NULL;
+	fileChooser = gtk_file_chooser_dialog_new("Save File", NULL,
+			GTK_FILE_CHOOSER_ACTION_SAVE, GTK_STOCK_CANCEL,
+			GTK_RESPONSE_CANCEL, GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
+			NULL);
+
+	if (gtk_dialog_run(GTK_DIALOG(fileChooser)) == GTK_RESPONSE_ACCEPT)
+	{
+		saveCurrentNote();
+
+		char *filename = NULL;
+		filename = gtk_file_chooser_get_filename(
+				GTK_FILE_CHOOSER(fileChooser));
+		saveNotes(filename);
 		g_free(filename);
 	}
 	gtk_widget_destroy(fileChooser);
@@ -927,7 +980,7 @@ int main(int argc, char **argv)
 
 	GtkWidget *toolbar = NULL;
 	GtkToolItem *openButton = NULL,
-				/* *saveButton = NULL, */
+				*saveButton = NULL,
 				*editButton = NULL;
 
 	PangoFontDescription *font_desc = NULL;
@@ -1159,6 +1212,11 @@ int main(int argc, char **argv)
 	g_signal_connect(G_OBJECT(openButton), "clicked",
 			G_CALLBACK(onOpenClicked), NULL);
 
+	saveButton = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE);
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), saveButton, -1);
+	g_signal_connect(G_OBJECT(saveButton), "clicked",
+			G_CALLBACK(onSaveClicked), NULL);
+
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),
 			gtk_separator_tool_item_new(), -1);
 
@@ -1166,11 +1224,6 @@ int main(int argc, char **argv)
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), editButton, -1);
 	g_signal_connect(G_OBJECT(editButton), "toggled",
 			G_CALLBACK(onEditToggled), NULL);
-
-	/* TODO: implement save functionaltiy.
-	saveButton = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE);
-	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), saveButton, -1);
-	*/
 
 	gtk_box_pack_start(GTK_BOX(notePadBox), toolbar, FALSE, FALSE, 2);
 	gtk_container_add(GTK_CONTAINER(notePadFrame), notePadBox);
