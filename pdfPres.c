@@ -750,16 +750,27 @@ static void readNotes(char *filename)
 				/* skip slide number and line break */
 				/* FIXME: I bet there's a better way to do this. */
 				onlyText = strstr(splitNotes[splitAt], "\n");
-				onlyText += sizeof(char);
 
-				/* replace note text */
-				if (notes[i] != NULL)
-					g_free(notes[i]);
+				if (onlyText != NULL)
+				{
+					/* if onlyText is NOT null, it'll point to the line
+					 * break. that means we're safe to advance one
+					 * character -- in the worst case, we'll end up on
+					 * the null terminator.
+					 *
+					 * FIXME: I still bet there's a better way.
+					 */
+					onlyText += sizeof(char);
 
-				notes[i] = g_strdup(onlyText);
+					/* replace note text */
+					if (notes[i] != NULL)
+						g_free(notes[i]);
 
-				/* quit inner for() */
-				break;
+					notes[i] = g_strdup(onlyText);
+
+					/* quit inner for() */
+					break;
+				}
 			}
 		}
 	}
