@@ -110,41 +110,20 @@ static void dieOnNull(void *ptr, int line)
 
 static void printNote(int slideNum)
 {
-	int thatSlide = -1;
-	int i;
-	gchar *title = NULL;
-	char *onlyText = NULL;
-
 	if (notes == NULL)
 	{
 		return;
 	}
 
-	for (i = 0; i < g_strv_length(notes); i++)
+	slideNum--;
+	if (slideNum < 0 || slideNum >= doc_n_pages)
 	{
-		sscanf(notes[i], "%d\n", &thatSlide);
-		if (thatSlide == slideNum)
-		{
-			/* set frame's title */
-			title = g_strdup_printf("Slide %d", slideNum);
-			gtk_frame_set_label(GTK_FRAME(notePadFrame), title);
-			g_free(title);
-
-			/* skip slide number and line break */
-			/* FIXME: I bet there's a better way to do this. */
-			onlyText = strstr(notes[i], "\n");
-			onlyText += sizeof(char);
-
-			/* push text into buffer */
-			gtk_text_buffer_set_text(noteBuffer, onlyText,
-					strlen(onlyText));
-			return;
-		}
+		return;
 	}
 
-	/* if we end up here, the slide hasn't been found */
-	gtk_frame_set_label(GTK_FRAME(notePadFrame), "X");
-	gtk_text_buffer_set_text(noteBuffer, "", 0);
+	/* push text into buffer */
+	gtk_text_buffer_set_text(noteBuffer, notes[slideNum],
+			strlen(notes[slideNum]));
 }
 
 static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
@@ -506,6 +485,22 @@ static void current_release(gboolean jump)
 	doc_page_beamer = doc_page;
 }
 
+static void saveCurrentNote(void)
+{
+	GtkTextIter start, end;
+	gchar *content = NULL;
+
+	/* get text from the buffer */
+	gtk_text_buffer_get_bounds(noteBuffer, &start, &end);
+	content = gtk_text_buffer_get_text(noteBuffer, &start, &end, FALSE);
+
+	/* replace previous content */
+	if (notes[doc_page] != NULL)
+		g_free(notes[doc_page]);
+
+	notes[doc_page] = content;
+}
+
 static void nextSlide(void)
 {
 	/* stop if we're at the end and wrapping is disabled. */
@@ -516,6 +511,8 @@ static void nextSlide(void)
 			return;
 		}
 	}
+
+	saveCurrentNote();
 
 	/* update global counter */
 	doc_page++;
@@ -536,6 +533,8 @@ static void prevSlide(void)
 			return;
 		}
 	}
+
+	saveCurrentNote();
 
 	/* update global counter */
 	doc_page--;
@@ -652,11 +651,30 @@ static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel)
 	return TRUE;
 }
 
+static void initNotes(void)
+{
+	int i;
+
+	/* if there were some notes before, kill em. */
+	if (notes != NULL)
+		g_strfreev(notes);
+
+	/* prepare notes array -- this can be free'd with g_strfreev */
+	notes = (gchar **)malloc((doc_n_pages + 1) * sizeof(gchar *));
+	for (i = 0; i < doc_n_pages; i++)
+	{
+		notes[i] = g_strdup("");
+	}
+	notes[doc_n_pages] = NULL;
+}
+
 static void readNotes(char *filename)
 {
-	char *databuf = NULL;
+	char *databuf = NULL, *onlyText = NULL;
+	gchar **splitNotes = NULL;
 	struct stat statbuf;
 	FILE *fp = NULL;
+	int thatSlide = -1, i = 0, splitAt = 0;
 
 	/* try to load the file */
 	if (stat(filename, &statbuf) == -1)
@@ -689,11 +707,37 @@ static void readNotes(char *filename)
 	 * determine where it ends. */
 	databuf[statbuf.st_size] = 0;
 
-	/* if there were some notes before, kill em. */
-	if (notes != NULL)
-		g_strfreev(notes);
+	/* init notes with empty string */
+	initNotes();
 
-	notes = g_strsplit(databuf, "-- ", 0);
+	/* split notes, parse slide numbers and replace entries */
+	splitNotes = g_strsplit(databuf, "-- ", 0);
+	for (i = 0; i < doc_n_pages; i++)
+	{
+		for (splitAt = 0; splitAt < g_strv_length(splitNotes); splitAt++)
+		{
+			sscanf(splitNotes[splitAt], "%d\n", &thatSlide);
+			if (thatSlide == (i + 1))
+			{
+				/* skip slide number and line break */
+				/* FIXME: I bet there's a better way to do this. */
+				onlyText = strstr(splitNotes[splitAt], "\n");
+				onlyText += sizeof(char);
+
+				/* replace note text */
+				if (notes[i] != NULL)
+					g_free(notes[i]);
+
+				notes[i] = g_strdup(onlyText);
+
+				/* quit inner for() */
+				break;
+			}
+		}
+	}
+	g_strfreev(splitNotes);
+
+	/* print current note */
 	printNote(doc_page + 1);
 
 	/* that buffer isn't needed anymore: */
@@ -998,6 +1042,9 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	/* now we know how many pages there are, so init our notes */
+	initNotes();
+
 	/* init colors */
 	if (gdk_color_parse("#000000", &black) != TRUE)
 		fprintf(stderr, "Could not resolve color \"black\".\n");
@@ -1082,7 +1129,7 @@ int main(int argc, char **argv)
 	/* create note pad inside a scrolled window */
 	notePadBox = gtk_vbox_new(FALSE, 2);
 	notePadScroll = gtk_scrolled_window_new(NULL, NULL);
-	notePadFrame = gtk_frame_new("X");
+	notePadFrame = gtk_frame_new("");
 	notePad = gtk_text_view_new();
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad), TRUE);
 	gtk_scrolled_window_add_with_viewport(
