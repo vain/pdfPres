@@ -201,8 +201,6 @@ static GdkPixbuf * renderRawBuffer(struct viewport *pp, int mypage_i)
 			/* cache hit. */
 			found = TRUE;
 			targetBuf = ci->pixbuf;
-			printf("\tCache hit for %d: %lf, %lf, %lf\n", mypage_i, w, h,
-					scale);
 
 			/* we need to increase this item's "score", that is marking
 			 * it as a "recent" item. we do so by placing it at the end
@@ -219,9 +217,6 @@ static GdkPixbuf * renderRawBuffer(struct viewport *pp, int mypage_i)
 
 	if (!found)
 	{
-		printf("\tCache miss for %d: %lf, %lf, %lf\n", mypage_i, w, h,
-				scale);
-
 		/* cache miss, render to a pixbuf. */
 		targetBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, w, h);
 		dieOnNull(targetBuf, __LINE__);
@@ -262,8 +257,6 @@ static GdkPixbuf * renderRawBuffer(struct viewport *pp, int mypage_i)
 		ci->scale = scale;
 		ci->pixbuf = targetBuf;
 		cache = g_list_append(cache, ci);
-
-		printf("\tCache length: %d\n", g_list_length(cache));
 	}
 
 	/* cleanup */
@@ -392,14 +385,10 @@ static gboolean idleFillCaches(gpointer dummy)
 	GList *it = ports;
 	int mypage_i = -1;
 
-	printf("idleFillCaches() ...\n");
-
 	while (it)
 	{
 		pp = (struct viewport *)(it->data);
 		mypage_i = pagenumForPort(pp);
-
-		printf("\tTriggering -%d+\n", mypage_i);
 
 		/* trigger some prerendering. the pointers are irrelevant for
 		 * now -- we just want the cache to be filled with all
@@ -413,8 +402,6 @@ static gboolean idleFillCaches(gpointer dummy)
 	/* save state. */
 	preQueued = FALSE;
 
-	printf("idleFillCaches() ended.\n");
-
 	/* do not call me again. */
 	return FALSE;
 }
@@ -423,8 +410,6 @@ static void refreshPorts(void)
 {
 	struct viewport *pp = NULL;
 	GList *it = ports;
-
-	printf("refreshPorts() ...\n");
 
 	/* display. */
 	while (it)
@@ -435,7 +420,6 @@ static void refreshPorts(void)
 	}
 
 	refreshFrames();
-	printf("refreshPorts() ended.\n");
 
 	/* queue prerendering of next slides unless this has already been
 	 * done.
