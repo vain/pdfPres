@@ -3,18 +3,18 @@
 
 	This file is part of pdfPres.
 
-	pdfPres is free software: you can redistribute it and/or modify it under
-	the terms of the GNU General Public License as published by the Free
-	Software Foundation, either version 3 of the License, or (at your option)
-	any later version.
+	pdfPres is free software: you can redistribute it and/or modify it
+	under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-	pdfPres is distributed in the hope that it will be useful, but WITHOUT ANY
-	WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-	FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
-	details.
+	pdfPres is distributed in the hope that it will be useful, but
+	WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+	General Public License for more details.
 
-	You should have received a copy of the GNU General Public License along
-	with pdfPres. If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with pdfPres. If not, see <http://www.gnu.org/licenses/>.
 */
 
 
@@ -55,6 +55,7 @@ struct cacheItem
 	double scale;
 };
 
+
 static GList *ports = NULL;
 static GtkWidget *win_preview = NULL;
 static GtkWidget *win_beamer = NULL;
@@ -86,15 +87,14 @@ static GtkWidget *startButton;
 static GtkTextBuffer *noteBuffer;
 static gchar **notes = NULL;
 
-
 static GdkColor col_current, col_marked, col_dim;
 
 #define FIT_WIDTH 0
 #define FIT_HEIGHT 1
 #define FIT_PAGE 2
+static int fitmode = FIT_PAGE;
 
 #define FONT_SIZE 35
-static int fitmode = FIT_PAGE;
 
 
 static void dieOnNull(void *ptr, int line)
@@ -106,33 +106,32 @@ static void dieOnNull(void *ptr, int line)
 	}
 }
 
-
-
 static void printNote(int slideNum)
 {
-    int thatSlide = -1;
-    int i;
-    GtkTextIter iter;
+	int thatSlide = -1;
+	int i;
+	GtkTextIter iter;
 
-    if(notes == NULL)
-    {
-        return;
-    }
+	if (notes == NULL)
+	{
+		return;
+	}
 
-    gtk_text_buffer_set_text(noteBuffer, " ", 1);
+	gtk_text_buffer_set_text(noteBuffer, " ", 1);
 
-    for(i=0;i<g_strv_length(notes);i++)
-    {
-        sscanf(notes[i], "%d\n", &thatSlide);
-        if (thatSlide == slideNum)
-        {
-            gtk_text_buffer_get_iter_at_offset(noteBuffer, &iter, 0);
-            gtk_text_buffer_insert_with_tags_by_name(noteBuffer, &iter, "Slide ", -1, "bigsize", "lmarg", NULL);
-            gtk_text_buffer_insert_with_tags_by_name(noteBuffer, &iter, notes[i], -1, "bigsize", "lmarg", NULL);
-            return;
-        }
-    }
-
+	for (i = 0; i < g_strv_length(notes); i++)
+	{
+		sscanf(notes[i], "%d\n", &thatSlide);
+		if (thatSlide == slideNum)
+		{
+			gtk_text_buffer_get_iter_at_offset(noteBuffer, &iter, 0);
+			gtk_text_buffer_insert_with_tags_by_name(noteBuffer, &iter,
+					"Slide ", -1, "bigsize", "lmarg", NULL);
+			gtk_text_buffer_insert_with_tags_by_name(noteBuffer, &iter,
+					notes[i], -1, "bigsize", "lmarg", NULL);
+			return;
+		}
+	}
 }
 
 static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
@@ -229,8 +228,8 @@ static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
 			it = g_list_first(cache);
 			if (it == NULL)
 			{
-				fprintf(stderr, "[Cache] No first item in list. cache_max"
-						" too small?\n");
+				fprintf(stderr, "[Cache] No first item in list."
+						" cache_max too small?\n");
 			}
 			else
 			{
@@ -316,12 +315,12 @@ static void updatePortPixbuf(struct viewport *pp)
 	 */
 	if (pp->offset == 0 && !pp->isBeamer)
 	{
-        printNote(doc_page + 1);
-        if(do_notectrl)
-        {
-            printf("%d\n", doc_page + 1);
-            fflush(stdout);
-        }
+		printNote(doc_page + 1);
+		if (do_notectrl)
+		{
+			printf("%d\n", doc_page + 1);
+			fflush(stdout);
+		}
 	}
 
 	/* get a pixbuf for this viewport. caching is behind
@@ -349,18 +348,21 @@ static void refreshFrames(void)
 		if (pp->isBeamer == FALSE)
 		{
 			/* reset background color */
-			gtk_widget_modify_bg(pp->frame->parent, GTK_STATE_NORMAL, NULL);
+			gtk_widget_modify_bg(pp->frame->parent, GTK_STATE_NORMAL,
+					NULL);
 
 			/* lock mode: highlight the saved/current page */
 			if (beamer_active == FALSE)
 			{
 				if (doc_page + pp->offset == doc_page_mark)
 				{
-					gtk_widget_modify_bg(pp->frame->parent, GTK_STATE_NORMAL, &col_marked);
+					gtk_widget_modify_bg(pp->frame->parent,
+							GTK_STATE_NORMAL, &col_marked);
 				}
 				else if (pp->offset == 0)
 				{
-					gtk_widget_modify_bg(pp->frame->parent, GTK_STATE_NORMAL, &col_dim);
+					gtk_widget_modify_bg(pp->frame->parent,
+							GTK_STATE_NORMAL, &col_dim);
 				}
 			}
 			/* normal mode: highlight the "current" frame */
@@ -368,7 +370,8 @@ static void refreshFrames(void)
 			{
 				if (pp->offset == 0)
 				{
-					gtk_widget_modify_bg(pp->frame->parent, GTK_STATE_NORMAL, &col_current);
+					gtk_widget_modify_bg(pp->frame->parent,
+							GTK_STATE_NORMAL, &col_current);
 				}
 			}
 		}
@@ -574,67 +577,71 @@ static void toggleFullScreen(void)
 /* Starts, pauses  and continues the timer */
 static void toggleTimer()
 {
-    switch(timerMode)
-    {
-        case 0:
-            timer = g_timer_new();
-            timerMode = 1;
-            gtk_button_set_label(GTK_BUTTON(startButton), "Pause");
-            break;
-        case 1:
-            g_timer_stop(timer);
-            timerMode = 2;
-            gtk_button_set_label(GTK_BUTTON(startButton), "Continue");
-            break;
-        case 2:
-            g_timer_continue (timer);
-            timerMode = 1;
-            gtk_button_set_label(GTK_BUTTON(startButton), "Pause");
-            break;
-    } 
+	switch (timerMode)
+	{
+		case 0:
+			timer = g_timer_new();
+			timerMode = 1;
+			gtk_button_set_label(GTK_BUTTON(startButton), "Pause");
+			break;
+		case 1:
+			g_timer_stop(timer);
+			timerMode = 2;
+			gtk_button_set_label(GTK_BUTTON(startButton), "Continue");
+			break;
+		case 2:
+			g_timer_continue(timer);
+			timerMode = 1;
+			gtk_button_set_label(GTK_BUTTON(startButton), "Pause");
+			break;
+	}
 }
 
 static void resetTimer()
 {
-    if(timer != NULL){
-        g_timer_destroy(timer);
-        timer = NULL;
-    }
-    timerMode = 0;
-    gtk_button_set_label(GTK_BUTTON(startButton), "Start");
+	if (timer != NULL)
+	{
+		g_timer_destroy(timer);
+		timer = NULL;
+	}
+	timerMode = 0;
+	gtk_button_set_label(GTK_BUTTON(startButton), "Start");
 }
 
-static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel){
-    int timeElapsed;
-    gchar *timeToSet = NULL;
-    gchar *textSize = NULL;
+static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel)
+{
+	int timeElapsed;
+	gchar *timeToSet = NULL;
+	gchar *textSize = NULL;
 
+	if (timerMode > 0)
+	{
+		timeElapsed = (int)g_timer_elapsed(timer,NULL);
 
-    if(timerMode > 0){
-        timeElapsed = (int) g_timer_elapsed(timer,NULL);
+		int min = (int)timeElapsed / 60.0;
+		int sec = timeElapsed % 60;
+		timeToSet = g_strdup_printf("%02d:%02d", min, sec);
 
-        int min = (int) timeElapsed/60.0;
-        int sec = timeElapsed%60; 
-        timeToSet = g_strdup_printf("%02d:%02d", min, sec);
+		textSize = g_markup_printf_escaped(
+				"<span font=\"%d\">%s</span>", FONT_SIZE, timeToSet);
+		gtk_label_set_markup(GTK_LABEL(timeElapsedLabel), textSize);
+		g_free(textSize);
+		g_free(timeToSet);
+	}
+	else
+	{
+		textSize = g_markup_printf_escaped(
+				"<span font=\"%d\">%s</span>", FONT_SIZE, "00:00");
+		gtk_label_set_markup(GTK_LABEL(timeElapsedLabel), textSize);
+		g_free(textSize);
+	}
 
-        textSize = g_markup_printf_escaped ("<span font=\"%d\">%s</span>", FONT_SIZE, timeToSet);
-        gtk_label_set_markup (GTK_LABEL (timeElapsedLabel),textSize);
-        g_free(textSize);
-        g_free(timeToSet);
-    } else {
-        textSize = g_markup_printf_escaped ("<span font=\"%d\">%s</span>", FONT_SIZE, "00:00");
-        gtk_label_set_markup (GTK_LABEL (timeElapsedLabel),textSize);
-        g_free(textSize);
-    }
-
-    return TRUE;
+	return TRUE;
 }
-
 
 static void readNotes(char *filename)
 {
-
-    char *databuf;
+	char *databuf;
 	struct stat statbuf;
 	FILE *fp;
 
@@ -673,8 +680,8 @@ static void readNotes(char *filename)
 	if (notes != NULL)
 		g_strfreev(notes);
 
-    notes = g_strsplit(databuf,"-- ",0);
-    printNote(doc_page + 1);
+	notes = g_strsplit(databuf, "-- ", 0);
+	printNote(doc_page + 1);
 
 	/* that buffer isn't needed anymore: */
 	free(databuf);
@@ -682,21 +689,25 @@ static void readNotes(char *filename)
 
 static void onOpenClicked(GtkWidget *widget, gpointer data)
 {
-    GtkWidget *fileChooser;
-    fileChooser = gtk_file_chooser_dialog_new("Open File",NULL, GTK_FILE_CHOOSER_ACTION_OPEN,
-                    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT, NULL);
+	GtkWidget *fileChooser;
+	fileChooser = gtk_file_chooser_dialog_new("Open File", NULL,
+			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_STOCK_CANCEL,
+			GTK_RESPONSE_CANCEL, GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
+			NULL);
 
-    if (gtk_dialog_run (GTK_DIALOG (fileChooser)) == GTK_RESPONSE_ACCEPT)
-      {
-        char *filename;
-        filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (fileChooser));
-        readNotes(filename);
-        g_free (filename);
-      }
-    gtk_widget_destroy (fileChooser);
+	if (gtk_dialog_run(GTK_DIALOG(fileChooser)) == GTK_RESPONSE_ACCEPT)
+	{
+		char *filename;
+		filename = gtk_file_chooser_get_filename(
+				GTK_FILE_CHOOSER(fileChooser));
+		readNotes(filename);
+		g_free(filename);
+	}
+	gtk_widget_destroy(fileChooser);
 }
 
-static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_data)
+static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
+		gpointer user_data)
 {
 	gboolean changed = TRUE;
 
@@ -741,21 +752,21 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_dat
 			current_release(TRUE);
 			break;
 
-        case GDK_f:
-            toggleFullScreen();
-            break;
+		case GDK_f:
+			toggleFullScreen();
+			break;
 
-        case GDK_s:
-            toggleTimer();
-            break;
+		case GDK_s:
+			toggleTimer();
+			break;
 
-        case GDK_c:
-            toggleCurserVisibility();
-            break;
+		case GDK_c:
+			toggleCurserVisibility();
+			break;
 
-        case GDK_r:
-            resetTimer();
-            break;
+		case GDK_r:
+			resetTimer();
+			break;
 
 		case GDK_Escape:
 		case GDK_q:
@@ -775,7 +786,8 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_dat
 	return TRUE;
 }
 
-static gboolean onMouseReleased(GtkWidget *widg, GdkEventButton *ev, gpointer user_data)
+static gboolean onMouseReleased(GtkWidget *widg, GdkEventButton *ev,
+		gpointer user_data)
 {
 	/* forward on left click, backward on right click */
 
@@ -796,7 +808,8 @@ static gboolean onMouseReleased(GtkWidget *widg, GdkEventButton *ev, gpointer us
 	return TRUE;
 }
 
-static void onResize(GtkWidget *widg, GtkAllocation *al, struct viewport *port)
+static void onResize(GtkWidget *widg, GtkAllocation *al,
+		struct viewport *port)
 {
 	int wOld = port->width;
 	int hOld = port->height;
@@ -828,17 +841,16 @@ int main(int argc, char **argv)
 	GError *err = NULL;
 	GtkWidget *image, *frame, *evbox, *outerevbox, *timeFrame;
 	GdkColor black;
-    GtkWidget *timeElapsedLabel, *resetButton;
-    GtkWidget *notePadFrame, *notePad;
-    gchar *textSize;
+	GtkWidget *timeElapsedLabel, *resetButton;
+	GtkWidget *notePadFrame, *notePad;
+	gchar *textSize;
 
-    GtkWidget *toolbar;
-    GtkToolItem *openButton; /* ,saveButton; */
+	GtkWidget *toolbar;
+	GtkToolItem *openButton; /* ,saveButton; */
 
 	struct viewport *thisport;
 
 	gtk_init(&argc, &argv);
-
 
 	/* defaults */
 	filename = NULL;
@@ -946,7 +958,6 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-
 	/* init colors */
 	if (gdk_color_parse("#000000", &black) != TRUE)
 		fprintf(stderr, "Could not resolve color \"black\".\n");
@@ -957,7 +968,6 @@ int main(int argc, char **argv)
 	if (gdk_color_parse("#BBBBBB", &col_dim) != TRUE)
 		fprintf(stderr, "Could not resolve color \"col_dim\".\n");
 
-
 	/* init our two windows */
 	win_preview = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	win_beamer  = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -965,98 +975,107 @@ int main(int argc, char **argv)
 	gtk_window_set_title(GTK_WINDOW(win_preview), "pdfPres - Preview");
 	gtk_window_set_title(GTK_WINDOW(win_beamer),  "pdfPres - Beamer");
 
-	g_signal_connect(G_OBJECT(win_preview), "delete_event", G_CALLBACK(gtk_main_quit), NULL);
-	g_signal_connect(G_OBJECT(win_preview), "destroy",      G_CALLBACK(gtk_main_quit), NULL);
-	g_signal_connect(G_OBJECT(win_beamer),  "delete_event", G_CALLBACK(gtk_main_quit), NULL);
-	g_signal_connect(G_OBJECT(win_beamer),  "destroy",      G_CALLBACK(gtk_main_quit), NULL);
+	g_signal_connect(G_OBJECT(win_preview), "delete_event",
+			G_CALLBACK(gtk_main_quit), NULL);
+	g_signal_connect(G_OBJECT(win_preview), "destroy",
+			G_CALLBACK(gtk_main_quit), NULL);
+	g_signal_connect(G_OBJECT(win_beamer), "delete_event",
+			G_CALLBACK(gtk_main_quit), NULL);
+	g_signal_connect(G_OBJECT(win_beamer), "destroy",
+			G_CALLBACK(gtk_main_quit), NULL);
 
-	g_signal_connect(G_OBJECT(win_preview), "key_press_event", G_CALLBACK(onKeyPressed), NULL);
-	g_signal_connect(G_OBJECT(win_beamer),  "key_press_event", G_CALLBACK(onKeyPressed), NULL);
+	g_signal_connect(G_OBJECT(win_preview), "key_press_event",
+			G_CALLBACK(onKeyPressed), NULL);
+	g_signal_connect(G_OBJECT(win_beamer), "key_press_event",
+			G_CALLBACK(onKeyPressed), NULL);
 
 	gtk_widget_add_events(win_beamer, GDK_BUTTON_PRESS_MASK);
 	gtk_widget_add_events(win_beamer, GDK_BUTTON_RELEASE_MASK);
-	g_signal_connect(G_OBJECT(win_beamer), "button_release_event", G_CALLBACK(onMouseReleased), NULL);
+	g_signal_connect(G_OBJECT(win_beamer), "button_release_event",
+			G_CALLBACK(onMouseReleased), NULL);
 
 	gtk_widget_add_events(win_preview, GDK_BUTTON_PRESS_MASK);
 	gtk_widget_add_events(win_preview, GDK_BUTTON_RELEASE_MASK);
-	g_signal_connect(G_OBJECT(win_preview), "button_release_event", G_CALLBACK(onMouseReleased), NULL);
+	g_signal_connect(G_OBJECT(win_preview), "button_release_event",
+			G_CALLBACK(onMouseReleased), NULL);
 
 	gtk_container_set_border_width(GTK_CONTAINER(win_preview), 10);
-	gtk_container_set_border_width(GTK_CONTAINER(win_beamer),  0);
+	gtk_container_set_border_width(GTK_CONTAINER(win_beamer), 0);
 
 	gtk_widget_modify_bg(win_beamer, GTK_STATE_NORMAL, &black);
 
-
-
-    /* create buttons */
+	/* create buttons */
 	buttonBox = gtk_hbox_new(TRUE, 3);
 
-    startButton = gtk_button_new();
-    gtk_widget_set_size_request(startButton, 70, 30);
-    gtk_button_set_label(GTK_BUTTON(startButton), "Start");
-	g_signal_connect(G_OBJECT(startButton), "clicked", G_CALLBACK(toggleTimer), NULL);
+	startButton = gtk_button_new();
+	gtk_widget_set_size_request(startButton, 70, 30);
+	gtk_button_set_label(GTK_BUTTON(startButton), "Start");
+	g_signal_connect(G_OBJECT(startButton), "clicked",
+			G_CALLBACK(toggleTimer), NULL);
 
-    resetButton = gtk_button_new();
-    gtk_widget_set_size_request(resetButton, 70, 30);
-    gtk_button_set_label(GTK_BUTTON(resetButton), "Reset");
-	g_signal_connect(G_OBJECT(resetButton), "clicked", G_CALLBACK(resetTimer), NULL);
+	resetButton = gtk_button_new();
+	gtk_widget_set_size_request(resetButton, 70, 30);
+	gtk_button_set_label(GTK_BUTTON(resetButton), "Reset");
+	g_signal_connect(G_OBJECT(resetButton), "clicked",
+			G_CALLBACK(resetTimer), NULL);
 
-    gtk_box_pack_start(GTK_BOX(buttonBox), startButton, FALSE, FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(buttonBox), resetButton, FALSE, FALSE, 5);
+	gtk_box_pack_start(GTK_BOX(buttonBox), startButton, FALSE, FALSE, 5);
+	gtk_box_pack_start(GTK_BOX(buttonBox), resetButton, FALSE, FALSE, 5);
 
-
-
-    /* setting text size for time label*/
-    textSize = g_markup_printf_escaped ("<span font=\"%d\">%s</span>", FONT_SIZE, "00:00");
-    timeElapsedLabel = gtk_label_new(NULL);
-    gtk_label_set_markup (GTK_LABEL (timeElapsedLabel),textSize);
+	/* setting text size for time label */
+	textSize = g_markup_printf_escaped("<span font=\"%d\">%s</span>",
+			FONT_SIZE, "00:00");
+	timeElapsedLabel = gtk_label_new(NULL);
+	gtk_label_set_markup (GTK_LABEL(timeElapsedLabel), textSize);
 	g_free(textSize);
 
-    /* create timer */
-    timeBox = gtk_vbox_new(FALSE, 5);
-    gtk_box_pack_start(GTK_BOX(timeBox), timeElapsedLabel, TRUE, TRUE, 5);
-    gtk_box_pack_start(GTK_BOX(timeBox), buttonBox, FALSE, FALSE, 5);
+	/* create timer */
+	timeBox = gtk_vbox_new(FALSE, 5);
+	gtk_box_pack_start(GTK_BOX(timeBox), timeElapsedLabel,
+			TRUE, TRUE, 5);
+	gtk_box_pack_start(GTK_BOX(timeBox), buttonBox,
+			FALSE, FALSE, 5);
 
-    timeFrame = gtk_frame_new("");
-    gtk_container_add(GTK_CONTAINER(timeFrame), timeBox);
+	timeFrame = gtk_frame_new("");
+	gtk_container_add(GTK_CONTAINER(timeFrame), timeBox);
 
+	/* create note pad */
+	notePadBox = gtk_vbox_new(FALSE, 2);
+	notePadFrame = gtk_frame_new("");
+	notePad = gtk_text_view_new();
+	gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad), TRUE);
+	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(notePad), GTK_WRAP_WORD);
+	gtk_box_pack_start(GTK_BOX(notePadBox), notePad, TRUE, TRUE, 2);
 
-    /* create note pad */
-    notePadBox = gtk_vbox_new(FALSE, 2);
-    notePadFrame = gtk_frame_new("");
-    notePad = gtk_text_view_new();
-    gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad),TRUE);
-    gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(notePad),GTK_WRAP_WORD);
-    gtk_box_pack_start(GTK_BOX(notePadBox), notePad, TRUE, TRUE, 2);
+	noteBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(notePad));
+	gtk_text_buffer_create_tag(noteBuffer, "lmarg", "left_margin", 5,
+			NULL);
+	gtk_text_buffer_create_tag(noteBuffer, "bigsize", "font", "12",
+			NULL);
 
-    noteBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(notePad));
-    gtk_text_buffer_create_tag(noteBuffer, "lmarg", "left_margin", 5, NULL);
-    gtk_text_buffer_create_tag(noteBuffer, "bigsize", "font", "12", NULL);
+	toolbar = gtk_toolbar_new();
+	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
+	gtk_container_set_border_width(GTK_CONTAINER(toolbar), 2);
 
+	openButton = gtk_tool_button_new_from_stock(GTK_STOCK_OPEN);
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), openButton, -1);
+	g_signal_connect(G_OBJECT(openButton), "clicked",
+			G_CALLBACK(onOpenClicked), NULL);
 
-    toolbar = gtk_toolbar_new();
-    gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
-    gtk_container_set_border_width(GTK_CONTAINER(toolbar), 2);
+	/* TODO: implement save functionaltiy.
+	save = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE);
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), save, -1);
+	*/
 
-    openButton = gtk_tool_button_new_from_stock(GTK_STOCK_OPEN);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), openButton, -1);
-    g_signal_connect(G_OBJECT(openButton), "clicked", G_CALLBACK(onOpenClicked), NULL);
-
-    /* TODO: implement save functionaltiy. 
-    save = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE);
-    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), save, -1);
-    */
-
-    gtk_box_pack_start(GTK_BOX(notePadBox), toolbar, FALSE, FALSE, 2);
-    gtk_container_add(GTK_CONTAINER(notePadFrame), notePadBox);
-
+	gtk_box_pack_start(GTK_BOX(notePadBox), toolbar, FALSE, FALSE, 2);
+	gtk_container_add(GTK_CONTAINER(notePadFrame), notePadBox);
 
 	/* init containers for "preview" */
-	table = gtk_table_new(numframes, numframes+1, TRUE);
-    gtk_table_set_col_spacings(GTK_TABLE(table), 5);
+	table = gtk_table_new(numframes, numframes + 1, TRUE);
+	gtk_table_set_col_spacings(GTK_TABLE(table), 5);
 
 	/* dynamically create all the frames */
-	for (i = 0; i < numframes; i++) 
+	for (i = 0; i < numframes; i++)
 	{
 		/* calc the offset for this frame */
 		transIndex = i - (int)((double)numframes / 2.0);
@@ -1067,14 +1086,16 @@ int main(int argc, char **argv)
 		 * allocated when the title changes. */
 		frame = gtk_frame_new("");
 
-		/* create a new drawing area - the pdf will be rendered in there */
+		/* create a new drawing area - the pdf will be rendered in
+		 * there */
 		image = gtk_image_new();
 		gtk_widget_set_size_request(image, 100, 100);
 
-		/* add widgets to their parents. the image is placed in an eventbox,
-		 * the box's size_allocate signal will be handled. so, we know the
-		 * exact width/height we can render into. (placing the image into the
-		 * frame would create the need of knowing the frame's border size...)
+		/* add widgets to their parents. the image is placed in an
+		 * eventbox, the box's size_allocate signal will be handled. so,
+		 * we know the exact width/height we can render into. (placing
+		 * the image into the frame would create the need of knowing the
+		 * frame's border size...)
 		 */
 		evbox = gtk_event_box_new();
 		gtk_container_add(GTK_CONTAINER(evbox), image);
@@ -1085,42 +1106,52 @@ int main(int argc, char **argv)
 		outerevbox = gtk_event_box_new();
 		gtk_container_add(GTK_CONTAINER(outerevbox), frame);
 
-        if(i == 0)
-        {
-            gtk_table_attach_defaults(GTK_TABLE(table),notePadFrame, 0,1,0,numframes-1);
-            gtk_table_attach_defaults(GTK_TABLE(table),outerevbox, 0,1,numframes-1,numframes);
-        }  
-        else 
-        {
-            if(i == numframes-1) 
-            {
-                gtk_table_attach_defaults(GTK_TABLE(table),outerevbox, numframes,numframes+1,0,1);
-                gtk_table_attach_defaults(GTK_TABLE(table),timeFrame, numframes,numframes+1,numframes-1,numframes);
-            } 
-            else 
-            {
-                if(i == (int) (numframes/2) )
-                {
-                    gtk_table_attach_defaults(GTK_TABLE(table),outerevbox, i,i+2,0,numframes);
-                }
-                else
-                {
-                    if(i < (int) (numframes/2))
-                    {
-                        gtk_table_attach_defaults(GTK_TABLE(table),outerevbox, i,i+1,numframes-i-1,numframes-i);
-                    }
-                    else
-                    {
-                        gtk_table_attach_defaults(GTK_TABLE(table),outerevbox, i+1,i+2,numframes-i-1,numframes-i);
-                    }
-                }
-            }
-        }
-        fflush(stdout);
+		if (i == 0)
+		{
+			gtk_table_attach_defaults(GTK_TABLE(table), notePadFrame,
+					0, 1, 0, numframes - 1);
+			gtk_table_attach_defaults(GTK_TABLE(table), outerevbox,
+					0, 1, numframes - 1, numframes);
+		}
+		else
+		{
+			if (i == numframes - 1)
+			{
+				gtk_table_attach_defaults(GTK_TABLE(table), outerevbox,
+						numframes, numframes + 1,
+						0, 1);
+				gtk_table_attach_defaults(GTK_TABLE(table), timeFrame,
+						numframes, numframes + 1,
+						numframes - 1, numframes);
+			}
+			else
+			{
+				if (i == (int)(numframes / 2))
+				{
+					gtk_table_attach_defaults(GTK_TABLE(table),
+							outerevbox, i, i + 2, 0, numframes);
+				}
+				else
+				{
+					if (i < (int)(numframes / 2))
+					{
+						gtk_table_attach_defaults(GTK_TABLE(table),
+								outerevbox, i, i + 1,
+								numframes - i - 1, numframes - i);
+					}
+					else
+					{
+						gtk_table_attach_defaults(GTK_TABLE(table),
+								outerevbox, i + 1, i + 2,
+								numframes - i - 1, numframes - i);
+					}
+				}
+			}
+		}
+		fflush(stdout);
 
 		/* make the eventbox "transparent" */
 		gtk_event_box_set_visible_window(GTK_EVENT_BOX(evbox), FALSE);
-
 
 		/* save info of this rendering port */
 		thisport = (struct viewport *)malloc(sizeof(struct viewport));
@@ -1135,17 +1166,14 @@ int main(int argc, char **argv)
 		ports = g_list_append(ports, thisport);
 
 		/* resize callback */
-		g_signal_connect(G_OBJECT(evbox), "size_allocate", G_CALLBACK(onResize), thisport);
+		g_signal_connect(G_OBJECT(evbox), "size_allocate",
+				G_CALLBACK(onResize), thisport);
 	}
-
-
-
 
 	gtk_container_add(GTK_CONTAINER(win_preview), table);
 
 	/* in order to set the initially highlighted frame */
 	refreshFrames();
-
 
 	/* add a rendering area to the beamer window */
 	image = gtk_image_new();
@@ -1166,20 +1194,20 @@ int main(int argc, char **argv)
 	ports = g_list_append(ports, thisport);
 
 	/* connect the on-resize-callback directly to the window */
-	g_signal_connect(G_OBJECT(win_beamer), "size_allocate", G_CALLBACK(onResize), thisport);
-
+	g_signal_connect(G_OBJECT(win_beamer), "size_allocate",
+			G_CALLBACK(onResize), thisport);
 
 	/* show the windows */
 	gtk_widget_show_all(win_preview);
 	gtk_widget_show_all(win_beamer);
-
 
 	/* now, as the real gdk window exists, hide mouse cursor in the
 	 * beamer window */
 	gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(win_beamer)),
 			gdk_cursor_new(GDK_BLANK_CURSOR));
 
-    g_timeout_add(500, (GSourceFunc) printTimeElapsed, (gpointer) timeElapsedLabel);
+	g_timeout_add(500, (GSourceFunc) printTimeElapsed,
+			(gpointer) timeElapsedLabel);
 
 	/* queue initial prerendering. */
 	preQueued = TRUE;
