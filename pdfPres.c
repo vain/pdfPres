@@ -114,14 +114,11 @@ static void printNote(int slideNum)
 	int i;
 	gchar *title = NULL;
 	char *onlyText = NULL;
-	GtkTextIter iter;
 
 	if (notes == NULL)
 	{
 		return;
 	}
-
-	gtk_text_buffer_set_text(noteBuffer, "", 0);
 
 	for (i = 0; i < g_strv_length(notes); i++)
 	{
@@ -139,15 +136,15 @@ static void printNote(int slideNum)
 			onlyText += sizeof(char);
 
 			/* push text into buffer */
-			gtk_text_buffer_get_iter_at_offset(noteBuffer, &iter, 0);
-			gtk_text_buffer_insert_with_tags_by_name(noteBuffer, &iter,
-					onlyText, -1, "bigsize", "lmarg", NULL);
+			gtk_text_buffer_set_text(noteBuffer, onlyText,
+					strlen(onlyText));
 			return;
 		}
 	}
 
 	/* if we end up here, the slide hasn't been found */
 	gtk_frame_set_label(GTK_FRAME(notePadFrame), "X");
+	gtk_text_buffer_set_text(noteBuffer, "", 0);
 }
 
 static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
@@ -861,6 +858,8 @@ static void usage(char *exe)
 
 int main(int argc, char **argv)
 {
+	/* TODO: Split this function. */
+
 	int i = 0, transIndex = 0, numframes;
 	char *filename = NULL;
 	FILE *fp = NULL;
@@ -886,6 +885,8 @@ int main(int argc, char **argv)
 	GtkToolItem *openButton = NULL,
 				/* *saveButton = NULL, */
 				*editButton = NULL;
+
+	PangoFontDescription *font_desc = NULL;
 
 	struct viewport *thisport = NULL;
 
@@ -1091,12 +1092,17 @@ int main(int argc, char **argv)
 	gtk_box_pack_start(GTK_BOX(notePadBox), notePadScroll, TRUE,
 			TRUE, 2);
 
-	noteBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(notePad));
-	gtk_text_buffer_create_tag(noteBuffer, "lmarg", "left_margin", 5,
-			NULL);
-	gtk_text_buffer_create_tag(noteBuffer, "bigsize", "font", "12",
-			NULL);
+	/* set note pad font and margin */
+	font_desc = pango_font_description_from_string("Sans 12");
+	gtk_widget_modify_font(notePad, font_desc);
+	pango_font_description_free(font_desc);
 
+	gtk_text_view_set_left_margin(GTK_TEXT_VIEW(notePad), 5);
+	gtk_text_view_set_right_margin(GTK_TEXT_VIEW(notePad), 5);
+
+	noteBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(notePad));
+
+	/* create toolbar */
 	toolbar = gtk_toolbar_new();
 	gtk_toolbar_set_style(GTK_TOOLBAR(toolbar), GTK_TOOLBAR_ICONS);
 	gtk_container_set_border_width(GTK_CONTAINER(toolbar), 2);
