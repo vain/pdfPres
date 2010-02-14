@@ -135,7 +135,7 @@ static void printNote(int slideNum)
 
 }
 
-static GdkPixbuf * renderRawBuffer(struct viewport *pp, int mypage_i)
+static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
 {
 	int myfitmode = -1;
 	double pw = 0, ph = 0;
@@ -273,7 +273,7 @@ static int pagenumForPort(struct viewport *pp)
 		return doc_page_beamer + pp->offset;
 }
 
-static void renderToPixbuf(struct viewport *pp)
+static void updatePortPixbuf(struct viewport *pp)
 {
 	int mypage_i;
 	gchar *title = NULL;
@@ -325,8 +325,8 @@ static void renderToPixbuf(struct viewport *pp)
 	}
 
 	/* get a pixbuf for this viewport. caching is behind
-	 * renderRawBuffer(). */
-	pp->pixbuf = renderRawBuffer(pp, mypage_i);
+	 * getRenderedPixbuf(). */
+	pp->pixbuf = getRenderedPixbuf(pp, mypage_i);
 
 	/* display the current page. */
 	if (pp->pixbuf != NULL)
@@ -393,8 +393,8 @@ static gboolean idleFillCaches(gpointer dummy)
 		/* trigger some prerendering. the pointers are irrelevant for
 		 * now -- we just want the cache to be filled with all
 		 * previous and next slides. */
-		renderRawBuffer(pp, mypage_i + 1);
-		renderRawBuffer(pp, mypage_i - 1);
+		getRenderedPixbuf(pp, mypage_i + 1);
+		getRenderedPixbuf(pp, mypage_i - 1);
 
 		it = g_list_next(it);
 	}
@@ -415,7 +415,7 @@ static void refreshPorts(void)
 	while (it)
 	{
 		pp = (struct viewport *)(it->data);
-		renderToPixbuf(pp);
+		updatePortPixbuf(pp);
 		it = g_list_next(it);
 	}
 
@@ -435,7 +435,7 @@ static void refreshPorts(void)
 	}
 }
 
-static void clearAllCaches(void)
+static void clearCache(void)
 {
 	struct cacheItem *ci = NULL;
 	GList *it = cache;
@@ -714,7 +714,7 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev, gpointer user_dat
 
 		case GDK_F5:
 			/* this shall trigger a hard refresh, so empty the cache. */
-			clearAllCaches();
+			clearCache();
 			break;
 
 		case GDK_w:
@@ -808,7 +808,7 @@ static void onResize(GtkWidget *widg, GtkAllocation *al, struct viewport *port)
 	 * re-render this particular viewport. */
 	if (wOld != port->width || hOld != port->height)
 	{
-		renderToPixbuf(port);
+		updatePortPixbuf(port);
 	}
 }
 
