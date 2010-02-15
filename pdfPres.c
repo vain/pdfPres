@@ -740,27 +740,40 @@ static void readNotes(char *filename)
 
 	/* split notes, parse slide numbers and replace entries */
 	/* TODO: Spit out a warning when there are more notes than slides */
+	/* TODO: Use sth. like libyaml or libxml2 to read the notes */
 	splitNotes = g_strsplit(databuf, "-- ", 0);
 	for (i = 0; i < doc_n_pages; i++)
 	{
 		for (splitAt = 0; splitAt < g_strv_length(splitNotes); splitAt++)
 		{
+			thatSlide = -1;
 			sscanf(splitNotes[splitAt], "%d\n", &thatSlide);
 			if (thatSlide == (i + 1))
 			{
 				/* skip slide number and line break */
 				/* FIXME: I bet there's a better way to do this. */
 				onlyText = strstr(splitNotes[splitAt], "\n");
-				onlyText += sizeof(char);
 
-				/* replace note text */
-				if (notes[i] != NULL)
-					g_free(notes[i]);
+				if (onlyText != NULL)
+				{
+					/* if onlyText is NOT null, it'll point to the line
+					 * break. that means we're safe to advance one
+					 * character -- in the worst case, we'll end up on
+					 * the null terminator.
+					 *
+					 * FIXME: I still bet there's a better way.
+					 */
+					onlyText += sizeof(char);
 
-				notes[i] = g_strdup(onlyText);
+					/* replace note text */
+					if (notes[i] != NULL)
+						g_free(notes[i]);
 
-				/* quit inner for() */
-				break;
+					notes[i] = g_strdup(onlyText);
+
+					/* quit inner for() */
+					break;
+				}
 			}
 		}
 	}
@@ -775,6 +788,8 @@ static void readNotes(char *filename)
 
 static void saveNotes(char *filename)
 {
+	/* TODO: Use sth. like libyaml or libxml2 to save the notes */
+
 	int i;
 	FILE *fp = NULL;
 	GtkWidget *dialog = NULL;
@@ -1019,6 +1034,10 @@ static void onResize(GtkWidget *widg, GtkAllocation *al,
 	 * re-render this particular viewport. */
 	if (wOld != port->width || hOld != port->height)
 	{
+		/* be sure to save the current notes because the following
+		 * update will trigger a re-print of them. */
+		saveCurrentNote();
+
 		updatePortPixbuf(port);
 	}
 }
