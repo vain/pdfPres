@@ -89,6 +89,7 @@ static GtkWidget *startButton = NULL;
 static GtkWidget *notePad = NULL, *notePadFrame = NULL;
 static GtkTextBuffer *noteBuffer = NULL;
 static gchar **notes = NULL;
+static char *notesFont = NULL;
 
 static GdkColor col_current, col_marked, col_dim;
 
@@ -864,6 +865,24 @@ static void onSaveClicked(GtkWidget *widget, gpointer data)
 	gtk_widget_destroy(fileChooser);
 }
 
+static void onFontSelectClick(GtkWidget *widget, gpointer data)
+{
+	GtkWidget *fontChooser = NULL;
+	PangoFontDescription *font_desc = NULL;
+
+	fontChooser = gtk_font_selection_dialog_new("Select Notes Font");
+    gtk_font_selection_dialog_set_font_name(GTK_FONT_SELECTION_DIALOG(fontChooser),notesFont);
+    if(gtk_dialog_run(GTK_DIALOG(fontChooser)) == GTK_RESPONSE_OK)
+    {
+        notesFont = gtk_font_selection_dialog_get_font_name(GTK_FONT_SELECTION_DIALOG(fontChooser));
+        font_desc = pango_font_description_from_string(notesFont);
+        gtk_widget_modify_font(notePad, font_desc);
+        pango_font_description_free(font_desc);
+    }
+
+	gtk_widget_destroy(fontChooser);
+}
+
 static void onEditToggled(GtkWidget *widget, gpointer data)
 {
 	if (gtk_toggle_tool_button_get_active(
@@ -1036,7 +1055,8 @@ int main(int argc, char **argv)
 	GtkWidget *toolbar = NULL;
 	GtkToolItem *openButton = NULL,
 				*saveButton = NULL,
-				*editButton = NULL;
+				*editButton = NULL,
+                *fontSelectButton = NULL;
 
 	PangoFontDescription *font_desc = NULL;
 
@@ -1251,7 +1271,8 @@ int main(int argc, char **argv)
 			TRUE, 2);
 
 	/* set note pad font and margin */
-	font_desc = pango_font_description_from_string("Sans 12");
+    notesFont = "Sans 12";
+	font_desc = pango_font_description_from_string(notesFont);
 	gtk_widget_modify_font(notePad, font_desc);
 	pango_font_description_free(font_desc);
 
@@ -1282,6 +1303,11 @@ int main(int argc, char **argv)
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), editButton, -1);
 	g_signal_connect(G_OBJECT(editButton), "toggled",
 			G_CALLBACK(onEditToggled), NULL);
+
+	fontSelectButton = gtk_tool_button_new_from_stock(GTK_STOCK_SELECT_FONT);
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), fontSelectButton, -1);
+	g_signal_connect(G_OBJECT(fontSelectButton), "clicked",
+			G_CALLBACK(onFontSelectClick), NULL);
 
 	gtk_box_pack_start(GTK_BOX(notePadBox), toolbar, FALSE, FALSE, 2);
 	gtk_container_add(GTK_CONTAINER(notePadFrame), notePadBox);
