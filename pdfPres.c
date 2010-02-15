@@ -739,11 +739,13 @@ static void readNotes(char *filename)
 
 	/* split notes, parse slide numbers and replace entries */
 	/* TODO: Spit out a warning when there are more notes than slides */
+	/* TODO: Use sth. like libyaml or libxml2 to read the notes */
 	splitNotes = g_strsplit(databuf, "-- ", 0);
 	for (i = 0; i < doc_n_pages; i++)
 	{
 		for (splitAt = 0; splitAt < g_strv_length(splitNotes); splitAt++)
 		{
+			thatSlide = -1;
 			sscanf(splitNotes[splitAt], "%d\n", &thatSlide);
 			if (thatSlide == (i + 1))
 			{
@@ -785,6 +787,8 @@ static void readNotes(char *filename)
 
 static void saveNotes(char *filename)
 {
+	/* TODO: Use sth. like libyaml or libxml2 to save the notes */
+
 	int i;
 	FILE *fp = NULL;
 	GtkWidget *dialog = NULL;
