@@ -31,48 +31,95 @@
 #include "pdfPres.h"
 
 
-static gchar **notes = NULL;
-
-
-void initNotes(void)
+struct noteItem
 {
-	int i;
+	int number;
+	gchar *text;
+};
 
-	/* if there were some notes before, kill em. */
-	if (notes != NULL)
-		g_strfreev(notes);
 
-	/* prepare notes array -- this can be free'd with g_strfreev */
-	notes = (gchar **)malloc((doc_n_pages + 1) * sizeof(gchar *));
-	for (i = 0; i < doc_n_pages; i++)
+static GList *notesList = NULL;
+
+
+static void clearNotes(void)
+{
+	GList *it = notesList;
+	struct noteItem *ni = NULL;
+
+	while (it)
 	{
-		notes[i] = g_strdup("");
+		ni = (struct noteItem *)(it->data);
+
+		/* Free text if any. */
+		if (ni->text != NULL)
+			g_free(ni->text);
+
+		/* Free space alloc'd for the struct. */
+		free(ni);
+
+		it = g_list_next(it);
 	}
-	notes[doc_n_pages] = NULL;
+
+	/* Free the whole list. */
+	g_list_free(notesList);
+	notesList = NULL;
+}
+
+static void setNote_strdup(int slideNum, char *text)
+{
+	GList *it = notesList;
+	struct noteItem *ni = NULL;
+
+	/* See if there's already an element for this slideNum. */
+	while (it)
+	{
+		ni = (struct noteItem *)(it->data);
+
+		if (ni->number == slideNum)
+		{
+			/* Replace note. */
+			if (ni->text != NULL)
+				g_free(ni->text);
+			ni->text = g_strdup(text);
+			return;
+		}
+
+		it = g_list_next(it);
+	}
+
+	/* slideNum not found. Create a new one. */
+	ni = (struct noteItem *)malloc(sizeof(struct noteItem));
+	ni->number = slideNum;
+	ni->text = g_strdup(text);
+	notesList = g_list_append(notesList, ni);
 }
 
 void printNote(int slideNum)
 {
-	if (notes == NULL)
+	GList *it = notesList;
+	struct noteItem *ni = NULL;
+
+	/* Search for this slideNum. */
+	while (it)
 	{
-		return;
+		ni = (struct noteItem *)(it->data);
+
+		if (ni->number == slideNum && ni->text != NULL)
+		{
+			gtk_text_buffer_set_text(noteBuffer, ni->text,
+					strlen(ni->text));
+			return;
+		}
+
+		it = g_list_next(it);
 	}
 
-	slideNum--;
-	if (slideNum < 0 || slideNum >= doc_n_pages)
-	{
-		return;
-	}
-
-	/* push text into buffer */
-	gtk_text_buffer_set_text(noteBuffer, notes[slideNum],
-			strlen(notes[slideNum]));
+	/* Not found. */
+	gtk_text_buffer_set_text(noteBuffer, "", 0);
 }
 
 void readNotes(char *filename)
 {
-	/* TODO: Spit out a warning when there are more notes than slides */
-
 	GtkWidget *dialog = NULL;
 	xmlDoc *doc = NULL;
 	xmlNode *root_element = NULL;
@@ -80,8 +127,8 @@ void readNotes(char *filename)
 	xmlChar *tmp = NULL;
 	int slideNum = 0;
 
-	/* Init notes with empty strings. */
-	initNotes();
+	/* Clear notes list. */
+	clearNotes();
 
 	/* Try to read the file. */
 	doc = xmlReadFile(filename, NULL, 0);
@@ -127,10 +174,9 @@ void readNotes(char *filename)
 				continue;
 
 			slideNum = atoi((char *)tmp);
-			slideNum--;
 			xmlFree(tmp);
 
-			if (slideNum < 0)
+			if (slideNum <= 0)
 				continue;
 
 			tmp = xmlNodeGetContent(cur_node);
@@ -138,9 +184,7 @@ void readNotes(char *filename)
 				continue;
 
 			/* Replace note text. */
-			if (notes[slideNum] != NULL)
-				g_free(notes[slideNum]);
-			notes[slideNum] = g_strdup((char *)tmp);
+			setNote_strdup(slideNum, (char *)tmp);
 
 			xmlFree(tmp);
 		}
@@ -152,7 +196,9 @@ void readNotes(char *filename)
 
 void saveNotes(char *uri)
 {
-	int i, rc;
+	GList *it = notesList;
+	struct noteItem *ni = NULL;
+	int rc;
 	GtkWidget *dialog = NULL;
 	xmlTextWriterPtr writer;
 
@@ -206,9 +252,10 @@ void saveNotes(char *uri)
 	}
 
 	/* Save all notes which do exist. Leave out empty slides. */
-	for (i = 0; i < doc_n_pages; i++)
+	while (it)
 	{
-		if (notes[i] != NULL && g_strcmp0("", notes[i]) != 0)
+		ni = (struct noteItem *)(it->data);
+		if (ni->text != NULL && g_strcmp0("", ni->text) != 0)
 		{
 			/* Start of "slide" element. */
 			rc = xmlTextWriterStartElement(writer, BAD_CAST "slide");
@@ -229,7 +276,7 @@ void saveNotes(char *uri)
 
 			/* Write page number as attribute. */
 			rc = xmlTextWriterWriteFormatAttribute(writer,
-					BAD_CAST "number", "%d", (i + 1));
+					BAD_CAST "number", "%d", ni->number);
 			if (rc < 0)
 			{
 				dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
@@ -237,7 +284,7 @@ void saveNotes(char *uri)
 						GTK_MESSAGE_ERROR,
 						GTK_BUTTONS_OK,
 						"xml: Could not write attribute \"number\""
-						" for slide %d. %d.", (i + 1), rc);
+						" for slide %d. %d.", ni->number, rc);
 				gtk_dialog_run(GTK_DIALOG(dialog));
 				gtk_widget_destroy(dialog);
 				xmlFreeTextWriter(writer);
@@ -247,7 +294,7 @@ void saveNotes(char *uri)
 
 			/* Write note as element content. */
 			rc = xmlTextWriterWriteFormatString(writer,
-					"%s", notes[i]);
+					"%s", ni->text);
 			if (rc < 0)
 			{
 				dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
@@ -255,7 +302,7 @@ void saveNotes(char *uri)
 						GTK_MESSAGE_ERROR,
 						GTK_BUTTONS_OK,
 						"xml: Could not write string"
-						" for slide %d. %d.", (i + 1), rc);
+						" for slide %d. %d.", ni->number, rc);
 				gtk_dialog_run(GTK_DIALOG(dialog));
 				gtk_widget_destroy(dialog);
 				xmlFreeTextWriter(writer);
@@ -280,6 +327,8 @@ void saveNotes(char *uri)
 				return;
 			}
 		}
+
+		it = g_list_next(it);
 	}
 
 	/* Here we could close open elements using the function
@@ -324,8 +373,7 @@ void saveCurrentNote(void)
 	content = gtk_text_buffer_get_text(noteBuffer, &start, &end, FALSE);
 
 	/* replace previous content */
-	if (notes[doc_page] != NULL)
-		g_free(notes[doc_page]);
+	setNote_strdup(doc_page + 1, content);
 
-	notes[doc_page] = content;
+	g_free(content);
 }

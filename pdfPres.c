@@ -970,9 +970,6 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	/* now we know how many pages there are, so init our notes */
-	initNotes();
-
 	/* init colors */
 	if (gdk_color_parse("#000000", &black) != TRUE)
 		fprintf(stderr, "Could not resolve color \"black\".\n");

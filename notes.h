@@ -21,7 +21,6 @@
 #ifndef NOTES_H
 #define NOTES_H
 
-void initNotes(void);
 void printNote(int slideNum);
 void readNotes(char *filename);
 void saveNotes(char *filename);
