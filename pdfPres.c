@@ -636,6 +636,8 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 				GTK_FILE_CHOOSER(fileChooser));
 		readNotes(filename);
 		g_free(filename);
+
+		printNote(doc_page + 1);
 	}
 	gtk_widget_destroy(fileChooser);
 }
