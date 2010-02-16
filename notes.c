@@ -71,118 +71,83 @@ void printNote(int slideNum)
 
 void readNotes(char *filename)
 {
-	char *databuf = NULL, *onlyText = NULL;
-	gchar **splitNotes = NULL;
-	struct stat statbuf;
-	FILE *fp = NULL;
-	int thatSlide = -1, i = 0, splitAt = 0;
+	/* TODO: Spit out a warning when there are more notes than slides */
+
 	GtkWidget *dialog = NULL;
+	xmlDoc *doc = NULL;
+	xmlNode *root_element = NULL;
+	xmlNode *cur_node = NULL;
+	xmlChar *tmp = NULL;
+	int slideNum = 0;
 
-	/* try to load the file */
-	if (stat(filename, &statbuf) == -1)
-	{
-		dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
-				GTK_DIALOG_DESTROY_WITH_PARENT,
-				GTK_MESSAGE_ERROR,
-				GTK_BUTTONS_OK,
-				"Could not stat file: %s.",
-				g_strerror(errno));
-		gtk_dialog_run(GTK_DIALOG(dialog));
-		gtk_widget_destroy(dialog);
-		return;
-	}
-
-	/* allocate one additional byte so that we can store a null
-	 * terminator. */
-	databuf = (char *)malloc(statbuf.st_size + 1);
-	dieOnNull(databuf, __LINE__);
-
-	fp = fopen(filename, "r");
-	if (!fp)
-	{
-		dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
-				GTK_DIALOG_DESTROY_WITH_PARENT,
-				GTK_MESSAGE_ERROR,
-				GTK_BUTTONS_OK,
-				"Could not open file for reading: %s.",
-				g_strerror(errno));
-		gtk_dialog_run(GTK_DIALOG(dialog));
-		gtk_widget_destroy(dialog);
-
-		free(databuf);
-		return;
-	}
-
-	if (fread(databuf, 1, statbuf.st_size, fp) != statbuf.st_size)
-	{
-		dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
-				GTK_DIALOG_DESTROY_WITH_PARENT,
-				GTK_MESSAGE_ERROR,
-				GTK_BUTTONS_OK,
-				"Unexpected end of file.");
-		gtk_dialog_run(GTK_DIALOG(dialog));
-		gtk_widget_destroy(dialog);
-
-		free(databuf);
-		fclose(fp);
-		return;
-	}
-
-	fclose(fp);
-
-	/* terminate the string. otherwise, g_strsplit won't be able to
-	 * determine where it ends. */
-	databuf[statbuf.st_size] = 0;
-
-	/* init notes with empty string */
+	/* Init notes with empty strings. */
 	initNotes();
 
-	/* split notes, parse slide numbers and replace entries */
-	/* TODO: Spit out a warning when there are more notes than slides */
-	/* TODO: Use sth. like libyaml or libxml2 to read the notes */
-	splitNotes = g_strsplit(databuf, "-- ", 0);
-	for (i = 0; i < doc_n_pages; i++)
+	/* Try to read the file. */
+	doc = xmlReadFile(filename, NULL, 0);
+	if (doc == NULL)
 	{
-		for (splitAt = 0; splitAt < g_strv_length(splitNotes); splitAt++)
+		dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+				GTK_DIALOG_DESTROY_WITH_PARENT,
+				GTK_MESSAGE_ERROR,
+				GTK_BUTTONS_OK,
+				"xml: Could not read file.");
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+		xmlCleanupParser();
+		return;
+	}
+
+	/* Get the root element. */
+	root_element = xmlDocGetRootElement(doc);
+	if (root_element == NULL)
+	{
+		dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+				GTK_DIALOG_DESTROY_WITH_PARENT,
+				GTK_MESSAGE_ERROR,
+				GTK_BUTTONS_OK,
+				"xml: Could not get root element.");
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+		xmlFreeDoc(doc);
+		xmlCleanupParser();
+		return;
+	}
+
+	/* Traverse slide-elements. */
+	for (cur_node = root_element->children; cur_node;
+			cur_node = cur_node->next)
+	{
+		if (cur_node->type == XML_ELEMENT_NODE
+				&& !xmlStrcmp(cur_node->name, BAD_CAST "slide"))
 		{
-			thatSlide = -1;
-			sscanf(splitNotes[splitAt], "%d\n", &thatSlide);
-			if (thatSlide == (i + 1))
-			{
-				/* skip slide number and line break */
-				/* FIXME: I bet there's a better way to do this. */
-				onlyText = strstr(splitNotes[splitAt], "\n");
+			/* Get slide number and content. */
+			tmp = xmlGetProp(cur_node, BAD_CAST "number");
+			if (tmp == NULL)
+				continue;
 
-				if (onlyText != NULL)
-				{
-					/* if onlyText is NOT null, it'll point to the line
-					 * break. that means we're safe to advance one
-					 * character -- in the worst case, we'll end up on
-					 * the null terminator.
-					 *
-					 * FIXME: I still bet there's a better way.
-					 */
-					onlyText += sizeof(char);
+			slideNum = atoi((char *)tmp);
+			slideNum--;
+			xmlFree(tmp);
 
-					/* replace note text */
-					if (notes[i] != NULL)
-						g_free(notes[i]);
+			if (slideNum < 0)
+				continue;
 
-					notes[i] = g_strdup(onlyText);
+			tmp = xmlNodeGetContent(cur_node);
+			if (tmp == NULL)
+				continue;
 
-					/* quit inner for() */
-					break;
-				}
-			}
+			/* Replace note text. */
+			if (notes[slideNum] != NULL)
+				g_free(notes[slideNum]);
+			notes[slideNum] = g_strdup((char *)tmp);
+
+			xmlFree(tmp);
 		}
 	}
-	g_strfreev(splitNotes);
 
-	/* print current note */
-	printNote(doc_page + 1);
-
-	/* that buffer isn't needed anymore: */
-	free(databuf);
+	xmlFreeDoc(doc);
+	xmlCleanupParser();
 }
 
 void saveNotes(char *uri)
