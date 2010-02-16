@@ -25,6 +25,7 @@
 #include <sys/stat.h>
 
 #include <gtk/gtk.h>
+#include <libxml/xmlwriter.h>
 
 #include "notes.h"
 #include "pdfPres.h"
@@ -184,51 +185,161 @@ void readNotes(char *filename)
 	free(databuf);
 }
 
-void saveNotes(char *filename)
+void saveNotes(char *uri)
 {
-	/* TODO: Use sth. like libyaml or libxml2 to save the notes */
-
-	int i;
-	FILE *fp = NULL;
+	int i, rc;
 	GtkWidget *dialog = NULL;
+	xmlTextWriterPtr writer;
 
-	fp = fopen(filename, "w");
-	if (!fp)
+	/* Create a new XmlWriter for uri, with no compression. */
+	writer = xmlNewTextWriterFilename(uri, 0);
+	if (writer == NULL)
 	{
 		dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
 				GTK_DIALOG_DESTROY_WITH_PARENT,
 				GTK_MESSAGE_ERROR,
 				GTK_BUTTONS_OK,
-				"Could not open file for writing: %s.",
-				g_strerror(errno));
+				"xml: Error creating the xml writer.");
 		gtk_dialog_run(GTK_DIALOG(dialog));
 		gtk_widget_destroy(dialog);
+		xmlCleanupParser();
 		return;
 	}
 
+	/* Start the document with the xml default for the version, encoding
+	 * UTF-8 and the default for the standalone declaration. */
+	rc = xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL);
+	if (rc < 0)
+	{
+		dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+				GTK_DIALOG_DESTROY_WITH_PARENT,
+				GTK_MESSAGE_ERROR,
+				GTK_BUTTONS_OK,
+				"xml: Could not start document. %d.", rc);
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+		xmlFreeTextWriter(writer);
+		xmlCleanupParser();
+		return;
+	}
+
+	/* Start root element. It's okay to use "BAD_CAST" since there
+	 * are no non-ascii letters. */
+	rc = xmlTextWriterStartElement(writer, BAD_CAST "notes");
+	if (rc < 0)
+	{
+		dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+				GTK_DIALOG_DESTROY_WITH_PARENT,
+				GTK_MESSAGE_ERROR,
+				GTK_BUTTONS_OK,
+				"xml: Could not start element \"notes\". %d.", rc);
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+		xmlFreeTextWriter(writer);
+		xmlCleanupParser();
+		return;
+	}
+
+	/* Save all notes which do exist. Leave out empty slides. */
 	for (i = 0; i < doc_n_pages; i++)
 	{
-		/* if there's a note, write it to the file */
 		if (notes[i] != NULL && g_strcmp0("", notes[i]) != 0)
 		{
-			if (fprintf(fp, "-- %d\n%s\n\n", (i + 1), notes[i]) < 0)
+			/* Start of "slide" element. */
+			rc = xmlTextWriterStartElement(writer, BAD_CAST "slide");
+			if (rc < 0)
 			{
 				dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
 						GTK_DIALOG_DESTROY_WITH_PARENT,
 						GTK_MESSAGE_ERROR,
 						GTK_BUTTONS_OK,
-						"Could not write to file.");
+						"xml: Could not start element \"slide\". %d.",
+						rc);
 				gtk_dialog_run(GTK_DIALOG(dialog));
 				gtk_widget_destroy(dialog);
+				xmlFreeTextWriter(writer);
+				xmlCleanupParser();
+				return;
+			}
 
-				fclose(fp);
+			/* Write page number as attribute. */
+			rc = xmlTextWriterWriteFormatAttribute(writer,
+					BAD_CAST "number", "%d", (i + 1));
+			if (rc < 0)
+			{
+				dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+						GTK_DIALOG_DESTROY_WITH_PARENT,
+						GTK_MESSAGE_ERROR,
+						GTK_BUTTONS_OK,
+						"xml: Could not write attribute \"number\""
+						" for slide %d. %d.", (i + 1), rc);
+				gtk_dialog_run(GTK_DIALOG(dialog));
+				gtk_widget_destroy(dialog);
+				xmlFreeTextWriter(writer);
+				xmlCleanupParser();
+				return;
+			}
+
+			/* Write note as element content. */
+			rc = xmlTextWriterWriteFormatString(writer,
+					"%s", notes[i]);
+			if (rc < 0)
+			{
+				dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+						GTK_DIALOG_DESTROY_WITH_PARENT,
+						GTK_MESSAGE_ERROR,
+						GTK_BUTTONS_OK,
+						"xml: Could not write string"
+						" for slide %d. %d.", (i + 1), rc);
+				gtk_dialog_run(GTK_DIALOG(dialog));
+				gtk_widget_destroy(dialog);
+				xmlFreeTextWriter(writer);
+				xmlCleanupParser();
+				return;
+			}
+
+			/* End of "slide" element. */
+			rc = xmlTextWriterEndElement(writer);
+			if (rc < 0)
+			{
+				dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+						GTK_DIALOG_DESTROY_WITH_PARENT,
+						GTK_MESSAGE_ERROR,
+						GTK_BUTTONS_OK,
+						"xml: Could not end element \"slide\". %d.",
+						rc);
+				gtk_dialog_run(GTK_DIALOG(dialog));
+				gtk_widget_destroy(dialog);
+				xmlFreeTextWriter(writer);
+				xmlCleanupParser();
 				return;
 			}
 		}
 	}
 
-	fclose(fp);
+	/* Here we could close open elements using the function
+	 * xmlTextWriterEndElement, but since we do not want to write any
+	 * other elements, we simply call xmlTextWriterEndDocument, which
+	 * will do all the work. */
+	rc = xmlTextWriterEndDocument(writer);
+	if (rc < 0)
+	{
+		dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+				GTK_DIALOG_DESTROY_WITH_PARENT,
+				GTK_MESSAGE_ERROR,
+				GTK_BUTTONS_OK,
+				"xml: Could not end document. %d.", rc);
+		gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(dialog);
+		xmlFreeTextWriter(writer);
+		xmlCleanupParser();
+		return;
+	}
 
+	xmlFreeTextWriter(writer);
+	xmlCleanupParser();
+
+	/* Report success. */
 	dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
 			GTK_DIALOG_DESTROY_WITH_PARENT,
 			GTK_MESSAGE_INFO,
