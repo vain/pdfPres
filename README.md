@@ -15,7 +15,8 @@ In case there is no pointing device available the cursor can be set to visible.
 
 Private notes can be viewed in a notepad on the left side. A file containing 
 the notes can be loaded with the appropriate open-icon below the notepad.
-The format of the file is descibed later in this document.
+You can edit your notes from inside pdfPres by pressing the edit
+button. And of course, notes can be saved to a file.
 
 Optionally, an external program can be attached via a pipe. The number
 of the slide which is currently shown will be written to that pipe. So,
@@ -23,7 +24,8 @@ your external program or script can do additional things depending on
 the current slide -- it can show your private notes, trigger sound
 events or whatever.
 
-pdfPres uses GTK+ v2 and poppler-glib to render the PDF file.
+pdfPres uses GTK+ v2 and poppler-glib to render the PDF file. Notes are
+handled via libxml2.
 
 
 Keys
@@ -81,27 +83,7 @@ application.
 
 By providing the parameter "-n" the slide which is currently shown will
 be written to stdout. You can pipe this information to another program.
-That'll allow you to do fancy things. "private-notes.py" is an example
-of what you could do ("example" meaning "quick and dirty"):
-
-    $ ./pdfPres [-s <slides>] [-w] -n path/to/slides.pdf | ./private-notes.py ~/presentation/my-notes.txt
-
-This will attach the script to pdfPres. 
-
-Currently, the script and the private notes function expect a
-file formatted like this:
-
-	-- 1
-	This text will be shown on the first slide.
-
-	-- 2
-	... notes for second slide ...
-
-	-- 23
-	Here be dragons. Shown on slide 23.
-
-To be more precise, a line containing "-- [n]" indicates that the
-following lines shall be displayed on the n'th slide.
+That'll allow you to do fancy things.
 
 
 Build instructions
@@ -118,3 +100,20 @@ That's it. Furthermore, the following external libraries are required:
 
 * [gtk2 >= 2.16.1](http://www.gtk.org)
 * [poppler-glib >= 0.10.6](http://poppler.freedesktop.org)
+* [libxml2 >= 2.7.6](http://www.xmlsoft.org/)
+
+
+TODO
+----
+
+* Notes: Separate "Save" and "Save as ..." buttons.
+* Notes: Disable horizontal scrolling and enable wrapping again. Or find
+  a better solution. Another idea would be to make the note pad
+  dockable.
+* Notes: Maybe toggle editing simply by focus (hence remove the edit
+  button).
+* Core: Implement support for PDF links.
+* Core: Maybe implement a highlight box or a spotlight like those in
+  [impressive](http://impressive.sourceforge.net/).
+* Everything: Write a test suite.
+* Everything: Test it on x86_64 and platforms other than Linux.
