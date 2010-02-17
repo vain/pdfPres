@@ -103,6 +103,26 @@ That's it. Furthermore, the following external libraries are required:
 * [libxml2 >= 2.7.6](http://www.xmlsoft.org/)
 
 
+What do I do with old (non-XML) notes?
+--------------------------------------
+
+If you already used an old version of pdfPres that didn't save the notes
+in XML, you can use the converter script to transform those notes into
+XML:
+
+    $ ./legacy-notes-converter.py notes.txt > notes.xml
+
+The resulting file "notes.xml" can be read in pdfPres.
+
+Be aware that this script expects a file encoded with UTF-8. Use
+[Geany](http://www.geany.org/) or
+[recode](http://www.gnu.org/software/recode/recode.html) to transform
+any non-UTF-8 files (you may adjust the input encoding) before you run
+the converter:
+
+    $ recode LATIN1..UTF8 < notes.txt > notes-utf8.txt
+
+
 TODO
 ----
 
