@@ -1061,11 +1061,21 @@ int main(int argc, char **argv)
 	notePad = gtk_text_view_new();
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad), FALSE);
 	gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(notePad), FALSE);
+
+	/* Remarks:
+	 *
+	 * - The note pad uses word wrapping. If that's not enough, it also
+	 *   uses wrapping on a per character basis.
+	 * - The note pad is placed into a GtkScrolledWindow. This window
+	 *   allows vertical scrolling but no horizontal scrolling.
+	 */
+	gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(notePad),
+			GTK_WRAP_WORD_CHAR);
 	gtk_container_add(GTK_CONTAINER(notePadScroll), notePad);
 	gtk_scrolled_window_set_shadow_type(
 			GTK_SCROLLED_WINDOW(notePadScroll), GTK_SHADOW_IN);
 	gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(notePadScroll),
-			GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+			GTK_POLICY_NEVER, GTK_POLICY_ALWAYS);
 	gtk_box_pack_start(GTK_BOX(notePadBox), notePadScroll, TRUE,
 			TRUE, 2);
 

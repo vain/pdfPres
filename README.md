@@ -127,11 +127,9 @@ TODO
 ----
 
 * Notes: Separate "Save" and "Save as ..." buttons.
-* Notes: Disable horizontal scrolling and enable wrapping again. Or find
-  a better solution. Another idea would be to make the note pad
-  dockable.
 * Notes: Maybe toggle editing simply by focus (hence remove the edit
   button).
+* Notes: Maybe make the note pad dockable.
 * Core: Implement support for PDF links.
 * Core: Maybe implement a highlight box or a spotlight like those in
   [impressive](http://impressive.sourceforge.net/).
