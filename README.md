@@ -127,11 +127,21 @@ TODO
 ----
 
 * Notes: Separate "Save" and "Save as ..." buttons.
+* Notes: Warn about unsaved notes when closing the program.
 * Notes: Maybe toggle editing simply by focus (hence remove the edit
   button).
-* Notes: Maybe make the note pad dockable.
+* Notes: Add format features like bold text or lists.
+* Notes/Core: Maybe make the note pad dockable. Bonus: Make everything,
+  including preview ports, dockable and moveable.
+* Core: Add a "jump" feature -- the user can type the number of a slide
+  into an edit box and this slide will be shown.
 * Core: Implement support for PDF links.
 * Core: Maybe implement a highlight box or a spotlight like those in
-  [impressive](http://impressive.sourceforge.net/).
+  [impressive](http://impressive.sourceforge.net/). If we do so, this
+  spotlight (or box) must be controllable from the preview windows as
+  well. This would mean that you don't need to turn around to the beamer
+  if you want to show something.
+* Core: Maybe add a global overview, i.e. a window that shows like 9
+  or 12 slides at once.
 * Everything: Write a test suite.
 * Everything: Test it on x86_64 and platforms other than Linux.
