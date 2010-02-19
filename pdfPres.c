@@ -830,21 +830,14 @@ static void usage(char *exe)
 	fprintf(stderr, "Usage: %s [-s <slides>] [-n] [-w] <file>\n", exe);
 }
 
-int main(int argc, char **argv)
+static void initGUI(int numframes)
 {
-	/* TODO: Split this function. */
-
-	int i = 0, transIndex = 0, numframes;
-	char *filename = NULL;
-	FILE *fp = NULL;
-	struct stat statbuf;
-	char *databuf = NULL;
+    int i = 0, transIndex = 0; 
 	GtkWidget *buttonBox = NULL,
 			  *timeBox = NULL,
 			  *notePadBox = NULL,
 			  *notePadScroll = NULL,
 			  *table = NULL;
-	GError *err = NULL;
 	GtkWidget *image = NULL,
 			  *frame = NULL,
 			  *evbox = NULL,
@@ -864,114 +857,6 @@ int main(int argc, char **argv)
 
 	struct viewport *thisport = NULL;
 
-	gtk_init(&argc, &argv);
-
-	/* defaults */
-	filename = NULL;
-	numframes = 3;
-
-	/* get options via getopt */
-	while ((i = getopt(argc, argv, "s:wnc:")) != -1)
-	{
-		switch (i)
-		{
-			case 's':
-				numframes = 2 * atoi(optarg) + 1;
-				if (numframes <= 1)
-				{
-					fprintf(stderr, "Invalid slide count specified.\n");
-					usage(argv[0]);
-					exit(EXIT_FAILURE);
-				}
-				break;
-
-			case 'w':
-				do_wrapping = TRUE;
-				break;
-
-			case 'n':
-				do_notectrl = TRUE;
-				break;
-
-			case 'c':
-				/* don't care if that number is invalid. it'll get
-				 * re-adjusted anyway if it's too small. */
-				cache_max = atoi(optarg);
-				break;
-
-			case '?':
-				exit(EXIT_FAILURE);
-				break;
-		}
-	}
-
-	/* retrieve file name via first non-option argument */
-	if (optind < argc)
-	{
-		filename = argv[optind];
-	}
-
-	if (filename == NULL)
-	{
-		fprintf(stderr, "Invalid file path specified.\n");
-		usage(argv[0]);
-		exit(EXIT_FAILURE);
-	}
-
-	/* for the cache to be useful, we'll need at least "some" items.
-	 * that is 2 items (prev and next) per preview viewport and 2
-	 * items for the beamer port.
-	 *
-	 * this means that switching to the previous and next slide will
-	 * always be fast.
-	 */
-	if (cache_max < (numframes + 1) * 2)
-		cache_max = (numframes + 1) * 2;
-
-	/* try to load the file */
-	if (stat(filename, &statbuf) == -1)
-	{
-		perror("Could not stat file");
-		exit(EXIT_FAILURE);
-	}
-
-	/* note: this buffer must not be freed, it'll be used by poppler
-	 * later on. */
-	databuf = (char *)malloc(statbuf.st_size);
-	dieOnNull(databuf, __LINE__);
-
-	fp = fopen(filename, "rb");
-	if (!fp)
-	{
-		perror("Could not open file");
-		exit(EXIT_FAILURE);
-	}
-
-	if (fread(databuf, 1, statbuf.st_size, fp) != statbuf.st_size)
-	{
-		fprintf(stderr, "Unexpected end of file.\n");
-		exit(EXIT_FAILURE);
-	}
-
-	fclose(fp);
-
-	/* get document from data */
-	doc = poppler_document_new_from_data(databuf, statbuf.st_size,
-			NULL, &err);
-	if (!doc)
-	{
-		fprintf(stderr, "%s\n", err->message);
-		g_error_free(err);
-		exit(EXIT_FAILURE);
-	}
-
-	doc_n_pages = poppler_document_get_n_pages(doc);
-	if (doc_n_pages <= 0)
-	{
-		fprintf(stderr, "Huh, no pages in that document.\n");
-		exit(EXIT_FAILURE);
-	}
-
 	/* init colors */
 	if (gdk_color_parse("#000000", &black) != TRUE)
 		fprintf(stderr, "Could not resolve color \"black\".\n");
@@ -981,6 +866,7 @@ int main(int argc, char **argv)
 		fprintf(stderr, "Could not resolve color \"col_marked\".\n");
 	if (gdk_color_parse("#BBBBBB", &col_dim) != TRUE)
 		fprintf(stderr, "Could not resolve color \"col_dim\".\n");
+
 
 	/* init our two windows */
 	win_preview = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -1258,6 +1144,127 @@ int main(int argc, char **argv)
 
 	g_timeout_add(500, (GSourceFunc) printTimeElapsed,
 			(gpointer) timeElapsedLabel);
+
+}
+
+int main(int argc, char **argv)
+{
+	int i=0, numframes;
+	char *filename = NULL;
+	FILE *fp = NULL;
+	struct stat statbuf;
+	char *databuf = NULL;
+	GError *err = NULL;
+
+	gtk_init(&argc, &argv);
+
+	/* defaults */
+	filename = NULL;
+	numframes = 3;
+
+	/* get options via getopt */
+	while ((i = getopt(argc, argv, "s:wnc:")) != -1)
+	{
+		switch (i)
+		{
+			case 's':
+				numframes = 2 * atoi(optarg) + 1;
+				if (numframes <= 1)
+				{
+					fprintf(stderr, "Invalid slide count specified.\n");
+					usage(argv[0]);
+					exit(EXIT_FAILURE);
+				}
+				break;
+
+			case 'w':
+				do_wrapping = TRUE;
+				break;
+
+			case 'n':
+				do_notectrl = TRUE;
+				break;
+
+			case 'c':
+				/* don't care if that number is invalid. it'll get
+				 * re-adjusted anyway if it's too small. */
+				cache_max = atoi(optarg);
+				break;
+
+			case '?':
+				exit(EXIT_FAILURE);
+				break;
+		}
+	}
+
+	/* retrieve file name via first non-option argument */
+	if (optind < argc)
+	{
+		filename = argv[optind];
+	}
+
+	if (filename == NULL)
+	{
+		fprintf(stderr, "Invalid file path specified.\n");
+		usage(argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	/* for the cache to be useful, we'll need at least "some" items.
+	 * that is 2 items (prev and next) per preview viewport and 2
+	 * items for the beamer port.
+	 *
+	 * this means that switching to the previous and next slide will
+	 * always be fast.
+	 */
+	if (cache_max < (numframes + 1) * 2)
+		cache_max = (numframes + 1) * 2;
+
+	/* try to load the file */
+	if (stat(filename, &statbuf) == -1)
+	{
+		perror("Could not stat file");
+		exit(EXIT_FAILURE);
+	}
+
+	/* note: this buffer must not be freed, it'll be used by poppler
+	 * later on. */
+	databuf = (char *)malloc(statbuf.st_size);
+	dieOnNull(databuf, __LINE__);
+
+	fp = fopen(filename, "rb");
+	if (!fp)
+	{
+		perror("Could not open file");
+		exit(EXIT_FAILURE);
+	}
+
+	if (fread(databuf, 1, statbuf.st_size, fp) != statbuf.st_size)
+	{
+		fprintf(stderr, "Unexpected end of file.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	fclose(fp);
+
+	/* get document from data */
+	doc = poppler_document_new_from_data(databuf, statbuf.st_size,
+			NULL, &err);
+	if (!doc)
+	{
+		fprintf(stderr, "%s\n", err->message);
+		g_error_free(err);
+		exit(EXIT_FAILURE);
+	}
+
+	doc_n_pages = poppler_document_get_n_pages(doc);
+	if (doc_n_pages <= 0)
+	{
+		fprintf(stderr, "Huh, no pages in that document.\n");
+		exit(EXIT_FAILURE);
+	}
+
+    initGUI(numframes);
 
 	/* queue initial prerendering. */
 	preQueued = TRUE;
