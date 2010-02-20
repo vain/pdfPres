@@ -83,6 +83,8 @@ static gboolean do_notectrl = FALSE;
 static gboolean isFullScreen = FALSE;
 static gboolean isCurserVisible = FALSE;
 static gboolean isInsideNotePad = FALSE;
+static gboolean isUserAction = FALSE;
+static gboolean isSaved = TRUE;
 
 static gboolean preQueued = FALSE;
 
@@ -623,6 +625,12 @@ static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel)
 
 static gboolean onQuit(GtkWidget *widget, GdkEvent *ev, gpointer dummy)
 {
+	if (!isSaved)
+	{
+		printf("Unsaved.\n");
+		return TRUE;
+	}
+
 	gtk_main_quit();
 	return FALSE;
 }
@@ -642,6 +650,8 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 				GTK_FILE_CHOOSER(fileChooser));
 		readNotes(filename);
 		g_free(filename);
+
+		isSaved = TRUE;
 
 		printNote(doc_page + 1);
 	}
@@ -665,6 +675,8 @@ static void onSaveClicked(GtkWidget *widget, gpointer data)
 				GTK_FILE_CHOOSER(fileChooser));
 		saveNotes(filename);
 		g_free(filename);
+
+		isSaved = TRUE;
 	}
 	gtk_widget_destroy(fileChooser);
 }
@@ -701,6 +713,27 @@ static void onEditToggled(GtkWidget *widget, gpointer data)
 		isInsideNotePad = FALSE;
 		gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad), FALSE);
 		gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(notePad), FALSE);
+	}
+}
+
+static void onBeginUserAction(GtkTextBuffer *buf, gpointer dummy)
+{
+	printf("User action start.\n");
+	isUserAction = TRUE;
+}
+
+static void onEndUserAction(GtkTextBuffer *buf, gpointer dummy)
+{
+	printf("User action end.\n");
+	isUserAction = FALSE;
+}
+
+static void onEditing(GtkTextBuffer *buf, gpointer dummy)
+{
+	if (isUserAction)
+	{
+		printf("Edited.\n");
+		isSaved = FALSE;
 	}
 }
 
@@ -981,6 +1014,19 @@ static void initGUI(int numframes)
 	gtk_text_view_set_right_margin(GTK_TEXT_VIEW(notePad), 5);
 
 	noteBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(notePad));
+
+	/* We detect changes of the notes by catching the "changed" signal.
+	 * As this signal is also emitted when we change the buffer
+	 * programmatically, we first have a look if there was a
+	 * "begin_user_action" signal. If so, the user has changed the
+	 * buffer.
+	 */
+	g_signal_connect(G_OBJECT(noteBuffer), "changed",
+			G_CALLBACK(onEditing), NULL);
+	g_signal_connect(G_OBJECT(noteBuffer), "begin_user_action",
+			G_CALLBACK(onBeginUserAction), NULL);
+	g_signal_connect(G_OBJECT(noteBuffer), "end_user_action",
+			G_CALLBACK(onEndUserAction), NULL);
 
 	/* create toolbar */
 	toolbar = gtk_toolbar_new();
