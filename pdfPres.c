@@ -621,6 +621,12 @@ static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel)
 	return TRUE;
 }
 
+static gboolean onQuit(GtkWidget *widget, GdkEvent *ev, gpointer dummy)
+{
+	gtk_main_quit();
+	return FALSE;
+}
+
 static void onOpenClicked(GtkWidget *widget, gpointer data)
 {
 	GtkWidget *fileChooser = NULL;
@@ -767,7 +773,7 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 		case GDK_Escape:
 		case GDK_q:
 			changed = FALSE;
-			gtk_main_quit();
+			onQuit(NULL, NULL, NULL);
 			break;
 
 		default:
@@ -876,13 +882,13 @@ static void initGUI(int numframes)
 	gtk_window_set_title(GTK_WINDOW(win_beamer),  "pdfPres - Beamer");
 
 	g_signal_connect(G_OBJECT(win_preview), "delete_event",
-			G_CALLBACK(gtk_main_quit), NULL);
+			G_CALLBACK(onQuit), NULL);
 	g_signal_connect(G_OBJECT(win_preview), "destroy",
-			G_CALLBACK(gtk_main_quit), NULL);
+			G_CALLBACK(onQuit), NULL);
 	g_signal_connect(G_OBJECT(win_beamer), "delete_event",
-			G_CALLBACK(gtk_main_quit), NULL);
+			G_CALLBACK(onQuit), NULL);
 	g_signal_connect(G_OBJECT(win_beamer), "destroy",
-			G_CALLBACK(gtk_main_quit), NULL);
+			G_CALLBACK(onQuit), NULL);
 
 	g_signal_connect(G_OBJECT(win_preview), "key_press_event",
 			G_CALLBACK(onKeyPressed), NULL);
