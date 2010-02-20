@@ -35,6 +35,8 @@
 #include "notes.h"
 
 
+/* TODO: Clean up all that stuff. */
+
 struct viewport
 {
 	int offset;
@@ -103,6 +105,9 @@ static GdkColor col_current, col_marked, col_dim;
 static int fitmode = FIT_PAGE;
 
 #define FONT_SIZE 35
+
+
+static void onSaveClicked(GtkWidget *widget, gpointer data);
 
 
 void dieOnNull(void *ptr, int line)
@@ -623,13 +628,53 @@ static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel)
 	return TRUE;
 }
 
-static gboolean onQuit(GtkWidget *widget, GdkEvent *ev, gpointer dummy)
+static gboolean handleUnsavedNotes()
 {
+	GtkWidget *dialog = NULL;
+	gint response = 0;
+
+	/* See if there are unsaved changes. */
 	if (!isSaved)
 	{
-		printf("Unsaved.\n");
-		return TRUE;
+		/* What to do? */
+		dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+				GTK_DIALOG_DESTROY_WITH_PARENT,
+				GTK_MESSAGE_QUESTION,
+				GTK_BUTTONS_NONE,
+				"There are unsaved notes. Save them now?");
+		gtk_dialog_add_buttons(GTK_DIALOG(dialog),
+				GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+				GTK_STOCK_NO, GTK_RESPONSE_NO,
+				GTK_STOCK_YES, GTK_RESPONSE_YES,
+				NULL);
+
+		response = gtk_dialog_run(GTK_DIALOG(dialog));
+		gtk_widget_destroy(GTK_WIDGET(dialog));
+
+		/* Just abort. */
+		if (response == GTK_RESPONSE_CANCEL)
+			return FALSE;
+
+		/* Abandon notes. */
+		else if (response == GTK_RESPONSE_NO)
+			return TRUE;
+
+		/* Give the user the opportunity to save them. */
+		onSaveClicked(NULL, NULL);
+
+		/* Are they saved now? That is, don't quit if he cancelled. */
+		if (!isSaved)
+			return FALSE;
 	}
+
+	return TRUE;
+}
+
+static gboolean onQuit(GtkWidget *widget, GdkEvent *ev, gpointer dummy)
+{
+	/* When there are unsaved notes, the user may chose not to quit. */
+	if (!handleUnsavedNotes())
+		return TRUE;
 
 	gtk_main_quit();
 	return FALSE;
@@ -638,6 +683,10 @@ static gboolean onQuit(GtkWidget *widget, GdkEvent *ev, gpointer dummy)
 static void onOpenClicked(GtkWidget *widget, gpointer data)
 {
 	GtkWidget *fileChooser = NULL;
+
+	if (!handleUnsavedNotes())
+		return;
+
 	fileChooser = gtk_file_chooser_dialog_new("Open File", NULL,
 			GTK_FILE_CHOOSER_ACTION_OPEN, GTK_STOCK_CANCEL,
 			GTK_RESPONSE_CANCEL, GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
@@ -718,13 +767,11 @@ static void onEditToggled(GtkWidget *widget, gpointer data)
 
 static void onBeginUserAction(GtkTextBuffer *buf, gpointer dummy)
 {
-	printf("User action start.\n");
 	isUserAction = TRUE;
 }
 
 static void onEndUserAction(GtkTextBuffer *buf, gpointer dummy)
 {
-	printf("User action end.\n");
 	isUserAction = FALSE;
 }
 
@@ -732,7 +779,6 @@ static void onEditing(GtkTextBuffer *buf, gpointer dummy)
 {
 	if (isUserAction)
 	{
-		printf("Edited.\n");
 		isSaved = FALSE;
 	}
 }
