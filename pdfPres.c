@@ -69,7 +69,7 @@ static GtkWidget *win_beamer = NULL;
 static GList *cache = NULL;
 /* sane number to start with. note that this value is adjusted later on
  * according to the number of visible preview ports. */
-static int cache_max = 32;
+static guint cache_max = 32;
 
 static PopplerDocument *doc = NULL;
 
@@ -1314,9 +1314,11 @@ int main(int argc, char **argv)
 	 *
 	 * this means that switching to the previous and next slide will
 	 * always be fast.
+	 *
+	 * note: numframes is not negative (see above), so that cast is okay.
 	 */
-	if (cache_max < (numframes + 1) * 2)
-		cache_max = (numframes + 1) * 2;
+	if (cache_max < (guint)((numframes + 1) * 2))
+		cache_max = (guint)((numframes + 1) * 2);
 
 	/* try to load the file */
 	if (stat(filename, &statbuf) == -1)
