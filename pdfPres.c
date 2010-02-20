@@ -1339,7 +1339,10 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	if (fread(databuf, 1, statbuf.st_size, fp) != statbuf.st_size)
+	/* Read 1 element of size "statbuf.st_size". fread() returns the
+	 * number of items successfully read. Thus, a return value of "1"
+	 * means "success" and anything else is an error. */
+	if (fread(databuf, statbuf.st_size, 1, fp) != 1)
 	{
 		fprintf(stderr, "Unexpected end of file.\n");
 		exit(EXIT_FAILURE);
