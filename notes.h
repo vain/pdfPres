@@ -22,7 +22,7 @@
 #define NOTES_H
 
 void printNote(int slideNum);
-void readNotes(char *filename);
+gboolean readNotes(char *filename);
 gboolean saveNotes(char *filename);
 void saveCurrentNote(void);
 

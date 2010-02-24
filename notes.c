@@ -118,7 +118,7 @@ void printNote(int slideNum)
 	gtk_text_buffer_set_text(noteBuffer, "", 0);
 }
 
-void readNotes(char *filename)
+gboolean readNotes(char *filename)
 {
 	GtkWidget *dialog = NULL;
 	xmlDoc *doc = NULL;
@@ -142,7 +142,7 @@ void readNotes(char *filename)
 		gtk_dialog_run(GTK_DIALOG(dialog));
 		gtk_widget_destroy(dialog);
 		xmlCleanupParser();
-		return;
+		return FALSE;
 	}
 
 	/* Get the root element. */
@@ -158,7 +158,7 @@ void readNotes(char *filename)
 		gtk_widget_destroy(dialog);
 		xmlFreeDoc(doc);
 		xmlCleanupParser();
-		return;
+		return FALSE;
 	}
 
 	/* Traverse slide-elements. */
@@ -192,6 +192,7 @@ void readNotes(char *filename)
 
 	xmlFreeDoc(doc);
 	xmlCleanupParser();
+	return TRUE;
 }
 
 gboolean saveNotes(char *uri)

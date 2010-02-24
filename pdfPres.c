@@ -726,16 +726,18 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 
 		savedAsFilename = gtk_file_chooser_get_filename(
 				GTK_FILE_CHOOSER(fileChooser));
-		readNotes(savedAsFilename);
+		if (readNotes(savedAsFilename))
+		{
+			msg = g_strdup_printf("Notes read from '%s'.",
+					savedAsFilename);
+			setStatusText_strdup(msg);
+			g_free(msg);
 
-		msg = g_strdup_printf("Notes read from '%s'.", savedAsFilename);
-		setStatusText_strdup(msg);
-		g_free(msg);
+			isSaved = TRUE;
+			gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
 
-		isSaved = TRUE;
-		gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
-
-		printNote(doc_page + 1);
+			printNote(doc_page + 1);
+		}
 	}
 	gtk_widget_destroy(fileChooser);
 }
