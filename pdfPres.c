@@ -708,6 +708,7 @@ static gboolean onQuit(GtkWidget *widget, GdkEvent *ev, gpointer dummy)
 
 static void onOpenClicked(GtkWidget *widget, gpointer data)
 {
+	gchar *msg = NULL;
 	GtkWidget *fileChooser = NULL;
 
 	if (!handleUnsavedNotes())
@@ -727,7 +728,9 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 				GTK_FILE_CHOOSER(fileChooser));
 		readNotes(savedAsFilename);
 
-		printf("Filename: %s %d\n", savedAsFilename, isSaved);
+		msg = g_strdup_printf("Notes read from '%s'.", savedAsFilename);
+		setStatusText_strdup(msg);
+		g_free(msg);
 
 		isSaved = TRUE;
 		gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
@@ -739,6 +742,7 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 
 static void onSaveAsClicked(GtkWidget *widget, gpointer data)
 {
+	gchar *msg = NULL;
 	GtkWidget *fileChooser = NULL;
 	fileChooser = gtk_file_chooser_dialog_new("Save File", NULL,
 			GTK_FILE_CHOOSER_ACTION_SAVE, GTK_STOCK_CANCEL,
@@ -758,15 +762,20 @@ static void onSaveAsClicked(GtkWidget *widget, gpointer data)
 		{
 			isSaved = TRUE;
 			gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
-		}
 
-		printf("Filename: %s %d\n", savedAsFilename, isSaved);
+			msg = g_strdup_printf("Notes saved as '%s'.",
+					savedAsFilename);
+			setStatusText_strdup(msg);
+			g_free(msg);
+		}
 	}
 	gtk_widget_destroy(fileChooser);
 }
 
 static void onSaveClicked(GtkWidget *widget, gpointer data)
 {
+	gchar *msg = NULL;
+
 	if (savedAsFilename == NULL)
 		return;
 
@@ -774,7 +783,9 @@ static void onSaveClicked(GtkWidget *widget, gpointer data)
 	if (!saveNotes(savedAsFilename))
 		return;
 
-	printf("Saved to filename: %s\n", savedAsFilename);
+	msg = g_strdup_printf("Notes saved: '%s'.", savedAsFilename);
+	setStatusText_strdup(msg);
+	g_free(msg);
 
 	isSaved = TRUE;
 	gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
