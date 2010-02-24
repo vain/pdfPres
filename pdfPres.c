@@ -703,7 +703,7 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 				GTK_FILE_CHOOSER(fileChooser));
 		readNotes(savedAsFilename);
 
-		printf("Filename: %s\n", savedAsFilename);
+		printf("Filename: %s %d\n", savedAsFilename, isSaved);
 
 		isSaved = TRUE;
 		gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
@@ -730,12 +730,13 @@ static void onSaveAsClicked(GtkWidget *widget, gpointer data)
 
 		savedAsFilename = gtk_file_chooser_get_filename(
 				GTK_FILE_CHOOSER(fileChooser));
-		saveNotes(savedAsFilename);
+		if (saveNotes(savedAsFilename))
+		{
+			isSaved = TRUE;
+			gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
+		}
 
-		printf("Filename: %s\n", savedAsFilename);
-
-		isSaved = TRUE;
-		gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
+		printf("Filename: %s %d\n", savedAsFilename, isSaved);
 	}
 	gtk_widget_destroy(fileChooser);
 }
@@ -746,7 +747,8 @@ static void onSaveClicked(GtkWidget *widget, gpointer data)
 		return;
 
 	saveCurrentNote();
-	saveNotes(savedAsFilename);
+	if (!saveNotes(savedAsFilename))
+		return;
 
 	printf("Saved to filename: %s\n", savedAsFilename);
 

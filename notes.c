@@ -194,7 +194,7 @@ void readNotes(char *filename)
 	xmlCleanupParser();
 }
 
-void saveNotes(char *uri)
+gboolean saveNotes(char *uri)
 {
 	GList *it = notesList;
 	struct noteItem *ni = NULL;
@@ -214,7 +214,7 @@ void saveNotes(char *uri)
 		gtk_dialog_run(GTK_DIALOG(dialog));
 		gtk_widget_destroy(dialog);
 		xmlCleanupParser();
-		return;
+		return FALSE;
 	}
 
 	/* Start the document with the xml default for the version, encoding
@@ -231,7 +231,7 @@ void saveNotes(char *uri)
 		gtk_widget_destroy(dialog);
 		xmlFreeTextWriter(writer);
 		xmlCleanupParser();
-		return;
+		return FALSE;
 	}
 
 	/* Start root element. It's okay to use "BAD_CAST" since there
@@ -248,7 +248,7 @@ void saveNotes(char *uri)
 		gtk_widget_destroy(dialog);
 		xmlFreeTextWriter(writer);
 		xmlCleanupParser();
-		return;
+		return FALSE;
 	}
 
 	/* Save all notes which do exist. Leave out empty slides. */
@@ -271,7 +271,7 @@ void saveNotes(char *uri)
 				gtk_widget_destroy(dialog);
 				xmlFreeTextWriter(writer);
 				xmlCleanupParser();
-				return;
+				return FALSE;
 			}
 
 			/* Write page number as attribute. */
@@ -289,7 +289,7 @@ void saveNotes(char *uri)
 				gtk_widget_destroy(dialog);
 				xmlFreeTextWriter(writer);
 				xmlCleanupParser();
-				return;
+				return FALSE;
 			}
 
 			/* Write note as element content. */
@@ -307,7 +307,7 @@ void saveNotes(char *uri)
 				gtk_widget_destroy(dialog);
 				xmlFreeTextWriter(writer);
 				xmlCleanupParser();
-				return;
+				return FALSE;
 			}
 
 			/* End of "slide" element. */
@@ -324,7 +324,7 @@ void saveNotes(char *uri)
 				gtk_widget_destroy(dialog);
 				xmlFreeTextWriter(writer);
 				xmlCleanupParser();
-				return;
+				return FALSE;
 			}
 		}
 
@@ -347,7 +347,7 @@ void saveNotes(char *uri)
 		gtk_widget_destroy(dialog);
 		xmlFreeTextWriter(writer);
 		xmlCleanupParser();
-		return;
+		return FALSE;
 	}
 
 	xmlFreeTextWriter(writer);
@@ -361,6 +361,8 @@ void saveNotes(char *uri)
 			"Notes saved.");
 	gtk_dialog_run(GTK_DIALOG(dialog));
 	gtk_widget_destroy(dialog);
+
+	return TRUE;
 }
 
 void saveCurrentNote(void)

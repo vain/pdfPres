@@ -23,7 +23,7 @@
 
 void printNote(int slideNum);
 void readNotes(char *filename);
-void saveNotes(char *filename);
+gboolean saveNotes(char *filename);
 void saveCurrentNote(void);
 
 #endif /* NOTES_H */
