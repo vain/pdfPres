@@ -109,7 +109,7 @@ static int fitmode = FIT_PAGE;
 #define FONT_SIZE 35
 
 
-static void onSaveAsClicked(GtkWidget *widget, gpointer data);
+static void onSaveClicked(GtkWidget *widget, gpointer data);
 
 
 void dieOnNull(void *ptr, int line)
@@ -662,7 +662,7 @@ static gboolean handleUnsavedNotes()
 			return TRUE;
 
 		/* Give the user the opportunity to save them. */
-		onSaveAsClicked(NULL, NULL);
+		onSaveClicked(NULL, NULL);
 
 		/* Are they saved now? That is, don't quit if he cancelled. */
 		if (!isSaved)
@@ -738,6 +738,20 @@ static void onSaveAsClicked(GtkWidget *widget, gpointer data)
 		gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
 	}
 	gtk_widget_destroy(fileChooser);
+}
+
+static void onSaveClicked(GtkWidget *widget, gpointer data)
+{
+	if (savedAsFilename == NULL)
+		return;
+
+	saveCurrentNote();
+	saveNotes(savedAsFilename);
+
+	printf("Saved to filename: %s\n", savedAsFilename);
+
+	isSaved = TRUE;
+	gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
 }
 
 static void onFontSelectClick(GtkWidget *widget, gpointer data)
@@ -1101,8 +1115,8 @@ static void initGUI(int numframes)
 	saveButton = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE);
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), saveButton, -1);
 	gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
-	//g_signal_connect(G_OBJECT(saveButton), "clicked",
-			//G_CALLBACK(onSaveClicked), NULL);
+	g_signal_connect(G_OBJECT(saveButton), "clicked",
+			G_CALLBACK(onSaveClicked), NULL);
 
 	saveAsButton = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE_AS);
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), saveAsButton, -1);
