@@ -886,6 +886,7 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 		return FALSE;
 
 	gboolean changed = TRUE;
+	saveCurrentNote();
 
 	switch (ev->keyval)
 	{
