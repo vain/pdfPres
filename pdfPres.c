@@ -95,7 +95,7 @@ static gboolean preQueued = FALSE;
 static GTimer *timer = NULL;
 static int timerMode = 0; /* 0 = stopped, 1 = running, 2 = paused */
 static GtkWidget *startButton = NULL;
-static GtkToolItem *saveButton = NULL;
+static GtkToolItem *saveButton = NULL, *editButton = NULL;
 static GtkWidget *notePad = NULL, *notePadFrame = NULL;
 GtkTextBuffer *noteBuffer = NULL;
 static char *notesFont = NULL;
@@ -811,21 +811,37 @@ static void onFontSelectClick(GtkWidget *widget, gpointer data)
 	gtk_widget_destroy(fontChooser);
 }
 
+static void setEditingState(gboolean state)
+{
+	isInsideNotePad = state;
+	gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad), state);
+	gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(notePad), state);
+	gtk_toggle_tool_button_set_active(
+			GTK_TOGGLE_TOOL_BUTTON(editButton), state);
+
+	if (state)
+	{
+		gtk_widget_grab_focus(notePad);
+	}
+}
+
 static void onEditToggled(GtkWidget *widget, gpointer data)
 {
+	gboolean newState = FALSE;
+
 	if (gtk_toggle_tool_button_get_active(
 				GTK_TOGGLE_TOOL_BUTTON(widget)))
 	{
-		isInsideNotePad = TRUE;
-		gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad), TRUE);
-		gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(notePad), TRUE);
+		newState = TRUE;
 	}
 	else
 	{
-		isInsideNotePad = FALSE;
-		gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad), FALSE);
-		gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(notePad), FALSE);
+		newState = FALSE;
 	}
+
+	/* Don't do anything if there's no change. */
+	if (newState != isInsideNotePad)
+		setEditingState(newState);
 }
 
 static void onBeginUserAction(GtkTextBuffer *buf, gpointer dummy)
@@ -847,6 +863,19 @@ static void onEditing(GtkTextBuffer *buf, gpointer dummy)
 		if (savedAsFilename != NULL)
 			gtk_widget_set_sensitive(GTK_WIDGET(saveButton), TRUE);
 	}
+}
+
+static gboolean onPadKeyPressed(GtkWidget *widg, GdkEventKey *ev,
+		gpointer user_data)
+{
+	switch (ev->keyval)
+	{
+		case GDK_Escape:
+			setEditingState(FALSE);
+			break;
+	}
+
+	return FALSE;
 }
 
 static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
@@ -919,6 +948,14 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 		case GDK_q:
 			changed = FALSE;
 			onQuit(NULL, NULL, NULL);
+			break;
+
+		case GDK_i:
+			/* This must not work when we're on the beamer window. */
+			if (widg != win_beamer)
+				setEditingState(TRUE);
+
+			changed = FALSE;
 			break;
 
 		default:
@@ -1002,7 +1039,6 @@ static void initGUI(int numframes)
 	GtkWidget *toolbar = NULL;
 	GtkToolItem *openButton = NULL,
 				*saveAsButton = NULL,
-				*editButton = NULL,
                 *fontSelectButton = NULL;
 
 	PangoFontDescription *font_desc = NULL;
@@ -1099,6 +1135,8 @@ static void initGUI(int numframes)
 	notePad = gtk_text_view_new();
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(notePad), FALSE);
 	gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(notePad), FALSE);
+	g_signal_connect(G_OBJECT(notePad), "key_press_event",
+			G_CALLBACK(onPadKeyPressed), NULL);
 
 	/* Remarks:
 	 *
