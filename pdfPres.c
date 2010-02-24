@@ -93,6 +93,7 @@ static gboolean preQueued = FALSE;
 static GTimer *timer = NULL;
 static int timerMode = 0; /* 0 = stopped, 1 = running, 2 = paused */
 static GtkWidget *startButton = NULL;
+static GtkToolItem *saveButton = NULL;
 static GtkWidget *notePad = NULL, *notePadFrame = NULL;
 GtkTextBuffer *noteBuffer = NULL;
 static char *notesFont = NULL;
@@ -107,7 +108,7 @@ static int fitmode = FIT_PAGE;
 #define FONT_SIZE 35
 
 
-static void onSaveClicked(GtkWidget *widget, gpointer data);
+static void onSaveAsClicked(GtkWidget *widget, gpointer data);
 
 
 void dieOnNull(void *ptr, int line)
@@ -660,7 +661,7 @@ static gboolean handleUnsavedNotes()
 			return TRUE;
 
 		/* Give the user the opportunity to save them. */
-		onSaveClicked(NULL, NULL);
+		onSaveAsClicked(NULL, NULL);
 
 		/* Are they saved now? That is, don't quit if he cancelled. */
 		if (!isSaved)
@@ -707,7 +708,7 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 	gtk_widget_destroy(fileChooser);
 }
 
-static void onSaveClicked(GtkWidget *widget, gpointer data)
+static void onSaveAsClicked(GtkWidget *widget, gpointer data)
 {
 	GtkWidget *fileChooser = NULL;
 	fileChooser = gtk_file_chooser_dialog_new("Save File", NULL,
@@ -934,7 +935,7 @@ static void initGUI(int numframes)
 
 	GtkWidget *toolbar = NULL;
 	GtkToolItem *openButton = NULL,
-				*saveButton = NULL,
+				*saveAsButton = NULL,
 				*editButton = NULL,
                 *fontSelectButton = NULL;
 
@@ -1084,10 +1085,17 @@ static void initGUI(int numframes)
 	g_signal_connect(G_OBJECT(openButton), "clicked",
 			G_CALLBACK(onOpenClicked), NULL);
 
+	/* TODO: Tooltips?! */
 	saveButton = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE);
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), saveButton, -1);
-	g_signal_connect(G_OBJECT(saveButton), "clicked",
-			G_CALLBACK(onSaveClicked), NULL);
+	gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
+	//g_signal_connect(G_OBJECT(saveButton), "clicked",
+			//G_CALLBACK(onSaveClicked), NULL);
+
+	saveAsButton = gtk_tool_button_new_from_stock(GTK_STOCK_SAVE_AS);
+	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), saveAsButton, -1);
+	g_signal_connect(G_OBJECT(saveAsButton), "clicked",
+			G_CALLBACK(onSaveAsClicked), NULL);
 
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar),
 			gtk_separator_tool_item_new(), -1);
