@@ -27,5 +27,6 @@ extern GtkWidget *win_preview;
 extern GtkTextBuffer *noteBuffer;
 
 void dieOnNull(void *ptr, int line);
+void setStatusText_strdup(char *msg);
 
 #endif /* PDFPRES_H */

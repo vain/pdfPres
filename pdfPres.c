@@ -65,6 +65,7 @@ struct cacheItem
 static GList *ports = NULL;
 GtkWidget *win_preview = NULL;
 static GtkWidget *win_beamer = NULL;
+static GtkWidget *mainStatusbar = NULL;
 
 static GList *cache = NULL;
 /* sane number to start with. note that this value is adjusted later on
@@ -119,6 +120,26 @@ void dieOnNull(void *ptr, int line)
 		fprintf(stderr, "Out of memory in line %d.\n", line);
 		exit(EXIT_FAILURE);
 	}
+}
+
+void setStatusText_strdup(gchar *msg)
+{
+	static gchar *curMsg = NULL;
+
+	if (mainStatusbar == NULL)
+		return;
+
+	/* Remove current message with context id 0. */
+	gtk_statusbar_pop(GTK_STATUSBAR(mainStatusbar), 0);
+
+	/* Free last message if any -- and store pointer to new message. */
+	if (curMsg != NULL)
+		g_free(curMsg);
+
+	curMsg = g_strdup(msg);
+
+	/* Set new message. */
+	gtk_statusbar_push(GTK_STATUSBAR(mainStatusbar), 0, curMsg);
 }
 
 static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
@@ -960,6 +981,7 @@ static void initGUI(int numframes)
 			  *evbox = NULL,
 			  *outerevbox = NULL,
 			  *timeFrame = NULL;
+	GtkWidget *mainVBox = NULL;
 	GdkColor black;
 	GtkWidget *timeElapsedLabel = NULL, *resetButton = NULL;
 	gchar *textSize = NULL;
@@ -1016,7 +1038,7 @@ static void initGUI(int numframes)
 	g_signal_connect(G_OBJECT(win_preview), "button_release_event",
 			G_CALLBACK(onMouseReleased), NULL);
 
-	gtk_container_set_border_width(GTK_CONTAINER(win_preview), 10);
+	gtk_container_set_border_width(GTK_CONTAINER(win_preview), 0);
 	gtk_container_set_border_width(GTK_CONTAINER(win_beamer), 0);
 
 	gtk_widget_modify_bg(win_beamer, GTK_STATE_NORMAL, &black);
@@ -1147,6 +1169,7 @@ static void initGUI(int numframes)
 	/* init containers for "preview" */
 	table = gtk_table_new(numframes, numframes + 1, TRUE);
 	gtk_table_set_col_spacings(GTK_TABLE(table), 5);
+	gtk_container_set_border_width(GTK_CONTAINER(table), 10);
 
 	/* dynamically create all the frames */
 	for (i = 0; i < numframes; i++)
@@ -1243,7 +1266,20 @@ static void initGUI(int numframes)
 				G_CALLBACK(onResize), thisport);
 	}
 
-	gtk_container_add(GTK_CONTAINER(win_preview), table);
+	/* Add main content and a status bar to preview window.
+	 *
+	 * Note: It's important to use gtk_box_pack_* to add the statusbar
+	 * because gtk_container_add will pick unappropriate defaults. */
+	mainVBox = gtk_vbox_new(FALSE, 5);
+	gtk_container_add(GTK_CONTAINER(mainVBox), table);
+
+	mainStatusbar = gtk_statusbar_new();
+	gtk_box_pack_end(GTK_BOX(mainVBox), mainStatusbar,
+			FALSE, FALSE, 0);
+
+	setStatusText_strdup("Ready.");
+
+	gtk_container_add(GTK_CONTAINER(win_preview), mainVBox);
 
 	/* in order to set the initially highlighted frame */
 	refreshFrames();
