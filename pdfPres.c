@@ -657,9 +657,12 @@ static gboolean handleUnsavedNotes()
 		if (response == GTK_RESPONSE_CANCEL)
 			return FALSE;
 
-		/* Abandon notes. */
+		/* Abandon notes. Consider them saved and get out of here. */
 		else if (response == GTK_RESPONSE_NO)
+		{
+			isSaved = TRUE;
 			return TRUE;
+		}
 
 		/* Give the user the opportunity to save them. */
 		onSaveClicked(NULL, NULL);
