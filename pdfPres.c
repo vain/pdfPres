@@ -87,6 +87,7 @@ static gboolean isCurserVisible = FALSE;
 static gboolean isInsideNotePad = FALSE;
 static gboolean isUserAction = FALSE;
 static gboolean isSaved = TRUE;
+static char *savedAsFilename = NULL;
 
 static gboolean preQueued = FALSE;
 
@@ -695,13 +696,17 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 
 	if (gtk_dialog_run(GTK_DIALOG(fileChooser)) == GTK_RESPONSE_ACCEPT)
 	{
-		char *filename = NULL;
-		filename = gtk_file_chooser_get_filename(
+		if (savedAsFilename != NULL)
+			g_free(savedAsFilename);
+
+		savedAsFilename = gtk_file_chooser_get_filename(
 				GTK_FILE_CHOOSER(fileChooser));
-		readNotes(filename);
-		g_free(filename);
+		readNotes(savedAsFilename);
+
+		printf("Filename: %s\n", savedAsFilename);
 
 		isSaved = TRUE;
+		gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
 
 		printNote(doc_page + 1);
 	}
@@ -720,13 +725,17 @@ static void onSaveAsClicked(GtkWidget *widget, gpointer data)
 	{
 		saveCurrentNote();
 
-		char *filename = NULL;
-		filename = gtk_file_chooser_get_filename(
+		if (savedAsFilename != NULL)
+			g_free(savedAsFilename);
+
+		savedAsFilename = gtk_file_chooser_get_filename(
 				GTK_FILE_CHOOSER(fileChooser));
-		saveNotes(filename);
-		g_free(filename);
+		saveNotes(savedAsFilename);
+
+		printf("Filename: %s\n", savedAsFilename);
 
 		isSaved = TRUE;
+		gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
 	}
 	gtk_widget_destroy(fileChooser);
 }
@@ -781,6 +790,9 @@ static void onEditing(GtkTextBuffer *buf, gpointer dummy)
 	if (isUserAction)
 	{
 		isSaved = FALSE;
+
+		if (savedAsFilename != NULL)
+			gtk_widget_set_sensitive(GTK_WIDGET(saveButton), TRUE);
 	}
 }
 
