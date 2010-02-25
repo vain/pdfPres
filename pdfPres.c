@@ -1043,7 +1043,9 @@ static void onResize(GtkWidget *widg, GtkAllocation *al,
 
 static void usage(char *exe)
 {
-	fprintf(stderr, "Usage: %s [-s <slides>] [-n] [-w] <file>\n", exe);
+	fprintf(stderr,
+			"Usage: %s [-c <cache items>] [-s <slides>] [-n] "
+			"[-w] <file>\n", exe);
 }
 
 static void initGUI(int numframes)
