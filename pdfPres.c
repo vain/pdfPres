@@ -89,6 +89,7 @@ static gboolean isInsideNotePad = FALSE;
 static gboolean isUserAction = FALSE;
 static gboolean isSaved = TRUE;
 static char *savedAsFilename = NULL;
+static char *lastFolder = NULL;
 
 static gboolean preQueued = FALSE;
 
@@ -140,6 +141,24 @@ void setStatusText_strdup(gchar *msg)
 
 	/* Set new message. */
 	gtk_statusbar_push(GTK_STATUSBAR(mainStatusbar), 0, curMsg);
+}
+
+static void saveLastFolderFrom(GtkWidget *widg)
+{
+	if (lastFolder != NULL)
+		g_free(lastFolder);
+
+	lastFolder = gtk_file_chooser_get_current_folder(
+			GTK_FILE_CHOOSER(widg));
+}
+
+static void setLastFolderOn(GtkWidget *widg)
+{
+	if (lastFolder == NULL)
+		return;
+
+	gtk_file_chooser_set_current_folder(
+			GTK_FILE_CHOOSER(widg), lastFolder);
 }
 
 static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
@@ -719,10 +738,14 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 			GTK_RESPONSE_CANCEL, GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
 			NULL);
 
+	setLastFolderOn(fileChooser);
+
 	if (gtk_dialog_run(GTK_DIALOG(fileChooser)) == GTK_RESPONSE_ACCEPT)
 	{
 		if (savedAsFilename != NULL)
 			g_free(savedAsFilename);
+
+		saveLastFolderFrom(fileChooser);
 
 		savedAsFilename = gtk_file_chooser_get_filename(
 				GTK_FILE_CHOOSER(fileChooser));
@@ -753,6 +776,8 @@ static void onSaveAsClicked(GtkWidget *widget, gpointer data)
 			GTK_FILE_CHOOSER_ACTION_SAVE, GTK_STOCK_CANCEL,
 			GTK_RESPONSE_CANCEL, GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
 			NULL);
+
+	setLastFolderOn(fileChooser);
 
 	if (gtk_dialog_run(GTK_DIALOG(fileChooser)) == GTK_RESPONSE_ACCEPT)
 	{
@@ -786,6 +811,8 @@ static void onSaveAsClicked(GtkWidget *widget, gpointer data)
 
 		if (overwrite == TRUE && saveNotes(savedAsFilename))
 		{
+			saveLastFolderFrom(fileChooser);
+
 			isSaved = TRUE;
 			gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
 
