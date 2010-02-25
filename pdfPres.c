@@ -768,14 +768,15 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 static void onSaveAsClicked(GtkWidget *widget, gpointer data)
 {
 	gchar *msg = NULL;
-	GtkWidget *fileChooser = NULL, *overAsk = NULL;
-	gboolean overwrite = FALSE;
-	FILE *fp = NULL;
+	GtkWidget *fileChooser = NULL;
 
 	fileChooser = gtk_file_chooser_dialog_new("Save File", NULL,
 			GTK_FILE_CHOOSER_ACTION_SAVE, GTK_STOCK_CANCEL,
 			GTK_RESPONSE_CANCEL, GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
 			NULL);
+
+	gtk_file_chooser_set_do_overwrite_confirmation(
+			GTK_FILE_CHOOSER(fileChooser), TRUE);
 
 	setLastFolderOn(fileChooser);
 
@@ -789,27 +790,7 @@ static void onSaveAsClicked(GtkWidget *widget, gpointer data)
 		savedAsFilename = gtk_file_chooser_get_filename(
 				GTK_FILE_CHOOSER(fileChooser));
 
-		fp = fopen(savedAsFilename, "r");
-		if (fp)
-		{
-			overAsk = gtk_message_dialog_new(NULL,
-					GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_WARNING,
-					GTK_BUTTONS_YES_NO,
-					"File %s already exists. Overwrite it?",
-					savedAsFilename);
-
-			if (gtk_dialog_run(GTK_DIALOG(overAsk)) == GTK_RESPONSE_YES)
-				overwrite = TRUE;
-
-			gtk_widget_destroy(overAsk);
-			fclose(fp);
-		}
-		else
-		{
-			overwrite = TRUE;
-		}
-
-		if (overwrite == TRUE && saveNotes(savedAsFilename))
+		if (saveNotes(savedAsFilename))
 		{
 			saveLastFolderFrom(fileChooser);
 
