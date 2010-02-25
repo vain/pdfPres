@@ -78,6 +78,7 @@ int doc_n_pages = 0;
 int doc_page = 0;
 static int doc_page_mark = 0;
 static int doc_page_beamer = 0;
+static int target_page = -1;
 
 static gboolean beamer_active = TRUE;
 static gboolean do_wrapping = FALSE;
@@ -913,12 +914,84 @@ static gboolean onPadKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 	return FALSE;
 }
 
+static int executeJump(void)
+{
+	/*
+	 * 0 = No jump pending, nothing done.
+	 * 1 = Jump succeeded.
+	 * 2 = Jump was pending, but target page invalid.
+	 */
+	int retval = 0;
+
+	/* Jump? */
+	if (target_page >= 0)
+	{
+		target_page--;
+
+		/* Restrict to valid range. */
+		if (target_page >= 0 && target_page < doc_n_pages)
+		{
+			doc_page = target_page;
+			doc_page_beamer = target_page;
+			setStatusText_strdup("Ready.");
+			retval = 1;
+		}
+		else
+		{
+			setStatusText_strdup("Invalid page.");
+			retval = 2;
+		}
+
+		/* Reset value to: "no jump pending". */
+		target_page = -1;
+	}
+
+	return retval;
+}
+
 static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 		gpointer user_data)
 {
+	guint key = ev->keyval;
+	gchar *msg = NULL;
+
 	/* When inside the note pad, don't do anything here. */
 	if (isInsideNotePad)
 		return FALSE;
+
+	/* Jump command?
+	 *
+	 * Note: This works as long as the values of GDK keysyms satisfy:
+	 *   1)  GDK_0 < GDK_1 < GDK_2 < ... < GDK_9
+	 *   2)  All of them must be >= 0.
+	 */
+	key -= GDK_0;
+	if (key <= 9)
+	{
+		/* The initial value is -1, so we have to reset this on the
+		 * first key stroke. */
+		if (target_page < 0)
+			target_page = 0;
+
+		/* Do a "decimal left shift" and add the given value. */
+		target_page *= 10;
+		target_page += (int)key;
+
+		/* Catch overflow and announce what would happen. */
+		if (target_page < 0)
+		{
+			target_page = -1;
+			setStatusText_strdup("Invalid page.");
+		}
+		else
+		{
+			msg = g_strdup_printf("Jump to page: %d", target_page);
+			setStatusText_strdup(msg);
+			g_free(msg);
+		}
+
+		return FALSE;
+	}
 
 	gboolean changed = TRUE;
 	saveCurrentNote();
@@ -926,7 +999,6 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 	switch (ev->keyval)
 	{
 		case GDK_Right:
-		case GDK_Return:
 		case GDK_space:
 			nextSlide();
 			break;
@@ -992,6 +1064,15 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 				setEditingState(TRUE);
 
 			changed = FALSE;
+			break;
+
+		case GDK_Return:
+			if (executeJump() == 0)
+				nextSlide();
+			break;
+
+		case GDK_G:
+			executeJump();
 			break;
 
 		default:
