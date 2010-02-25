@@ -13,10 +13,15 @@ Keeping an eye on the time during your presentations is now possible with a time
 The visibility of the cursor in the presentation window is disabled by default. 
 In case there is no pointing device available the cursor can be set to visible.
 
+To directly jump to a specific slide just type the slidenumber and press [G]
+or [RETURN].
+
 Private notes can be viewed in a notepad on the left side. A file containing 
 the notes can be loaded with the appropriate open-icon below the notepad.
 You can edit your notes from inside pdfPres by pressing the edit
-button. And of course, notes can be saved to a file.
+button or [i]. To return to normal mode either press the edit button again
+or press [ESC]. Of course, notes can be saved to a file using the save or 
+saveAs buttons.
 
 Optionally, an external program can be attached via a pipe. The number
 of the slide which is currently shown will be written to that pipe. So,
@@ -49,6 +54,9 @@ Keys
 * [s] starts the timer, pauses it and continues if paused. [r] resets
   the timer
 * [c] toggles cursor visibility in presentation window.
+* [i] enters note edit mode.
+* [ESC] leaves note edit mode.
+* Type a number and then [G] or [RETURN] to jump to the appropriate slide.
 
 
 Launching
