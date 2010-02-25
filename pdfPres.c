@@ -745,8 +745,10 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 static void onSaveAsClicked(GtkWidget *widget, gpointer data)
 {
 	gchar *msg = NULL;
-	GtkWidget *fileChooser = NULL, *overwriteChooser = NULL;
-    gboolean overwrite = FALSE;
+	GtkWidget *fileChooser = NULL, *overAsk = NULL;
+	gboolean overwrite = FALSE;
+	FILE *fp = NULL;
+
 	fileChooser = gtk_file_chooser_dialog_new("Save File", NULL,
 			GTK_FILE_CHOOSER_ACTION_SAVE, GTK_STOCK_CANCEL,
 			GTK_RESPONSE_CANCEL, GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
@@ -762,18 +764,26 @@ static void onSaveAsClicked(GtkWidget *widget, gpointer data)
 		savedAsFilename = gtk_file_chooser_get_filename(
 				GTK_FILE_CHOOSER(fileChooser));
 
-        FILE *fp = fopen(savedAsFilename,"r");
-        if( fp ) {
-            overwriteChooser = gtk_message_dialog_new(NULL, GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_WARNING, GTK_BUTTONS_YES_NO, "File %s already exists. Overwrite it?", savedAsFilename);
+		fp = fopen(savedAsFilename, "r");
+		if (fp)
+		{
+			overAsk = gtk_message_dialog_new(NULL,
+					GTK_DIALOG_DESTROY_WITH_PARENT, GTK_MESSAGE_WARNING,
+					GTK_BUTTONS_YES_NO,
+					"File %s already exists. Overwrite it?",
+					savedAsFilename);
 
-            if(gtk_dialog_run(GTK_DIALOG(overwriteChooser)) == GTK_RESPONSE_YES)
-                overwrite = TRUE;
+			if (gtk_dialog_run(GTK_DIALOG(overAsk)) == GTK_RESPONSE_YES)
+				overwrite = TRUE;
 
-            gtk_widget_destroy (overwriteChooser);
-            fclose(fp);
-        } else {
-            overwrite = TRUE;
-        }
+			gtk_widget_destroy(overAsk);
+			fclose(fp);
+		}
+		else
+		{
+			overwrite = TRUE;
+		}
+
 		if (overwrite == TRUE && saveNotes(savedAsFilename))
 		{
 			isSaved = TRUE;
@@ -813,14 +823,17 @@ static void onFontSelectClick(GtkWidget *widget, gpointer data)
 	PangoFontDescription *font_desc = NULL;
 
 	fontChooser = gtk_font_selection_dialog_new("Select Notes Font");
-    gtk_font_selection_dialog_set_font_name(GTK_FONT_SELECTION_DIALOG(fontChooser),notesFont);
-    if(gtk_dialog_run(GTK_DIALOG(fontChooser)) == GTK_RESPONSE_OK)
-    {
-        notesFont = gtk_font_selection_dialog_get_font_name(GTK_FONT_SELECTION_DIALOG(fontChooser));
-        font_desc = pango_font_description_from_string(notesFont);
-        gtk_widget_modify_font(notePad, font_desc);
-        pango_font_description_free(font_desc);
-    }
+	gtk_font_selection_dialog_set_font_name(
+			GTK_FONT_SELECTION_DIALOG(fontChooser), notesFont);
+
+	if (gtk_dialog_run(GTK_DIALOG(fontChooser)) == GTK_RESPONSE_OK)
+	{
+		notesFont = gtk_font_selection_dialog_get_font_name(
+				GTK_FONT_SELECTION_DIALOG(fontChooser));
+		font_desc = pango_font_description_from_string(notesFont);
+		gtk_widget_modify_font(notePad, font_desc);
+		pango_font_description_free(font_desc);
+	}
 
 	gtk_widget_destroy(fontChooser);
 }
@@ -1035,7 +1048,7 @@ static void usage(char *exe)
 
 static void initGUI(int numframes)
 {
-    int i = 0, transIndex = 0; 
+	int i = 0, transIndex = 0;
 	GtkWidget *buttonBox = NULL,
 			  *timeBox = NULL,
 			  *notePadBox = NULL,
@@ -1171,7 +1184,7 @@ static void initGUI(int numframes)
 			TRUE, 2);
 
 	/* set note pad font and margin */
-    notesFont = "Sans 12";
+	notesFont = "Sans 12";
 	font_desc = pango_font_description_from_string(notesFont);
 	gtk_widget_modify_font(notePad, font_desc);
 	pango_font_description_free(font_desc);
@@ -1224,7 +1237,8 @@ static void initGUI(int numframes)
 	g_signal_connect(G_OBJECT(editButton), "toggled",
 			G_CALLBACK(onEditToggled), NULL);
 
-	fontSelectButton = gtk_tool_button_new_from_stock(GTK_STOCK_SELECT_FONT);
+	fontSelectButton =
+		gtk_tool_button_new_from_stock(GTK_STOCK_SELECT_FONT);
 	gtk_toolbar_insert(GTK_TOOLBAR(toolbar), fontSelectButton, -1);
 	g_signal_connect(G_OBJECT(fontSelectButton), "clicked",
 			G_CALLBACK(onFontSelectClick), NULL);
@@ -1383,7 +1397,6 @@ static void initGUI(int numframes)
 
 	g_timeout_add(500, (GSourceFunc) printTimeElapsed,
 			(gpointer) timeElapsedLabel);
-
 }
 
 int main(int argc, char **argv)
