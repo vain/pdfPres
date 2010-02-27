@@ -32,10 +32,12 @@
 #include <glib/poppler.h>
 
 #include "pdfPres.h"
+#include "prefs.h"
 #include "notes.h"
 
 
 /* TODO: Clean up all that stuff. */
+/* TODO: Move all "runtime configuration variables" into one struct. */
 
 struct viewport
 {
@@ -104,9 +106,6 @@ static char *notesFont = NULL;
 
 static GdkColor col_current, col_marked, col_dim;
 
-#define FIT_WIDTH 0
-#define FIT_HEIGHT 1
-#define FIT_PAGE 2
 static int fitmode = FIT_PAGE;
 
 #define FONT_SIZE 35
@@ -721,6 +720,9 @@ static gboolean onQuit(GtkWidget *widget, GdkEvent *ev, gpointer dummy)
 	/* When there are unsaved notes, the user may chose not to quit. */
 	if (!handleUnsavedNotes())
 		return TRUE;
+
+	/* Save preferences. */
+	savePreferences();
 
 	gtk_main_quit();
 	return FALSE;
@@ -1501,9 +1503,17 @@ int main(int argc, char **argv)
 
 	gtk_init(&argc, &argv);
 
-	/* defaults */
+	/* Load preferences first. Command line options will override those
+	 * preferences. */
+	loadPreferences();
+
+	/* Read defaults from preferences. */
 	filename = NULL;
-	numframes = 3;
+	numframes = 2 * prefs.slide_context + 1;
+	do_wrapping = prefs.do_wrapping;
+	do_notectrl = prefs.do_notectrl;
+	cache_max = prefs.cache_max;
+	fitmode = prefs.initial_fit_mode;
 
 	/* get options via getopt */
 	while ((i = getopt(argc, argv, "s:wnc:")) != -1)
