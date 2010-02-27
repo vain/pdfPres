@@ -1243,9 +1243,15 @@ static void initGUI(int numframes)
 	pango_font_description_free(font_desc);
 	gtk_label_set_text(GTK_LABEL(timeElapsedLabel), "00:00");
 
+	/* Add timer label to another event box so we can set a nice border.
+	 */
+	evbox = gtk_event_box_new();
+	gtk_container_add(GTK_CONTAINER(evbox), timeElapsedLabel);
+	gtk_container_set_border_width(GTK_CONTAINER(evbox), 10);
+
 	/* create timer */
 	timeBox = gtk_vbox_new(FALSE, 5);
-	gtk_box_pack_start(GTK_BOX(timeBox), timeElapsedLabel,
+	gtk_box_pack_start(GTK_BOX(timeBox), evbox,
 			TRUE, TRUE, 5);
 	gtk_box_pack_start(GTK_BOX(timeBox), timeToolbar,
 			FALSE, FALSE, 5);
@@ -1263,6 +1269,7 @@ static void initGUI(int numframes)
 	gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(notePad), FALSE);
 	g_signal_connect(G_OBJECT(notePad), "key_press_event",
 			G_CALLBACK(onPadKeyPressed), NULL);
+	gtk_widget_set_size_request(notePad, 200, 50);
 
 	/* Remarks:
 	 *
