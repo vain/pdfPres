@@ -81,6 +81,7 @@ static GdkColor col_current, col_marked, col_dim;
 
 
 static void onSaveClicked(GtkWidget *widget, gpointer data);
+static void onSaveAsClicked(GtkWidget *widget, gpointer data);
 
 
 static void dieOnNull(void *ptr, int line)
@@ -675,7 +676,10 @@ static gboolean handleUnsavedNotes()
 		}
 
 		/* Give the user the opportunity to save them. */
-		onSaveClicked(NULL, NULL);
+		if (savedAsFilename == NULL)
+			onSaveAsClicked(NULL, NULL);
+		else
+			onSaveClicked(NULL, NULL);
 
 		/* Are they saved now? That is, don't quit if he cancelled. */
 		if (!isSaved)
