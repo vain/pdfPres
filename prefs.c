@@ -18,8 +18,12 @@
 */
 
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include <gtk/gtk.h>
 #include <libxml/parser.h>
+#include <libxml/xmlwriter.h>
 
 #include "prefs.h"
 
@@ -173,8 +177,186 @@ void loadPreferences(void)
 	return;
 }
 
+static gboolean checkdir(char *path)
+{
+	struct stat statbuf;
+
+	if (stat(path, &statbuf) == -1)
+	{
+		if (mkdir(path, S_IRWXU) == -1)
+		{
+			fprintf(stderr, "[prefs] Could not create directory:"
+					"\n\t`%s'\n", path);
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+static gboolean writeRootElement(xmlTextWriterPtr writer)
+{
+	int rc = 0;
+
+	/* Start of element. */
+	rc = xmlTextWriterStartElement(writer, BAD_CAST "config");
+	if (rc < 0)
+	{
+		fprintf(stderr, "[prefs] Could not start element `config'.\n");
+		xmlFreeTextWriter(writer);
+		xmlCleanupParser();
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean writeElement(xmlTextWriterPtr writer, char *ele, char *v)
+{
+	int rc = 0;
+
+	/* Start of element. */
+	rc = xmlTextWriterStartElement(writer, BAD_CAST ele);
+	if (rc < 0)
+	{
+		fprintf(stderr, "[prefs] Could not start element `%s'.\n", ele);
+		xmlFreeTextWriter(writer);
+		xmlCleanupParser();
+		return FALSE;
+	}
+
+	/* Write page number as attribute. */
+	rc = xmlTextWriterWriteFormatAttribute(writer,
+			BAD_CAST "v", "%s", v);
+	if (rc < 0)
+	{
+		fprintf(stderr, "[prefs] Could not write value `%s' "
+				"for element `%s'.\n", v, ele);
+		xmlFreeTextWriter(writer);
+		xmlCleanupParser();
+		return FALSE;
+	}
+
+	/* End of "slide" element. */
+	rc = xmlTextWriterEndElement(writer);
+	if (rc < 0)
+	{
+		fprintf(stderr, "[prefs] Could not end element `%s'.\n", ele);
+		xmlFreeTextWriter(writer);
+		xmlCleanupParser();
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+static gboolean writeElementInt(xmlTextWriterPtr writer, char *ele, int v)
+{
+	char *v_str = NULL;
+	gboolean result = FALSE;
+
+	v_str = g_strdup_printf("%d", v);
+	result = writeElement(writer, ele, v_str);
+	g_free(v_str);
+
+	return result;
+}
+
+static gboolean writeElementBoolean(xmlTextWriterPtr writer, char *ele,
+		gboolean v)
+{
+	return writeElement(writer, ele, (v ? "1" : "0"));
+}
+
 void savePreferences(void)
 {
-	/* TODO: Create directory structure: ~/.config/pdfPres/ */
-	/* TODO: Save settings to ~/.config/pdfPres/config.xml */
+	char *prefspath = NULL;
+	xmlTextWriterPtr writer;
+	gboolean result = FALSE;
+	int rc = 0;
+
+	/* Ready up dirs. */
+	/* NOTE / FIXME: This is specific to unix. */
+	prefspath = g_strdup_printf("%s/.config", getenv("HOME"));
+	result = checkdir(prefspath);
+	g_free(prefspath);
+
+	if (!result)
+		return;
+
+	prefspath = g_strdup_printf("%s/.config/pdfPres", getenv("HOME"));
+	result = checkdir(prefspath);
+	g_free(prefspath);
+
+	if (!result)
+		return;
+
+	/* Directories ready. */
+	prefspath = g_strdup_printf("%s/.config/pdfPres/config.xml",
+			getenv("HOME"));
+
+	/* Create a new XmlWriter for uri, with no compression. */
+	writer = xmlNewTextWriterFilename(prefspath, 0);
+	g_free(prefspath);
+	if (writer == NULL)
+	{
+		fprintf(stderr, "[prefs] Can't write to config.xml.\n");
+		xmlCleanupParser();
+		return;
+	}
+
+	/* Activate indentation. An error is not fatal at this point. */
+	rc = xmlTextWriterSetIndent(writer, 1);
+	if (rc < 0)
+	{
+		fprintf(stderr, "[prefs] Could not activate xml indentation.\n");
+	}
+
+	/* Start the document with the xml default for the version, encoding
+	 * UTF-8 and the default for the standalone declaration. */
+	rc = xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL);
+	if (rc < 0)
+	{
+		fprintf(stderr, "[prefs] Could not start document.\n");
+		xmlFreeTextWriter(writer);
+		xmlCleanupParser();
+		return;
+	}
+
+	/* Write all preferences. Note: On failure, these functions clean up
+	 * the xml stuff by themselves. */
+	if (!writeRootElement(writer))
+		return;
+
+	if (!writeElementInt(writer, "initial_fit_mode",
+				prefs.initial_fit_mode))
+		return;
+
+	if (!writeElementInt(writer, "slide_context", prefs.slide_context))
+		return;
+
+	if (!writeElementBoolean(writer, "do_wrapping", prefs.do_wrapping))
+		return;
+
+	if (!writeElementBoolean(writer, "do_notectrl", prefs.do_notectrl))
+		return;
+
+	if (!writeElementInt(writer, "cache_max", prefs.cache_max))
+		return;
+
+	if (!writeElement(writer, "font_notes", prefs.font_notes))
+		return;
+
+	if (!writeElement(writer, "font_timer", prefs.font_timer))
+		return;
+
+	/* Finish. */
+	rc = xmlTextWriterEndDocument(writer);
+	if (rc < 0)
+	{
+		fprintf(stderr, "[prefs] Could not end document.\n");
+	}
+
+	xmlFreeTextWriter(writer);
+	xmlCleanupParser();
 }
