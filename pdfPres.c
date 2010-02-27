@@ -102,13 +102,10 @@ static GtkWidget *startButton = NULL;
 static GtkToolItem *saveButton = NULL, *editButton = NULL;
 static GtkWidget *notePad = NULL, *notePadFrame = NULL;
 GtkTextBuffer *noteBuffer = NULL;
-static char *notesFont = NULL;
 
 static GdkColor col_current, col_marked, col_dim;
 
 static int fitmode = FIT_PAGE;
-
-#define FONT_SIZE 35
 
 
 static void onSaveClicked(GtkWidget *widget, gpointer data);
@@ -643,7 +640,6 @@ static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel)
 {
 	int timeElapsed;
 	gchar *timeToSet = NULL;
-	gchar *textSize = NULL;
 
 	if (timerMode > 0)
 	{
@@ -653,18 +649,12 @@ static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel)
 		int sec = timeElapsed % 60;
 		timeToSet = g_strdup_printf("%02d:%02d", min, sec);
 
-		textSize = g_markup_printf_escaped(
-				"<span font=\"%d\">%s</span>", FONT_SIZE, timeToSet);
-		gtk_label_set_markup(GTK_LABEL(timeElapsedLabel), textSize);
-		g_free(textSize);
+		gtk_label_set_text(GTK_LABEL(timeElapsedLabel), timeToSet);
 		g_free(timeToSet);
 	}
 	else
 	{
-		textSize = g_markup_printf_escaped(
-				"<span font=\"%d\">%s</span>", FONT_SIZE, "00:00");
-		gtk_label_set_markup(GTK_LABEL(timeElapsedLabel), textSize);
-		g_free(textSize);
+		gtk_label_set_text(GTK_LABEL(timeElapsedLabel), "00:00");
 	}
 
 	return TRUE;
@@ -835,13 +825,16 @@ static void onFontSelectClick(GtkWidget *widget, gpointer data)
 
 	fontChooser = gtk_font_selection_dialog_new("Select Notes Font");
 	gtk_font_selection_dialog_set_font_name(
-			GTK_FONT_SELECTION_DIALOG(fontChooser), notesFont);
+			GTK_FONT_SELECTION_DIALOG(fontChooser), prefs.font_notes);
 
 	if (gtk_dialog_run(GTK_DIALOG(fontChooser)) == GTK_RESPONSE_OK)
 	{
-		notesFont = gtk_font_selection_dialog_get_font_name(
+		if (prefs.font_notes != NULL)
+			g_free(prefs.font_notes);
+
+		prefs.font_notes = gtk_font_selection_dialog_get_font_name(
 				GTK_FONT_SELECTION_DIALOG(fontChooser));
-		font_desc = pango_font_description_from_string(notesFont);
+		font_desc = pango_font_description_from_string(prefs.font_notes);
 		gtk_widget_modify_font(notePad, font_desc);
 		pango_font_description_free(font_desc);
 	}
@@ -1155,7 +1148,6 @@ static void initGUI(int numframes)
 	GtkWidget *mainVBox = NULL;
 	GdkColor black;
 	GtkWidget *timeElapsedLabel = NULL, *resetButton = NULL;
-	gchar *textSize = NULL;
 
 	GtkWidget *toolbar = NULL;
 	GtkToolItem *openButton = NULL,
@@ -1232,11 +1224,11 @@ static void initGUI(int numframes)
 	gtk_box_pack_start(GTK_BOX(buttonBox), resetButton, FALSE, FALSE, 5);
 
 	/* setting text size for time label */
-	textSize = g_markup_printf_escaped("<span font=\"%d\">%s</span>",
-			FONT_SIZE, "00:00");
 	timeElapsedLabel = gtk_label_new(NULL);
-	gtk_label_set_markup (GTK_LABEL(timeElapsedLabel), textSize);
-	g_free(textSize);
+	font_desc = pango_font_description_from_string(prefs.font_timer);
+	gtk_widget_modify_font(GTK_WIDGET(timeElapsedLabel), font_desc);
+	pango_font_description_free(font_desc);
+	gtk_label_set_text(GTK_LABEL(timeElapsedLabel), "00:00");
 
 	/* create timer */
 	timeBox = gtk_vbox_new(FALSE, 5);
@@ -1277,8 +1269,7 @@ static void initGUI(int numframes)
 			TRUE, 2);
 
 	/* set note pad font and margin */
-	notesFont = "Sans 12";
-	font_desc = pango_font_description_from_string(notesFont);
+	font_desc = pango_font_description_from_string(prefs.font_notes);
 	gtk_widget_modify_font(notePad, font_desc);
 	pango_font_description_free(font_desc);
 

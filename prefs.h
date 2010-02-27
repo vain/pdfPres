@@ -34,8 +34,8 @@ struct _prefs
 	gboolean do_wrapping;
 	gboolean do_notectrl;
 	guint cache_max;
-	char *font_notes;         /* TODO: migrate. */
-	char *font_timer;         /* TODO: migrate. */
+	char *font_notes;
+	char *font_timer;
 };
 extern struct _prefs prefs;
 
