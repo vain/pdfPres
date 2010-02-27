@@ -111,10 +111,9 @@ pdfPres writes all of its configuration variables to
 		<font_timer v="Sans 35"/>
 	</config>
 
-For now, you're supposed to directly edit this file except for
-`font_notes`. If you change this font inside pdfPres, it'll get saved
-automatically. I plan to add a button soon so that you can also change
-the timer font.
+For now, you're supposed to directly edit this file except for font
+settings. If you change fonts inside pdfPres, they'll get saved
+automatically.
 
 * `initial_fit_mode` accepts `0`, `1` or `2` meaning `FIT_WIDTH`,
   `FIT_HEIGHT` or `FIT_PAGE`.
