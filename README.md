@@ -94,6 +94,38 @@ be written to stdout. You can pipe this information to another program.
 That'll allow you to do fancy things.
 
 
+Configuration
+-------------
+
+pdfPres writes all of its configuration variables to
+`~/.config/pdfPres/config.xml` on exit. This file will look like this:
+
+	<?xml version="1.0" encoding="UTF-8"?>
+	<config>
+		<initial_fit_mode v="2"/>
+		<slide_context v="1"/>
+		<do_wrapping v="0"/>
+		<do_notectrl v="0"/>
+		<cache_max v="32"/>
+		<font_notes v="Sans 12"/>
+		<font_timer v="Sans 35"/>
+	</config>
+
+For now, you're supposed to directly edit this file except for
+`font_notes`. If you change this font inside pdfPres, it'll get saved
+automatically. I plan to add a button soon so that you can also change
+the timer font.
+
+* `initial_fit_mode` accepts `0`, `1` or `2` meaning `FIT_WIDTH`,
+  `FIT_HEIGHT` or `FIT_PAGE`.
+* `slide_context` is equivalent to the `-s ...` parameter.
+* `do_wrapping` is equivalent to the `-w` parameter. `1` enables
+  wrapping and everything else disables it.
+* `do_notectrl` is equivalent to the `-n` parameter. `1` enables
+  note control and everything else disables it.
+* `cache_max` is equivalent to the `-c ...` parameter.
+
+
 Build instructions
 ------------------
 
