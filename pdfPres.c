@@ -650,11 +650,25 @@ static gboolean handleUnsavedNotes()
 	if (!isSaved)
 	{
 		/* What to do? */
-		dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
-				GTK_DIALOG_DESTROY_WITH_PARENT,
-				GTK_MESSAGE_QUESTION,
-				GTK_BUTTONS_NONE,
-				"There are unsaved notes. Save them now?");
+		if (savedAsFilename == NULL)
+		{
+			dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+					GTK_DIALOG_DESTROY_WITH_PARENT,
+					GTK_MESSAGE_QUESTION,
+					GTK_BUTTONS_NONE,
+					"There are unsaved notes. Save them now?");
+		}
+		else
+		{
+			dialog = gtk_message_dialog_new(GTK_WINDOW(win_preview),
+					GTK_DIALOG_DESTROY_WITH_PARENT,
+					GTK_MESSAGE_QUESTION,
+					GTK_BUTTONS_NONE,
+					"There are unsaved notes. Save them now?\n"
+					"\n"
+					"They will be saved to: `%s'.",
+					savedAsFilename);
+		}
 		gtk_dialog_add_buttons(GTK_DIALOG(dialog),
 				GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
 				GTK_STOCK_NO, GTK_RESPONSE_NO,
