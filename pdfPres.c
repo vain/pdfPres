@@ -37,32 +37,8 @@
 
 
 /* TODO: Clean up all that stuff. */
-/* TODO: Move all "runtime configuration variables" into one struct. */
 
-struct viewport
-{
-	int offset;
-
-	int width;
-	int height;
-
-	GtkWidget *image;
-	GtkWidget *frame;
-
-	GdkPixbuf *pixbuf;
-
-	gboolean isBeamer;
-};
-
-struct cacheItem
-{
-	GdkPixbuf *pixbuf;
-	int slidenum;
-	double w;
-	double h;
-	double scale;
-};
-
+struct _runtimePreferences runpref;
 
 static GList *ports = NULL;
 GtkWidget *win_preview = NULL;
@@ -70,9 +46,6 @@ static GtkWidget *win_beamer = NULL;
 static GtkWidget *mainStatusbar = NULL;
 
 static GList *cache = NULL;
-/* sane number to start with. note that this value is adjusted later on
- * according to the number of visible preview ports. */
-static guint cache_max = 32;
 
 static PopplerDocument *doc = NULL;
 
@@ -83,8 +56,6 @@ static int doc_page_beamer = 0;
 static int target_page = -1;
 
 static gboolean beamer_active = TRUE;
-static gboolean do_wrapping = FALSE;
-static gboolean do_notectrl = FALSE;
 
 static gboolean isFullScreen = FALSE;
 static gboolean isCurserVisible = FALSE;
@@ -105,13 +76,11 @@ GtkTextBuffer *noteBuffer = NULL;
 
 static GdkColor col_current, col_marked, col_dim;
 
-static int fitmode = FIT_PAGE;
-
 
 static void onSaveClicked(GtkWidget *widget, gpointer data);
 
 
-void dieOnNull(void *ptr, int line)
+static void dieOnNull(void *ptr, int line)
 {
 	if (ptr == NULL)
 	{
@@ -184,7 +153,7 @@ static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
 	screen_ratio = (double)pp->width / (double)pp->height;
 
 	/* select fit mode */
-	if (fitmode == FIT_PAGE)
+	if (runpref.fit_mode == FIT_PAGE)
 	{
 		/* that's it: compare screen and page ratio. this
 		 * will cover all 4 cases that could happen. */
@@ -194,7 +163,7 @@ static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
 			myfitmode = FIT_WIDTH;
 	}
 	else
-		myfitmode = fitmode;
+		myfitmode = runpref.fit_mode;
 
 	switch (myfitmode)
 	{
@@ -247,7 +216,7 @@ static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
 				targetBuf);
 
 		/* check if cache full. if so, kill the oldest item. */
-		if (g_list_length(cache) + 1 > cache_max)
+		if (g_list_length(cache) + 1 > runpref.cache_max)
 		{
 			it = g_list_first(cache);
 			if (it == NULL)
@@ -340,7 +309,7 @@ static void updatePortPixbuf(struct viewport *pp)
 	if (pp->offset == 0 && !pp->isBeamer)
 	{
 		printNote(doc_page + 1);
-		if (do_notectrl)
+		if (runpref.do_notectrl)
 		{
 			printf("%d\n", doc_page + 1);
 			fflush(stdout);
@@ -520,7 +489,7 @@ static void current_release(gboolean jump)
 static void nextSlide(void)
 {
 	/* stop if we're at the end and wrapping is disabled. */
-	if (!do_wrapping)
+	if (!runpref.do_wrapping)
 	{
 		if (doc_page == doc_n_pages - 1)
 		{
@@ -542,7 +511,7 @@ static void nextSlide(void)
 static void prevSlide(void)
 {
 	/* stop if we're at the beginning and wrapping is disabled. */
-	if (!do_wrapping)
+	if (!runpref.do_wrapping)
 	{
 		if (doc_page == 0)
 		{
@@ -1008,15 +977,15 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 			break;
 
 		case GDK_w:
-			fitmode = FIT_WIDTH;
+			runpref.fit_mode = FIT_WIDTH;
 			break;
 
 		case GDK_h:
-			fitmode = FIT_HEIGHT;
+			runpref.fit_mode = FIT_HEIGHT;
 			break;
 
 		case GDK_p:
-			fitmode = FIT_PAGE;
+			runpref.fit_mode = FIT_PAGE;
 			break;
 
 		case GDK_l:
@@ -1501,10 +1470,10 @@ int main(int argc, char **argv)
 	/* Read defaults from preferences. */
 	filename = NULL;
 	numframes = 2 * prefs.slide_context + 1;
-	do_wrapping = prefs.do_wrapping;
-	do_notectrl = prefs.do_notectrl;
-	cache_max = prefs.cache_max;
-	fitmode = prefs.initial_fit_mode;
+	runpref.do_wrapping = prefs.do_wrapping;
+	runpref.do_notectrl = prefs.do_notectrl;
+	runpref.cache_max = prefs.cache_max;
+	runpref.fit_mode = prefs.initial_fit_mode;
 
 	/* get options via getopt */
 	while ((i = getopt(argc, argv, "s:wnc:")) != -1)
@@ -1522,17 +1491,17 @@ int main(int argc, char **argv)
 				break;
 
 			case 'w':
-				do_wrapping = TRUE;
+				runpref.do_wrapping = TRUE;
 				break;
 
 			case 'n':
-				do_notectrl = TRUE;
+				runpref.do_notectrl = TRUE;
 				break;
 
 			case 'c':
 				/* don't care if that number is invalid. it'll get
 				 * re-adjusted anyway if it's too small. */
-				cache_max = atoi(optarg);
+				runpref.cache_max = atoi(optarg);
 				break;
 
 			case '?':
@@ -1563,8 +1532,8 @@ int main(int argc, char **argv)
 	 *
 	 * note: numframes is not negative (see above), so that cast is okay.
 	 */
-	if (cache_max < (guint)((numframes + 1) * 2))
-		cache_max = (guint)((numframes + 1) * 2);
+	if (runpref.cache_max < (guint)((numframes + 1) * 2))
+		runpref.cache_max = (guint)((numframes + 1) * 2);
 
 	/* try to load the file */
 	if (stat(filename, &statbuf) == -1)

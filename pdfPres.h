@@ -21,11 +21,47 @@
 #ifndef PDFPRES_H
 #define PDFPRES_H
 
+struct viewport
+{
+	int offset;
+
+	int width;
+	int height;
+
+	GtkWidget *image;
+	GtkWidget *frame;
+
+	GdkPixbuf *pixbuf;
+
+	gboolean isBeamer;
+};
+
+struct cacheItem
+{
+	GdkPixbuf *pixbuf;
+	int slidenum;
+	double w;
+	double h;
+	double scale;
+};
+
+/* These preferences are initially loaded by prefs.c but they can be
+ * overriden by command line parameters. We separate them from the other
+ * preferences because command line parameters must not have any effect
+ * on saved preferences.
+ */
+struct _runtimePreferences
+{
+	guint cache_max;
+	gboolean do_wrapping;
+	gboolean do_notectrl;
+	int fit_mode;
+};
+extern struct _runtimePreferences runpref;
+
 extern int doc_n_pages;
 extern int doc_page;
 extern GtkWidget *win_preview;
 extern GtkTextBuffer *noteBuffer;
-
-void dieOnNull(void *ptr, int line);
 
 #endif /* PDFPRES_H */
