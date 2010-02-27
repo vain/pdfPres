@@ -74,6 +74,7 @@ static GtkToolItem *saveButton = NULL,
 				   *startButton = NULL,
 				   *resetButton = NULL;
 static GtkWidget *notePad = NULL, *notePadFrame = NULL;
+static GtkWidget *timeElapsedLabel = NULL;
 GtkTextBuffer *noteBuffer = NULL;
 
 static GdkColor col_current, col_marked, col_dim;
@@ -821,6 +822,30 @@ static void onFontSelectClick(GtkWidget *widget, gpointer data)
 	gtk_widget_destroy(fontChooser);
 }
 
+static void onTimerFontSelectClick(GtkWidget *widget, gpointer data)
+{
+	GtkWidget *fontChooser = NULL;
+	PangoFontDescription *font_desc = NULL;
+
+	fontChooser = gtk_font_selection_dialog_new("Select Timer Font");
+	gtk_font_selection_dialog_set_font_name(
+			GTK_FONT_SELECTION_DIALOG(fontChooser), prefs.font_timer);
+
+	if (gtk_dialog_run(GTK_DIALOG(fontChooser)) == GTK_RESPONSE_OK)
+	{
+		if (prefs.font_timer != NULL)
+			g_free(prefs.font_timer);
+
+		prefs.font_timer = gtk_font_selection_dialog_get_font_name(
+				GTK_FONT_SELECTION_DIALOG(fontChooser));
+		font_desc = pango_font_description_from_string(prefs.font_timer);
+		gtk_widget_modify_font(timeElapsedLabel, font_desc);
+		pango_font_description_free(font_desc);
+	}
+
+	gtk_widget_destroy(fontChooser);
+}
+
 static void setEditingState(gboolean state)
 {
 	isInsideNotePad = state;
@@ -1127,12 +1152,12 @@ static void initGUI(int numframes)
 			  *timeFrame = NULL;
 	GtkWidget *mainVBox = NULL;
 	GdkColor black;
-	GtkWidget *timeElapsedLabel = NULL;
 
 	GtkWidget *toolbar = NULL, *timeToolbar = NULL;
 	GtkToolItem *openButton = NULL,
 				*saveAsButton = NULL,
-                *fontSelectButton = NULL;
+                *fontSelectButton = NULL,
+                *timeFontSelectButton = NULL;
 
 	PangoFontDescription *font_desc = NULL;
 
@@ -1200,6 +1225,16 @@ static void initGUI(int numframes)
 	g_signal_connect(G_OBJECT(resetButton), "clicked",
 			G_CALLBACK(resetTimer), NULL);
 	gtk_toolbar_insert(GTK_TOOLBAR(timeToolbar), resetButton, -1);
+
+	gtk_toolbar_insert(GTK_TOOLBAR(timeToolbar),
+			gtk_separator_tool_item_new(), -1);
+
+	timeFontSelectButton =
+		gtk_tool_button_new_from_stock(GTK_STOCK_SELECT_FONT);
+	gtk_toolbar_insert(GTK_TOOLBAR(timeToolbar),
+			timeFontSelectButton, -1);
+	g_signal_connect(G_OBJECT(timeFontSelectButton), "clicked",
+			G_CALLBACK(onTimerFontSelectClick), NULL);
 
 	/* setting text size for time label */
 	timeElapsedLabel = gtk_label_new(NULL);
