@@ -90,7 +90,6 @@ void loadPreferences(void)
 					|| tmp_i == FIT_PAGE)
 			{
 				prefs.initial_fit_mode = tmp_i;
-				fprintf(stderr, "[dbg] Initial fit mode: %d\n", tmp_i);
 			}
 			xmlFree(tmp);
 		}
@@ -104,7 +103,6 @@ void loadPreferences(void)
 			if (tmp_i > 0 && tmp_i < 30)
 			{
 				prefs.slide_context = tmp_i;
-				fprintf(stderr, "[dbg] Slide context: %d\n", tmp_i);
 			}
 			xmlFree(tmp);
 		}
@@ -116,7 +114,6 @@ void loadPreferences(void)
 			/* Do wrapping? */
 			tmp_i = atoi((char *)tmp);
 			prefs.do_wrapping = (tmp_i == 1 ? TRUE : FALSE);
-			fprintf(stderr, "[dbg] Do wrapping: %d\n", tmp_i);
 			xmlFree(tmp);
 		}
 
@@ -127,7 +124,6 @@ void loadPreferences(void)
 			/* Do note control? */
 			tmp_i = atoi((char *)tmp);
 			prefs.do_notectrl = (tmp_i == 1 ? TRUE : FALSE);
-			fprintf(stderr, "[dbg] Do notectrl: %d\n", tmp_i);
 			xmlFree(tmp);
 		}
 
@@ -140,7 +136,6 @@ void loadPreferences(void)
 			if (tmp_i > 0)
 			{
 				prefs.cache_max = tmp_i;
-				fprintf(stderr, "[dbg] Cache max: %d\n", tmp_i);
 			}
 			xmlFree(tmp);
 		}
@@ -154,7 +149,6 @@ void loadPreferences(void)
 				g_free(prefs.font_notes);
 
 			prefs.font_notes = g_strdup((char *)tmp);
-			fprintf(stderr, "[dbg] Font notes: %s\n", prefs.font_notes);
 			xmlFree(tmp);
 		}
 
@@ -167,7 +161,6 @@ void loadPreferences(void)
 				g_free(prefs.font_timer);
 
 			prefs.font_timer = g_strdup((char *)tmp);
-			fprintf(stderr, "[dbg] Font timer: %s\n", prefs.font_timer);
 			xmlFree(tmp);
 		}
 	}
