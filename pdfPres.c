@@ -69,8 +69,10 @@ static gboolean preQueued = FALSE;
 
 static GTimer *timer = NULL;
 static int timerMode = 0; /* 0 = stopped, 1 = running, 2 = paused */
-static GtkWidget *startButton = NULL;
-static GtkToolItem *saveButton = NULL, *editButton = NULL;
+static GtkToolItem *saveButton = NULL,
+				   *editButton = NULL,
+				   *startButton = NULL,
+				   *resetButton = NULL;
 static GtkWidget *notePad = NULL, *notePadFrame = NULL;
 GtkTextBuffer *noteBuffer = NULL;
 
@@ -579,30 +581,38 @@ static void toggleTimer()
 		case 0:
 			timer = g_timer_new();
 			timerMode = 1;
-			gtk_button_set_label(GTK_BUTTON(startButton), "Pause");
+			gtk_widget_set_sensitive(GTK_WIDGET(resetButton), FALSE);
+			gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(startButton),
+					GTK_STOCK_MEDIA_PAUSE);
 			break;
 		case 1:
 			g_timer_stop(timer);
 			timerMode = 2;
-			gtk_button_set_label(GTK_BUTTON(startButton), "Continue");
+			gtk_widget_set_sensitive(GTK_WIDGET(resetButton), TRUE);
+			gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(startButton),
+					GTK_STOCK_MEDIA_PLAY);
 			break;
 		case 2:
 			g_timer_continue(timer);
 			timerMode = 1;
-			gtk_button_set_label(GTK_BUTTON(startButton), "Pause");
+			gtk_widget_set_sensitive(GTK_WIDGET(resetButton), FALSE);
+			gtk_tool_button_set_stock_id(GTK_TOOL_BUTTON(startButton),
+					GTK_STOCK_MEDIA_PAUSE);
 			break;
 	}
 }
 
 static void resetTimer()
 {
+	if (timerMode == 1)
+		return;
+
 	if (timer != NULL)
 	{
 		g_timer_destroy(timer);
 		timer = NULL;
 	}
 	timerMode = 0;
-	gtk_button_set_label(GTK_BUTTON(startButton), "Start");
 }
 
 static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel)
@@ -1006,6 +1016,7 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 
 		case GDK_s:
 			toggleTimer();
+			changed = FALSE;
 			break;
 
 		case GDK_c:
@@ -1014,6 +1025,7 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 
 		case GDK_r:
 			resetTimer();
+			changed = FALSE;
 			break;
 
 		case GDK_Escape:
@@ -1104,8 +1116,7 @@ static void usage(char *exe)
 static void initGUI(int numframes)
 {
 	int i = 0, transIndex = 0;
-	GtkWidget *buttonBox = NULL,
-			  *timeBox = NULL,
+	GtkWidget *timeBox = NULL,
 			  *notePadBox = NULL,
 			  *notePadScroll = NULL,
 			  *table = NULL;
@@ -1116,9 +1127,9 @@ static void initGUI(int numframes)
 			  *timeFrame = NULL;
 	GtkWidget *mainVBox = NULL;
 	GdkColor black;
-	GtkWidget *timeElapsedLabel = NULL, *resetButton = NULL;
+	GtkWidget *timeElapsedLabel = NULL;
 
-	GtkWidget *toolbar = NULL;
+	GtkWidget *toolbar = NULL, *timeToolbar = NULL;
 	GtkToolItem *openButton = NULL,
 				*saveAsButton = NULL,
                 *fontSelectButton = NULL;
@@ -1175,22 +1186,20 @@ static void initGUI(int numframes)
 	gtk_widget_modify_bg(win_beamer, GTK_STATE_NORMAL, &black);
 
 	/* create buttons */
-	buttonBox = gtk_hbox_new(TRUE, 3);
+	timeToolbar = gtk_toolbar_new();
+	gtk_toolbar_set_style(GTK_TOOLBAR(timeToolbar), GTK_TOOLBAR_ICONS);
+	gtk_container_set_border_width(GTK_CONTAINER(timeToolbar), 5);
 
-	startButton = gtk_button_new();
-	gtk_widget_set_size_request(startButton, 70, 30);
-	gtk_button_set_label(GTK_BUTTON(startButton), "Start");
+	startButton = gtk_tool_button_new_from_stock(
+			GTK_STOCK_MEDIA_PLAY);
 	g_signal_connect(G_OBJECT(startButton), "clicked",
 			G_CALLBACK(toggleTimer), NULL);
+	gtk_toolbar_insert(GTK_TOOLBAR(timeToolbar), startButton, -1);
 
-	resetButton = gtk_button_new();
-	gtk_widget_set_size_request(resetButton, 70, 30);
-	gtk_button_set_label(GTK_BUTTON(resetButton), "Reset");
+	resetButton = gtk_tool_button_new_from_stock(GTK_STOCK_MEDIA_REWIND);
 	g_signal_connect(G_OBJECT(resetButton), "clicked",
 			G_CALLBACK(resetTimer), NULL);
-
-	gtk_box_pack_start(GTK_BOX(buttonBox), startButton, FALSE, FALSE, 5);
-	gtk_box_pack_start(GTK_BOX(buttonBox), resetButton, FALSE, FALSE, 5);
+	gtk_toolbar_insert(GTK_TOOLBAR(timeToolbar), resetButton, -1);
 
 	/* setting text size for time label */
 	timeElapsedLabel = gtk_label_new(NULL);
@@ -1203,7 +1212,7 @@ static void initGUI(int numframes)
 	timeBox = gtk_vbox_new(FALSE, 5);
 	gtk_box_pack_start(GTK_BOX(timeBox), timeElapsedLabel,
 			TRUE, TRUE, 5);
-	gtk_box_pack_start(GTK_BOX(timeBox), buttonBox,
+	gtk_box_pack_start(GTK_BOX(timeBox), timeToolbar,
 			FALSE, FALSE, 5);
 
 	timeFrame = gtk_frame_new("Timer");
