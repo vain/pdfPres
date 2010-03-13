@@ -1,0 +1,138 @@
+.TH PDFPRES 1 "March 2010" "pdfPres" "Dual head PDF presenter"
+.SH NAME
+pdfPres \- Dual head PDF presenter
+.SH SYNOPSIS
+.SY pdfPres
+.OP \-w
+.OP \-n
+.OP \-s slides
+.OP \-c cache
+.I FILE
+.YS
+.SH DESCRIPTION
+\fBpdfPres\fP is a presentation program for PDF files. It uses a "dual
+head"-layout: One window shows the previous, current and next slides
+while another window only shows the current slide. That additional
+window can be moved to an external screen (such as a beamer). Thus, you
+can present your slides on a beamer while keeping an eye on what's
+coming up next.
+.SH OPTIONS
+.TP
+\fB-s\fP \fIslides\fP
+This parameter allows you to specify how many slides before/after the
+current slide you wish to see, i.e. 3 means "preview the next 3 slides
+while still showing the previous 3 slides". The default is 1.
+
+Attention: It is recommended to set the number of slides not greater
+than 2 unless you have a large screen with a high resolution.
+.TP
+\fB-c\fP \fIcache\fP
+Specify the number of slides that can be cached/pre-rendered.
+
+Be aware, though, that this value will always be at least "number of pdf
+viewports" * 2. This is needed so that we can pre-render the current and
+next slide for each viewport. Hence, switching to the next (or previous)
+slides will always be instant.
+.TP
+\fB-w\fP
+Enables wrapping. When you're on the last slide and wrapping is enabled,
+switching to the "next" slide actually switches to the very first slide.
+.TP
+\fB-n\fP
+Enables "note control". The number of the slide which is currently shown
+will be written to STDOUT. You can pipe this information to another
+program. That'll allow you to do fancy things.
+.SH KEYS
+Use the \fBcursor keys\fP to navigate (\fBSpace\fP, \fBReturn\fP also go
+the next slide). \fBLeft Mouse\fP switches to the next slide, \fBRight
+Mouse\fP switches to the previous slide.
+.P
+\fBp\fP switches to \fB"fit page"\fP, this is the default.
+.P
+\fBw\fP switches to \fB"fit width"\fP mode, \fBh\fP switches to \fB"fit
+height"\fP mode.
+.P
+\fBF5\fP forces a full refresh.
+.P
+\fBEscape\fP and \fBq\fP quit the program.
+.P
+Sometimes you need to browse your slides but that would, inevitably,
+confuse the audience. So fixating the current slide on the beamer while
+still allowing free navigation in the preview window should be quite
+handy. Lock it by pressing \fBl\fP and unlock it with a capital \fBL\fP.
+.P
+In locked mode, press \fBJ\fP to jump to the currently selected slide.
+.P
+To switch to fullscreen, press \fBf\fP. You could also use your window
+manager for this purpose. That is, \fBAlt + F11\fP would do the same in
+Xfce.
+.P
+\fBs\fP starts the timer, pauses it and continues if paused. \fBr\fP
+resets the timer.
+.P
+\fBc\fP toggles cursor visibility in presentation window.
+.P
+\fBi\fP enters note edit mode, \fBESC\fP leaves note edit mode.
+.P
+Type a number and then \fBG\fP or \fBRETURN\fP to jump to the
+appropriate slide.
+.SH CONFIGURATION
+pdfPres writes all of its configuration variables to
+\fB\fC$HOME/.config/pdfPres/config.xml\fR on exit. This file will look
+like this:
+.P
+.EX
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+	<initial_fit_mode v="2"/>
+	<slide_context v="1"/>
+	<do_wrapping v="0"/>
+	<do_notectrl v="0"/>
+	<cache_max v="32"/>
+	<font_notes v="Sans 12"/>
+	<font_timer v="Sans 35"/>
+</config>
+.EE
+.P
+For now, you're supposed to directly edit this file except for font
+settings. If you change fonts inside pdfPres, they'll get saved
+automatically.
+.TP
+.B initial_fit_mode
+Accepts \fI0\fP, \fI1\fP or \fI2\fP meaning \fB"fit width"\fP,
+\fB"fit height"\fP or \fB"fit page"\fP.
+.TP
+.B slide_context
+Equivalent to the \fB-s ...\fP parameter.
+.TP
+.B cache_max
+Equivalent to the \fB-c ...\fP parameter.
+.TP
+.B do_wrapping 
+Equivalent to the \fB-w\fP parameter. \fI1\fP enables wrapping and
+everything else disables it.
+.TP
+.B do_notectrl
+Equivalent to the \fB-n\fP parameter. \fI1\fP enables note control and
+everything else disables it.
+.TP
+.B font_notes
+.TQ
+.B font_timer
+Set the font for notes and timer. This string will get parsed by
+\fBpango_font_description_from_string\fP, so you might want to have a
+look at the
+.UR http://library.gnome.org\:/devel\:/pango\:/unstable\:/pango-Fonts.html\:#pango\:-font-description\:-from-string
+GNOME API documentation
+.UE
+to see what's possible.
+.SH FILES
+.TP
+\fC$HOME/.config/pdfPres/config.xml\fP
+Local per user configuration.
+.SH BUGS
+Currently, no bugs are known. If you find one, we invite you to report
+it at
+.UR http://github.com/vain/pdfPres/issues
+the GitHub Issue tracker
+.UE .
