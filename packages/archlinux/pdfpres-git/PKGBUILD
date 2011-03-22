@@ -1,0 +1,57 @@
+# Contributor: vain
+# Maintainer: vain
+pkgname=pdfpres-git
+pkgver=20110322
+pkgrel=1
+pkgdesc="Dual head PDF presenter"
+arch=('i686')
+url="http://github.com/vain/pdfPres"
+license=('GPL')
+
+# Actually, gtk2 and libxml2 are needed, too, but they're dependencies
+# of poppler-glib.
+depends=('poppler-glib')
+makedepends=('git' 'scons')
+
+source=()
+md5sums=()
+
+_gitroot="git://github.com/vain/pdfPres.git"
+_gitname="pdfPres"
+
+build() {
+  cd "$srcdir"
+  msg "Connecting to GIT server...."
+
+  if [ -d $_gitname ] ; then
+    cd $_gitname && git pull origin
+    msg "The local files are updated."
+  else
+    git clone $_gitroot $_gitname
+  fi
+
+  msg "GIT checkout done or server timeout"
+  msg "Starting make..."
+
+  rm -rf "$srcdir/$_gitname-build"
+  git clone "$srcdir/$_gitname" "$srcdir/$_gitname-build"
+  cd "$srcdir/$_gitname-build"
+
+  #
+  # BUILD HERE
+  #
+
+  scons
+}
+
+package() {
+  cd "$srcdir/$_gitname-build"
+
+  # Install binary, README and LICENSE.
+  install -Dm 644 LICENSE \
+    "${pkgdir}/usr/share/licenses/${pkgname%-git}/LICENSE"
+  install -Dm 644 README.md \
+    "${pkgdir}/usr/share/doc/${pkgname%-git}/README.md"
+  install -Dm 755 pdfPres \
+    "${pkgdir}/usr/bin/pdfPres"
+}
