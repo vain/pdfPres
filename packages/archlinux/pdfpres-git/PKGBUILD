@@ -1,10 +1,10 @@
 # Contributor: vain
 # Maintainer: vain
 pkgname=pdfpres-git
-pkgver=20110322
+pkgver=20110430
 pkgrel=1
 pkgdesc="Dual head PDF presenter"
-arch=('i686')
+arch=('i686' 'x86_64')
 url="http://github.com/vain/pdfPres"
 license=('GPL')
 
