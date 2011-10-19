@@ -1,7 +1,7 @@
-pdfPres - a dual head PDF presenter
+pdfpres - a dual head PDF presenter
 ===================================
 
-pdfPres is a presentation program for PDF files. It uses a "dual
+pdfpres is a presentation program for PDF files. It uses a "dual
 head"-layout: One window shows the previous, current and next slides
 while another window only shows the current slide. That additional
 window can be moved to an external screen (such as a beamer) - use your
@@ -21,7 +21,7 @@ To directly jump to a specific slide just type the slidenumber and press
 
 Private notes can be viewed in a notepad on the left side. A file
 containing the notes can be loaded with the appropriate open-icon below
-the notepad.  You can edit your notes from inside pdfPres by pressing
+the notepad.  You can edit your notes from inside pdfpres by pressing
 the edit button or `[i]`. To return to normal mode either press the edit
 button again or press `[ESC]`. Of course, notes can be saved to a file
 using the save or saveAs buttons.
@@ -32,7 +32,7 @@ your external program or script can do additional things depending on
 the current slide - it can show your private notes, trigger sound events
 or whatever.
 
-pdfPres uses GTK+ v2 and poppler-glib to render the PDF file. Notes and
+pdfpres uses GTK+ v2 and poppler-glib to render the PDF file. Notes and
 preferences are handled via libxml2.
 
 
@@ -69,7 +69,7 @@ Launching
 
 Issue something like:
 
-    $ ./pdfPres [-s <slides>] [-c <cache>] [-w] [-n] path/to/slides.pdf
+    $ ./pdfpres [-s <slides>] [-c <cache>] [-w] [-n] path/to/slides.pdf
 
 The optional parameter `-s` allows you to specify how many slides
 before/after the current slide you wish to see, i.e. `3` means "preview
@@ -100,7 +100,7 @@ History
 
 All bugs that are found after release 0.2 are planned to be fixed in a
 0.2.1 release. Have a look at the [GitHub Issue
-tracker](http://github.com/vain/pdfPres/issues) if you're interested in
+tracker](http://github.com/vain/pdfpres/issues) if you're interested in
 what's planned for release 0.3.
 
 
@@ -127,8 +127,8 @@ what's planned for release 0.3.
 Configuration
 -------------
 
-pdfPres writes all of its configuration variables to
-`~/.config/pdfPres/config.xml` on exit. This file will look like this:
+pdfpres writes all of its configuration variables to
+`~/.config/pdfpres/config.xml` on exit. This file will look like this:
 
 	<?xml version="1.0" encoding="UTF-8"?>
 	<config>
@@ -142,7 +142,7 @@ pdfPres writes all of its configuration variables to
 	</config>
 
 For now, you're supposed to directly edit this file except for font
-settings. If you change fonts inside pdfPres, they'll get saved
+settings. If you change fonts inside pdfpres, they'll get saved
 automatically.
 
 * `initial_fit_mode` accepts `0`, `1` or `2` meaning `FIT_WIDTH`,
@@ -175,13 +175,13 @@ That's it. Furthermore, the following external libraries are required:
 What do I do with old (non-XML) notes?
 --------------------------------------
 
-If you already used an old version of pdfPres that didn't save the notes
+If you already used an old version of pdfpres that didn't save the notes
 in XML, you can use the converter script to transform those notes into
 XML:
 
     $ ./legacy-notes-converter.py notes.txt > notes.xml
 
-The resulting file `notes.xml` can be read in pdfPres.
+The resulting file `notes.xml` can be read in pdfpres.
 
 Be aware that this script expects a file encoded with UTF-8. Use
 [Geany](http://www.geany.org/) or

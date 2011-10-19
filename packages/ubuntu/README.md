@@ -14,7 +14,7 @@ Now, you should end up with a directory structure like this:
 	|   `-- control
 	`-- usr
 	    `-- bin
-	        `-- pdfPres
+	        `-- pdfpres
 
 Issue the following command to build the package:
 

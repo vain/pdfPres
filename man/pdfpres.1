@@ -1,8 +1,8 @@
-.TH PDFPRES 1 "March 2010" "pdfPres" "Dual head PDF presenter"
+.TH PDFPRES 1 "March 2010" "pdfpres" "Dual head PDF presenter"
 .SH NAME
-pdfPres \- Dual head PDF presenter
+pdfpres \- Dual head PDF presenter
 .SH SYNOPSIS
-.SY pdfPres
+.SY pdfpres
 .OP \-w
 .OP \-n
 .OP \-s slides
@@ -10,7 +10,7 @@ pdfPres \- Dual head PDF presenter
 .I FILE
 .YS
 .SH DESCRIPTION
-\fBpdfPres\fP is a presentation program for PDF files. It uses a "dual
+\fBpdfpres\fP is a presentation program for PDF files. It uses a "dual
 head"-layout: One window shows the previous, current and next slides
 while another window only shows the current slide. That additional
 window can be moved to an external screen (such as a beamer). Thus, you
@@ -77,8 +77,8 @@ resets the timer.
 Type a number and then \fBG\fP or \fBRETURN\fP to jump to the
 appropriate slide.
 .SH CONFIGURATION
-pdfPres writes all of its configuration variables to
-\fB\fC$HOME/.config/pdfPres/config.xml\fR on exit. This file will look
+pdfpres writes all of its configuration variables to
+\fB\fC$HOME/.config/pdfpres/config.xml\fR on exit. This file will look
 like this:
 .P
 .EX
@@ -95,7 +95,7 @@ like this:
 .EE
 .P
 For now, you're supposed to directly edit this file except for font
-settings. If you change fonts inside pdfPres, they'll get saved
+settings. If you change fonts inside pdfpres, they'll get saved
 automatically.
 .TP
 .B initial_fit_mode
@@ -128,11 +128,11 @@ GNOME API documentation
 to see what's possible.
 .SH FILES
 .TP
-\fC$HOME/.config/pdfPres/config.xml\fP
+\fC$HOME/.config/pdfpres/config.xml\fP
 Local per user configuration.
 .SH BUGS
 Currently, no bugs are known. If you find one, we invite you to report
 it at
-.UR http://github.com/vain/pdfPres/issues
+.UR http://github.com/vain/pdfpres/issues
 the GitHub Issue tracker
 .UE .

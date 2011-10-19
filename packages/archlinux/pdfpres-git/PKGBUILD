@@ -5,7 +5,7 @@ pkgver=20110430
 pkgrel=1
 pkgdesc="Dual head PDF presenter"
 arch=('i686' 'x86_64')
-url="http://github.com/vain/pdfPres"
+url="http://github.com/vain/pdfpres"
 license=('GPL')
 
 # Actually, gtk2 and libxml2 are needed, too, but they're dependencies
@@ -16,8 +16,8 @@ makedepends=('git' 'scons')
 source=()
 md5sums=()
 
-_gitroot="git://github.com/vain/pdfPres.git"
-_gitname="pdfPres"
+_gitroot="git://github.com/vain/pdfpres.git"
+_gitname="pdfpres"
 
 build() {
   cd "$srcdir"
@@ -52,6 +52,6 @@ package() {
     "${pkgdir}/usr/share/licenses/${pkgname%-git}/LICENSE"
   install -Dm 644 README.md \
     "${pkgdir}/usr/share/doc/${pkgname%-git}/README.md"
-  install -Dm 755 pdfPres \
-    "${pkgdir}/usr/bin/pdfPres"
+  install -Dm 755 pdfpres \
+    "${pkgdir}/usr/bin/pdfpres"
 }

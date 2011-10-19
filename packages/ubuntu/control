@@ -1,4 +1,4 @@
-Package: pdfPres
+Package: pdfpres
 Version: 0.2
 Section: x11
 Priority: optional
@@ -7,7 +7,7 @@ Essential: no
 Depends: libgtk2.0-0 (>= 2.16.1), libpoppler-glib4 (>=0.10.6), libxml2 (>= 2.7.5)
 Installed-Size: 50
 Maintainer: Marcel Jakobs [zimon@gmx.net]
-Description: pdfPres is a presentation program for PDF files. 
+Description: pdfpres is a presentation program for PDF files. 
              It uses a "dual head"-layout: One window shows the 
              previous, current and next slides while another 
              window only shows the current slide. That additional 
