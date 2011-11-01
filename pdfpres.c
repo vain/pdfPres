@@ -32,6 +32,7 @@
 #include <glib/poppler.h>
 
 #include "pdfpres.h"
+#include "popplergdk.h"
 #include "prefs.h"
 #include "notes.h"
 
