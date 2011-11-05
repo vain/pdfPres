@@ -10,18 +10,18 @@ pdfpres \- Dual head PDF presenter
 .I FILE
 .YS
 .SH DESCRIPTION
-\fBpdfpres\fP is a presentation program for PDF files. It uses a "dual
-head"-layout: One window shows the previous, current and next slides
-while another window only shows the current slide. That additional
-window can be moved to an external screen (such as a beamer). Thus, you
-can present your slides on a beamer while keeping an eye on what's
-coming up next.
+\fBpdfpres\fP is a presentation program for PDF files. It uses a
+\(lqdual head\(rq-layout: One window shows the previous, current and
+next slides while another window only shows the current slide. That
+additional window can be moved to an external screen (such as a beamer).
+Thus, you can present your slides on a beamer while keeping an eye on
+what's coming up next.
 .SH OPTIONS
 .TP
 \fB-s\fP \fIslides\fP
 This parameter allows you to specify how many slides before/after the
-current slide you wish to see, i.e. 3 means "preview the next 3 slides
-while still showing the previous 3 slides". The default is 1.
+current slide you wish to see, i.e. 3 means \(lqpreview the next 3
+slides while still showing the previous 3 slides\(rq. The default is 1.
 
 Attention: It is recommended to set the number of slides not greater
 than 2 unless you have a large screen with a high resolution.
@@ -29,28 +29,29 @@ than 2 unless you have a large screen with a high resolution.
 \fB-c\fP \fIcache\fP
 Specify the number of slides that can be cached/pre-rendered.
 
-Be aware, though, that this value will always be at least "number of pdf
-viewports" * 2. This is needed so that we can pre-render the current and
-next slide for each viewport. Hence, switching to the next (or previous)
-slides will always be instant.
+Be aware, though, that this value will always be at least \(lqnumber of
+pdf viewports\(rq \(mu 2. This is needed so that we can pre-render the
+current and next slide for each viewport. Hence, switching to the next
+(or previous) slides will always be instant.
 .TP
 \fB-w\fP
 Enables wrapping. When you're on the last slide and wrapping is enabled,
-switching to the "next" slide actually switches to the very first slide.
+switching to the \(lqnext\(rq slide actually switches to the very first
+slide.
 .TP
 \fB-n\fP
-Enables "note control". The number of the slide which is currently shown
-will be written to STDOUT. You can pipe this information to another
-program. That'll allow you to do fancy things.
+Enables \(lqnote control\(rq. The number of the slide which is currently
+shown will be written to \fBstdout\fP. You can pipe this information to
+another program. That'll allow you to do fancy things.
 .SH KEYS
 Use the \fBcursor keys\fP to navigate (\fBSpace\fP, \fBReturn\fP also go
 the next slide). \fBLeft Mouse\fP switches to the next slide, \fBRight
 Mouse\fP switches to the previous slide.
 .P
-\fBp\fP switches to \fB"fit page"\fP, this is the default.
+\fBp\fP switches to \fB\(lqfit page\(rq\fP, this is the default.
 .P
-\fBw\fP switches to \fB"fit width"\fP mode, \fBh\fP switches to \fB"fit
-height"\fP mode.
+\fBw\fP switches to \fB\(lqfit width\(rq\fP mode, \fBh\fP switches to
+\fB\(lqfit height\(rq\fP mode.
 .P
 \fBF5\fP forces a full refresh.
 .P
@@ -78,7 +79,7 @@ Type a number and then \fBG\fP or \fBRETURN\fP to jump to the
 appropriate slide.
 .SH CONFIGURATION
 pdfpres writes all of its configuration variables to
-\fB\fC$HOME/.config/pdfpres/config.xml\fR on exit. This file will look
+\fI~/.config/pdfpres/config.xml\fP on exit. This file will look
 like this:
 .P
 .EX
@@ -99,8 +100,8 @@ settings. If you change fonts inside pdfpres, they'll get saved
 automatically.
 .TP
 .B initial_fit_mode
-Accepts \fI0\fP, \fI1\fP or \fI2\fP meaning \fB"fit width"\fP,
-\fB"fit height"\fP or \fB"fit page"\fP.
+Accepts \fI0\fP, \fI1\fP or \fI2\fP meaning \fB\(lqfit width\(rq\fP,
+\fB\(lqfit height\(rq\fP or \fB\(lqfit page\(rq\fP.
 .TP
 .B slide_context
 Equivalent to the \fB-s ...\fP parameter.
@@ -128,7 +129,7 @@ GNOME API documentation
 to see what's possible.
 .SH FILES
 .TP
-\fC$HOME/.config/pdfpres/config.xml\fP
+\fI~/.config/pdfpres/config.xml\fP
 Local per user configuration.
 .SH BUGS
 Currently, no bugs are known. If you find one, we invite you to report
