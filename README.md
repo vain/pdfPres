@@ -69,7 +69,8 @@ Launching
 
 Issue something like:
 
-    $ ./pdfpres [-s <slides>] [-c <cache>] [-w] [-n] path/to/slides.pdf
+    $ ./pdfpres [-s <slides>] [-c <cache>] [-w] [-n] [-N <note file>]\
+                path/to/slides.pdf
 
 The optional parameter `-s` allows you to specify how many slides
 before/after the current slide you wish to see, i.e. `3` means "preview
@@ -93,6 +94,10 @@ switching to the next (or previous) slides will always be instant.
 By providing the parameter `-n` the slide which is currently shown will
 be written to stdout. You can pipe this information to another program.
 That'll allow you to do fancy things.
+
+`-N` allows you to specify a file with notes that will be loaded on
+startup. The file has to be in the same format that pdfPres uses
+when saving notes.
 
 
 History
