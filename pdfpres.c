@@ -1018,10 +1018,12 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 	{
 		case GDK_Right:
 		case GDK_space:
+                case GDK_Down:
 			nextSlide();
 			break;
 
 		case GDK_Left:
+                case GDK_Up:
 			prevSlide();
 			break;
 
