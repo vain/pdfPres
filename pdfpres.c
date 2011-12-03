@@ -721,21 +721,20 @@ static void showNotesFromFile(gchar *notefile)
 {
 	gchar *msg = NULL;
 
-	if(savedAsFilename != NULL)
+	if (savedAsFilename != NULL)
 		g_free(savedAsFilename);
 
 	savedAsFilename = notefile;
 
 	if (readNotes(notefile))
 	{
-		msg = g_strdup_printf("Notes read from '%s'.",
-				      notefile);
+		msg = g_strdup_printf("Notes read from '%s'.", notefile);
 		setStatusText_strdup(msg);
 		g_free(msg);
-		
+
 		isSaved = TRUE;
 		gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
-		
+
 		printNote(doc_page + 1);
 	}
 }
@@ -757,14 +756,12 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 
 	if (gtk_dialog_run(GTK_DIALOG(fileChooser)) == GTK_RESPONSE_ACCEPT)
 	{
-
 		saveLastFolderFrom(fileChooser);
 
 		filename = gtk_file_chooser_get_filename(
 				GTK_FILE_CHOOSER(fileChooser));
 
 		showNotesFromFile(filename);
-
 	}
 	gtk_widget_destroy(fileChooser);
 }
@@ -1030,12 +1027,12 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 	{
 		case GDK_Right:
 		case GDK_space:
-                case GDK_Down:
+		case GDK_Down:
 			nextSlide();
 			break;
 
 		case GDK_Left:
-                case GDK_Up:
+		case GDK_Up:
 			prevSlide();
 			break;
 
@@ -1189,8 +1186,8 @@ static void initGUI(int numframes, gchar *notefile)
 	GtkWidget *toolbar = NULL, *timeToolbar = NULL;
 	GtkToolItem *openButton = NULL,
 				*saveAsButton = NULL,
-                *fontSelectButton = NULL,
-                *timeFontSelectButton = NULL;
+				*fontSelectButton = NULL,
+				*timeFontSelectButton = NULL;
 
 	PangoFontDescription *font_desc = NULL;
 
@@ -1544,7 +1541,7 @@ static void initGUI(int numframes, gchar *notefile)
 
 int main(int argc, char **argv)
 {
-	int i=0, numframes;
+	int i = 0, numframes;
 	char *filename = NULL;
 	gchar *notefile = NULL;
 	FILE *fp = NULL;
