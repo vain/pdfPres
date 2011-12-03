@@ -96,7 +96,7 @@ be written to stdout. You can pipe this information to another program.
 That'll allow you to do fancy things.
 
 `-N` allows you to specify a file with notes that will be loaded on
-startup. The file has to be in the same format that pdfPres uses
+startup. The file has to be in the same format that pdfpres uses
 when saving notes.
 
 
