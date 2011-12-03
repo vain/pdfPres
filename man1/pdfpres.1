@@ -7,6 +7,7 @@ pdfpres \- Dual head PDF presenter
 .OP \-n
 .OP \-s slides
 .OP \-c cache
+.OP \-N notes
 .I FILE
 .YS
 .SH DESCRIPTION
@@ -43,6 +44,11 @@ slide.
 Enables \(lqnote control\(rq. The number of the slide which is currently
 shown will be written to \fBstdout\fP. You can pipe this information to
 another program. That'll allow you to do fancy things.
+.TP
+\fB-N\fP \fInotes\fP
+Allows you to specify a file with notes that will be loaded on startup.
+The file has to be in the same format that pdfpres uses when saving
+notes.
 .SH KEYS
 Use the \fBcursor keys\fP to navigate (\fBSpace\fP, \fBReturn\fP also go
 the next slide). \fBLeft Mouse\fP switches to the next slide, \fBRight
