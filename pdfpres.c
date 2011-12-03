@@ -717,10 +717,33 @@ static gboolean onQuit(GtkWidget *widget, GdkEvent *ev, gpointer dummy)
 	return FALSE;
 }
 
-static void onOpenClicked(GtkWidget *widget, gpointer data)
+static void showNotesFromFile(gchar *notefile)
 {
 	gchar *msg = NULL;
+
+	if(savedAsFilename != NULL)
+		g_free(savedAsFilename);
+
+	savedAsFilename = notefile;
+
+	if (readNotes(notefile))
+	{
+		msg = g_strdup_printf("Notes read from '%s'.",
+				      notefile);
+		setStatusText_strdup(msg);
+		g_free(msg);
+		
+		isSaved = TRUE;
+		gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
+		
+		printNote(doc_page + 1);
+	}
+}
+
+static void onOpenClicked(GtkWidget *widget, gpointer data)
+{
 	GtkWidget *fileChooser = NULL;
+	gchar *filename;
 
 	if (!handleUnsavedNotes())
 		return;
@@ -734,25 +757,14 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 
 	if (gtk_dialog_run(GTK_DIALOG(fileChooser)) == GTK_RESPONSE_ACCEPT)
 	{
-		if (savedAsFilename != NULL)
-			g_free(savedAsFilename);
 
 		saveLastFolderFrom(fileChooser);
 
-		savedAsFilename = gtk_file_chooser_get_filename(
+		filename = gtk_file_chooser_get_filename(
 				GTK_FILE_CHOOSER(fileChooser));
-		if (readNotes(savedAsFilename))
-		{
-			msg = g_strdup_printf("Notes read from '%s'.",
-					savedAsFilename);
-			setStatusText_strdup(msg);
-			g_free(msg);
 
-			isSaved = TRUE;
-			gtk_widget_set_sensitive(GTK_WIDGET(saveButton), FALSE);
+		showNotesFromFile(filename);
 
-			printNote(doc_page + 1);
-		}
 	}
 	gtk_widget_destroy(fileChooser);
 }
@@ -1156,10 +1168,10 @@ static void usage(char *exe)
 {
 	fprintf(stderr,
 			"Usage: %s [-c <cache items>] [-s <slides>] [-n] "
-			"[-w] <file>\n", exe);
+			"[-N <note file>] [-w] <file>\n", exe);
 }
 
-static void initGUI(int numframes)
+static void initGUI(int numframes, gchar *notefile)
 {
 	int i = 0, transIndex = 0;
 	GtkWidget *timeBox = NULL,
@@ -1511,6 +1523,12 @@ static void initGUI(int numframes)
 	g_signal_connect(G_OBJECT(win_beamer), "size_allocate",
 			G_CALLBACK(onResize), thisport);
 
+	/* load notes if requested */
+	if (notefile)
+	{
+		showNotesFromFile(notefile);
+	}
+
 	/* show the windows */
 	gtk_widget_show_all(win_preview);
 	gtk_widget_show_all(win_beamer);
@@ -1528,6 +1546,7 @@ int main(int argc, char **argv)
 {
 	int i=0, numframes;
 	char *filename = NULL;
+	gchar *notefile = NULL;
 	FILE *fp = NULL;
 	struct stat statbuf;
 	char *databuf = NULL;
@@ -1548,7 +1567,7 @@ int main(int argc, char **argv)
 	runpref.fit_mode = prefs.initial_fit_mode;
 
 	/* get options via getopt */
-	while ((i = getopt(argc, argv, "s:wnc:")) != -1)
+	while ((i = getopt(argc, argv, "s:wnc:N:")) != -1)
 	{
 		switch (i)
 		{
@@ -1574,6 +1593,9 @@ int main(int argc, char **argv)
 				/* don't care if that number is invalid. it'll get
 				 * re-adjusted anyway if it's too small. */
 				runpref.cache_max = atoi(optarg);
+				break;
+			case 'N':
+				notefile = g_strdup(optarg);
 				break;
 
 			case '?':
@@ -1654,7 +1676,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-    initGUI(numframes);
+	initGUI(numframes, notefile);
 
 	/* queue initial prerendering. */
 	preQueued = TRUE;
