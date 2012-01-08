@@ -1,5 +1,5 @@
 /*
-	Copyright 2009, 2010 Peter Hofmann
+	Copyright 2009-2012 Peter Hofmann
 
 	This file is part of pdfpres.
 
