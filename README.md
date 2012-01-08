@@ -144,6 +144,7 @@ pdfpres writes all of its configuration variables to
 		<cache_max v="32"/>
 		<font_notes v="Sans 12"/>
 		<font_timer v="Sans 35"/>
+		<q_exits_fullscreen v="0"/>
 	</config>
 
 For now, you're supposed to directly edit this file except for font
@@ -158,6 +159,11 @@ automatically.
 * `do_notectrl` is equivalent to the `-n` parameter. `1` enables
   note control and everything else disables it.
 * `cache_max` is equivalent to the `-c ...` parameter.
+* `q_exits_fullscreen`: If it's `1`, then pressing `[q]` or `[Esc]` only
+  exits fullscreen mode and you'll need a second keypress on `[q]` or
+  `[Esc]` to exit the program. If it's `0` (default), then a single
+  keypress on `[q]` or `[Esc]` always quits pdfpres (unless you're
+  currently editing slide notes).
 
 
 Build instructions

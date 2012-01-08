@@ -36,6 +36,7 @@ struct _prefs
 	guint cache_max;
 	char *font_notes;
 	char *font_timer;
+	gboolean q_exits_fullscreen;
 };
 extern struct _prefs prefs;
 

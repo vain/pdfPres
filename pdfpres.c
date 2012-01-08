@@ -1087,8 +1087,15 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 
 		case GDK_Escape:
 		case GDK_q:
-			changed = FALSE;
-			onQuit(NULL, NULL, NULL);
+			if (prefs.q_exits_fullscreen && isFullScreen)
+			{
+				toggleFullScreen();
+			}
+			else
+			{
+				changed = FALSE;
+				onQuit(NULL, NULL, NULL);
+			}
 			break;
 
 		case GDK_i:

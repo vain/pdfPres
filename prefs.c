@@ -47,6 +47,7 @@ void loadPreferences(void)
 	prefs.cache_max = 32;
 	prefs.font_notes = g_strdup("Sans 12");
 	prefs.font_timer = g_strdup("Sans 35");
+	prefs.q_exits_fullscreen = 0;
 	/* We're using g_strdup() here so we can use g_free() all the time.
 	 */
 
@@ -161,6 +162,17 @@ void loadPreferences(void)
 				g_free(prefs.font_timer);
 
 			prefs.font_timer = g_strdup((char *)tmp);
+			xmlFree(tmp);
+		}
+
+		if (cur_node->type == XML_ELEMENT_NODE
+				&& !xmlStrcmp(cur_node->name, BAD_CAST "q_exits_fullscreen")
+				&& (tmp = xmlGetProp(cur_node, BAD_CAST "v")) != NULL)
+		{
+			/* When in fullscreen, does Q/Esc quit the program (0) or
+			 * does it exit fullscreen mode (1)? */
+			tmp_i = atoi((char *)tmp);
+			prefs.q_exits_fullscreen = (tmp_i == 1 ? TRUE : FALSE);
 			xmlFree(tmp);
 		}
 	}
@@ -341,6 +353,10 @@ void savePreferences(void)
 		return;
 
 	if (!writeElement(writer, "font_timer", prefs.font_timer))
+		return;
+
+	if (!writeElementBoolean(writer, "q_exits_fullscreen",
+				prefs.q_exits_fullscreen))
 		return;
 
 	/* Finish. */
