@@ -625,7 +625,7 @@ static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel)
 
 	if (timerMode > 0)
 	{
-		timeElapsed = (int)g_timer_elapsed(timer,NULL);
+		timeElapsed = (int)g_timer_elapsed(timer, NULL);
 
 		int min = (int)timeElapsed / 60.0;
 		int sec = timeElapsed % 60;
@@ -1600,6 +1600,7 @@ int main(int argc, char **argv)
 				 * re-adjusted anyway if it's too small. */
 				runpref.cache_max = atoi(optarg);
 				break;
+
 			case 'N':
 				notefile = g_strdup(optarg);
 				break;
