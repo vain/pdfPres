@@ -1,4 +1,4 @@
-.TH PDFPRES 1 "December 2011" "pdfpres" "Dual head PDF presenter"
+.TH PDFPRES 1 "January 2012" "pdfpres" "Dual head PDF presenter"
 .SH NAME
 pdfpres \- Dual head PDF presenter
 .SH SYNOPSIS
@@ -50,9 +50,14 @@ Allows you to specify a file with notes that will be loaded on startup.
 The file has to be in the same format that \fBpdfpres\fP uses when saving
 notes.
 .SH KEYS
-Use the \fBcursor keys\fP to navigate (\fBSpace\fP, \fBReturn\fP also go
-the next slide). \fBLeft Mouse\fP switches to the next slide, \fBRight
-Mouse\fP switches to the previous slide.
+Full customization of all keybinds is planned. Currently, you can only
+use the following fixed keybinds to control \fBpdfpres\fP:
+.P
+Use the \fBcursor keys\fP to navigate. \fBSpace\fP, \fBReturn\fP,
+\fBRight\fP, \fBDown\fP and \fBPage Down\fP also go the next slide,
+\fBLeft\fP, \fBUp\fP and \fBPage Up\fP go to the previous slide. \fBLeft
+Mouse\fP switches to the next slide, \fBRight Mouse\fP switches to the
+previous slide.
 .P
 \fBp\fP switches to \fB\(lqfit page\(rq\fP, this is the default.
 .P
@@ -61,7 +66,9 @@ Mouse\fP switches to the previous slide.
 .P
 \fBF5\fP forces a full refresh.
 .P
-\fBEscape\fP and \fBq\fP quit the program.
+\fBEsc\fP and \fBq\fP quit the program. If \fBq_exits_fullscreen\fP is
+set (see \fBCONFIGURATION\fP), those keys only end fullscreen mode. You
+then need a second keypress to exit \fBpdfpres\fP.
 .P
 Sometimes you need to browse your slides but that would, inevitably,
 confuse the audience. So fixating the current slide on the beamer while
@@ -79,9 +86,9 @@ resets the timer.
 .P
 \fBc\fP toggles cursor visibility in presentation window.
 .P
-\fBi\fP enters note edit mode, \fBESC\fP leaves note edit mode.
+\fBi\fP enters note edit mode, \fBEsc\fP leaves note edit mode.
 .P
-Type a number and then \fBG\fP or \fBRETURN\fP to jump to the
+Type a number and then \fBG\fP or \fBReturn\fP to jump to the
 appropriate slide.
 .SH CONFIGURATION
 \fBpdfpres\fP writes all of its configuration variables to
@@ -98,6 +105,7 @@ like this:
 	<cache_max v="32"/>
 	<font_notes v="Sans 12"/>
 	<font_timer v="Sans 35"/>
+	<q_exits_fullscreen v="0"/>
 </config>
 .EE
 .P
@@ -133,13 +141,80 @@ look at the
 GNOME API documentation
 .UE
 to see what's possible.
+.TP
+.B q_exits_fullscreen
+If this is set to \fI1\fP, then pressing \fBq\fP or \fBEsc\fP only exits
+fullscreen mode and you'll need a second keypress on \fBq\fP or
+\fBEsc\fP to exit the program. If it's \fI0\fP (default), then a single
+keypress on \fBq\fP or \fBEsc\fP always quits \fBpdfpres\fP (unless
+you're currently editing slide notes).
+.SH "OLD FORMAT FOR SLIDE NOTES"
+If you already used an old version of \fBpdfpres\fP that didn't save the
+notes in XML, you can use the converter script to transform those notes
+into XML:
+.P
+.EX
+$ ./legacy-notes-converter.py notes.txt > notes.xml
+.EE
+.P
+The resulting file \fInotes.xml\fP can be read in \fBpdfpres\fP.
+.P
+Be aware that this script expects a file encoded with UTF-8. Use the
+editor of your choice or \fBrecode\fP to transform any non-UTF-8 files
+(you may adjust the input encoding) before you run the converter:
+.P
+.EX
+$ recode LATIN1..UTF8 < notes.txt > notes-utf8.txt
+.EE
+.P
 .SH FILES
 .TP
 \fI~/.config/pdfpres/config.xml\fP
 Local per user configuration.
+.SH "DEPENDENCIES AND BUILDING"
+If you need to manually compile \fBpdfpres\fP, the following libraries
+and tools must be installed:
+.IP \(bu 4
+.UR http://www.scons.org/
+SConstruct
+.UE
+.IP \(bu 4
+.UR http://www.gtk.org/
+gtk2
+.UE ,
+minimum tested version: 2.16.1.
+.IP \(bu 4
+.UR http://poppler.freedesktop.org/
+poppler and poppler-glib
+.UE ,
+minimum tested version: 0.10.6.
+.IP \(bu 4
+.UR http://www.xmlsoft.org/
+libxml2
+.UE ,
+minimum tested version: 2.7.6.
+.P
+Once those are installed, you can build \fBpdfpres\fP as follows:
+.P
+.EX
+$ cd /path/to/sources
+$ scons
+.EE
 .SH BUGS
 Currently, no bugs are known. If you find one, we invite you to report
 it at
 .UR http://github.com/vain/pdfpres/issues
 the GitHub Issue tracker
 .UE .
+.SH LICENSE
+\fBpdfpres\fP is released as \(lqGPL3+\(rq. See the accompanying
+\fILICENSE\fP file.
+.SH AUTHORS
+\fBpdfpres\fP was initially written by Peter Hofmann. Since then,
+several people contributed code. Git tells you all the names:
+.P
+.EX
+$ git shortlog -s | sort -k1rn
+.EE
+.SH "SEE ALSO"
+.BR xpdf (1)
