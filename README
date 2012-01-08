@@ -6,20 +6,21 @@ NAME
        pdfpres - Dual head PDF presenter
 
 SYNOPSIS
-       pdfpres [-w] [-n] [-s slides] [-c cache] [-N notes] FILE
+       pdfpres [-w] [-n] [-s slides] [-c cache] [-N notes] [-T] [-C]
+               FILE
 
 DESCRIPTION
-       pdfpres  is  a  presentation  program  for PDF files. It uses a
-       “dual head”-layout: One window shows the previous, current  and
-       next  slides while another window only shows the current slide.
+       pdfpres is a presentation program for  PDF  files.  It  uses  a
+       “dual  head”-layout: One window shows the previous, current and
+       next slides while another window only shows the current  slide.
        That additional window can be moved to an external screen (such
-       as  a  beamer).   Thus, you can present your slides on a beamer
+       as a beamer).  Thus, you can present your slides  on  a  beamer
        while keeping an eye on what's coming up next.
 
 OPTIONS
        -s slides
-              This parameter allows you to  specify  how  many  slides
-              before/after  the  current slide you wish to see, i.e. 3
+              This  parameter  allows  you  to specify how many slides
+              before/after the current slide you wish to see,  i.e.  3
               means “preview the next 3 slides while still showing the
               previous 3 slides”. The default is 1.
 
@@ -31,57 +32,65 @@ OPTIONS
               Specify the number of slides that can be cached/pre-ren‐
               dered.
 
-              Be aware, though, that this  value  will  always  be  at
-              least  “number  of pdf viewports” × 2. This is needed so
-              that we can pre-render the current and  next  slide  for
-              each  viewport.  Hence, switching to the next (or previ‐
+              Be  aware,  though,  that  this  value will always be at
+              least “number of pdf viewports” × 2. This is  needed  so
+              that  we  can  pre-render the current and next slide for
+              each viewport. Hence, switching to the next  (or  previ‐
               ous) slides will always be instant.
 
-       -w     Enables wrapping. When you're  on  the  last  slide  and
+       -w     Enables  wrapping.  When  you're  on  the last slide and
               wrapping is enabled, switching to the “next” slide actu‐
               ally switches to the very first slide.
 
        -n     Enables “note control”. The number of the slide which is
-              currently  shown will be written to stdout. You can pipe
-              this information to another program. That'll  allow  you
+              currently shown will be written to stdout. You can  pipe
+              this  information  to another program. That'll allow you
               to do fancy things.
 
        -N notes
-              Allows  you  to  specify  a file with notes that will be
-              loaded on startup.  The file has to be in the same  for‐
+              Allows you to specify a file with  notes  that  will  be
+              loaded  on startup.  The file has to be in the same for‐
               mat that pdfpres uses when saving notes.
 
+       -C     Forces the timer to be a clock, so it shows the  current
+              time.
+
+       -T     Opposite of -C, forces the timer to be a timer.
+
+       Command  line arguments take precedence over permanent settings
+       (see CONFIGURATION).
+
 KEYS
-       Full  customization  of all keybinds is planned. Currently, you
+       Full customization of all keybinds is planned.  Currently,  you
        can only use the following fixed keybinds to control pdfpres:
 
        Use the cursor keys to navigate. Space, Return, Right, Down and
-       Page  Down  also  go the next slide, Left, Up and Page Up go to
-       the previous slide. Left Mouse  switches  to  the  next  slide,
+       Page Down also go the next slide, Left, Up and Page  Up  go  to
+       the  previous  slide.  Left  Mouse  switches to the next slide,
        Right Mouse switches to the previous slide.
 
        p switches to “fit page”, this is the default.
 
-       w  switches  to  “fit  width”  mode, h switches to “fit height”
+       w switches to “fit width” mode,  h  switches  to  “fit  height”
        mode.
 
        F5 forces a full refresh.
 
-       Esc and q quit the program. If q_exits_fullscreen is  set  (see
-       CONFIGURATION),  those  keys only end fullscreen mode. You then
+       Esc  and  q quit the program. If q_exits_fullscreen is set (see
+       CONFIGURATION), those keys only end fullscreen mode.  You  then
        need a second keypress to exit pdfpres.
 
-       Sometimes you need  to  browse  your  slides  but  that  would,
+       Sometimes  you  need  to  browse  your  slides  but that would,
        inevitably, confuse the audience. So fixating the current slide
-       on the beamer while still allowing free navigation in the  pre‐
-       view  window  should  be quite handy. Lock it by pressing l and
+       on  the beamer while still allowing free navigation in the pre‐
+       view window should be quite handy. Lock it by  pressing  l  and
        unlock it with a capital L.
 
-       In locked mode, press J  to  jump  to  the  currently  selected
+       In  locked  mode,  press  J  to  jump to the currently selected
        slide.
 
-       To  switch to fullscreen, press f. You could also use your win‐
-       dow manager for this purpose. That is, Alt + F11 would  do  the
+       To switch to fullscreen, press f. You could also use your  win‐
+       dow  manager  for this purpose. That is, Alt + F11 would do the
        same in Xfce.
 
        s starts the timer, pauses it and continues if paused. r resets
@@ -91,11 +100,11 @@ KEYS
 
        i enters note edit mode, Esc leaves note edit mode.
 
-       Type a number and then G or Return to jump to  the  appropriate
+       Type  a  number and then G or Return to jump to the appropriate
        slide.
 
 CONFIGURATION
-       pdfpres  writes  all  of its configuration variables to ~/.con‐
+       pdfpres writes all of its configuration  variables  to  ~/.con‐
        fig/pdfpres/config.xml on exit. This file will look like this:
 
        <?xml version="1.0" encoding="UTF-8"?>
@@ -108,14 +117,15 @@ CONFIGURATION
             <font_notes v="Sans 12"/>
             <font_timer v="Sans 35"/>
             <q_exits_fullscreen v="0"/>
+            <timer_is_clock v="0"/>
        </config>
 
-       For now, you're supposed to directly edit this file except  for
-       font  settings. If you change fonts inside pdfpres, they'll get
+       For  now, you're supposed to directly edit this file except for
+       font settings. If you change fonts inside pdfpres, they'll  get
        saved automatically.
 
        initial_fit_mode
-              Accepts 0, 1 or 2 meaning “fit width”, “fit  height”  or
+              Accepts  0,  1 or 2 meaning “fit width”, “fit height” or
               “fit page”.
 
        slide_context
@@ -125,28 +135,34 @@ CONFIGURATION
               Equivalent to the -c ... parameter.
 
        do_wrapping
-              Equivalent  to  the -w parameter. 1 enables wrapping and
+              Equivalent to the -w parameter. 1 enables  wrapping  and
               everything else disables it.
 
        do_notectrl
-              Equivalent to the -n parameter. 1 enables  note  control
+              Equivalent  to  the -n parameter. 1 enables note control
               and everything else disables it.
 
        font_notes
        font_timer
-              Set  the  font for notes and timer. This string will get
+              Set the font for notes and timer. This string  will  get
               parsed  by  pango_font_description_from_string,  so  you
               might want to have a look at the GNOME API documentation
               ⟨http://library.gnome.org/devel/pango/unstable/pango-
-              Fonts.html#pango-font-description-from-string⟩   to  see
+              Fonts.html#pango-font-description-from-string⟩  to   see
               what's possible.
 
        q_exits_fullscreen
-              If this is set to 1, then pressing q or Esc  only  exits
-              fullscreen  mode  and you'll need a second keypress on q
-              or Esc to exit the program. If it's 0 (default), then  a
+              If  this  is set to 1, then pressing q or Esc only exits
+              fullscreen mode and you'll need a second keypress  on  q
+              or  Esc to exit the program. If it's 0 (default), then a
               single keypress on q or Esc always quits pdfpres (unless
               you're currently editing slide notes).
+
+       timer_is_clock
+              By  default  (0),  a timer is shown. You can start it or
+              stop it.  However, it's sometimes more useful to see the
+              current  real  time.  This  can  be done by setting this
+              option to 1.
 
 OLD FORMAT FOR SLIDE NOTES
        If you already used an old version of pdfpres that didn't  save

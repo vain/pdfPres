@@ -8,6 +8,8 @@ pdfpres \- Dual head PDF presenter
 .OP \-s slides
 .OP \-c cache
 .OP \-N notes
+.OP \-T
+.OP \-C
 .I FILE
 .YS
 .SH DESCRIPTION
@@ -49,6 +51,15 @@ another program. That'll allow you to do fancy things.
 Allows you to specify a file with notes that will be loaded on startup.
 The file has to be in the same format that \fBpdfpres\fP uses when saving
 notes.
+.TP
+\fB-C\fP
+Forces the timer to be a clock, so it shows the current time.
+.TP
+\fB-T\fP
+Opposite of \fB-C\fP, forces the timer to be a timer.
+.P
+Command line arguments take precedence over permanent settings (see
+\fBCONFIGURATION\fP).
 .SH KEYS
 Full customization of all keybinds is planned. Currently, you can only
 use the following fixed keybinds to control \fBpdfpres\fP:
@@ -106,6 +117,7 @@ like this:
 	<font_notes v="Sans 12"/>
 	<font_timer v="Sans 35"/>
 	<q_exits_fullscreen v="0"/>
+	<timer_is_clock v="0"/>
 </config>
 .EE
 .P
@@ -148,6 +160,11 @@ fullscreen mode and you'll need a second keypress on \fBq\fP or
 \fBEsc\fP to exit the program. If it's \fI0\fP (default), then a single
 keypress on \fBq\fP or \fBEsc\fP always quits \fBpdfpres\fP (unless
 you're currently editing slide notes).
+.TP
+.B timer_is_clock
+By default (\fI0\fP), a timer is shown. You can start it or stop it.
+However, it's sometimes more useful to see the current real time. This
+can be done by setting this option to \fI1\fP.
 .SH "OLD FORMAT FOR SLIDE NOTES"
 If you already used an old version of \fBpdfpres\fP that didn't save the
 notes in XML, you can use the converter script to transform those notes
