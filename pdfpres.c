@@ -579,6 +579,9 @@ static void toggleFullScreen(void)
 /* Starts, pauses  and continues the timer */
 static void toggleTimer()
 {
+	if (prefs.timer_is_clock)
+		return;
+
 	switch (timerMode)
 	{
 		case 0:
@@ -607,6 +610,9 @@ static void toggleTimer()
 
 static void resetTimer()
 {
+	if (prefs.timer_is_clock)
+		return;
+
 	if (timerMode == 1)
 		return;
 
@@ -616,6 +622,17 @@ static void resetTimer()
 		timer = NULL;
 	}
 	timerMode = 0;
+}
+
+static gboolean printCurrentTime(GtkWidget *timeElapsedLabel)
+{
+	GDateTime *now = g_date_time_new_now_local();
+	gchar *nowFmt = g_date_time_format(now, "%R");
+	gtk_label_set_text(GTK_LABEL(timeElapsedLabel), nowFmt);
+	g_free(nowFmt);
+	g_date_time_unref(now);
+
+	return TRUE;
 }
 
 static gboolean printTimeElapsed(GtkWidget *timeElapsedLabel)
@@ -1254,19 +1271,22 @@ static void initGUI(int numframes, gchar *notefile)
 	gtk_toolbar_set_style(GTK_TOOLBAR(timeToolbar), GTK_TOOLBAR_ICONS);
 	gtk_container_set_border_width(GTK_CONTAINER(timeToolbar), 5);
 
-	startButton = gtk_tool_button_new_from_stock(
-			GTK_STOCK_MEDIA_PLAY);
-	g_signal_connect(G_OBJECT(startButton), "clicked",
-			G_CALLBACK(toggleTimer), NULL);
-	gtk_toolbar_insert(GTK_TOOLBAR(timeToolbar), startButton, -1);
+	if (!prefs.timer_is_clock)
+	{
+		startButton = gtk_tool_button_new_from_stock(
+				GTK_STOCK_MEDIA_PLAY);
+		g_signal_connect(G_OBJECT(startButton), "clicked",
+				G_CALLBACK(toggleTimer), NULL);
+		gtk_toolbar_insert(GTK_TOOLBAR(timeToolbar), startButton, -1);
 
-	resetButton = gtk_tool_button_new_from_stock(GTK_STOCK_MEDIA_REWIND);
-	g_signal_connect(G_OBJECT(resetButton), "clicked",
-			G_CALLBACK(resetTimer), NULL);
-	gtk_toolbar_insert(GTK_TOOLBAR(timeToolbar), resetButton, -1);
+		resetButton = gtk_tool_button_new_from_stock(GTK_STOCK_MEDIA_REWIND);
+		g_signal_connect(G_OBJECT(resetButton), "clicked",
+				G_CALLBACK(resetTimer), NULL);
+		gtk_toolbar_insert(GTK_TOOLBAR(timeToolbar), resetButton, -1);
 
-	gtk_toolbar_insert(GTK_TOOLBAR(timeToolbar),
-			gtk_separator_tool_item_new(), -1);
+		gtk_toolbar_insert(GTK_TOOLBAR(timeToolbar),
+				gtk_separator_tool_item_new(), -1);
+	}
 
 	timeFontSelectButton =
 		gtk_tool_button_new_from_stock(GTK_STOCK_SELECT_FONT);
@@ -1280,7 +1300,14 @@ static void initGUI(int numframes, gchar *notefile)
 	font_desc = pango_font_description_from_string(prefs.font_timer);
 	gtk_widget_modify_font(GTK_WIDGET(timeElapsedLabel), font_desc);
 	pango_font_description_free(font_desc);
-	gtk_label_set_text(GTK_LABEL(timeElapsedLabel), "00:00");
+	if (prefs.timer_is_clock)
+	{
+		printCurrentTime(timeElapsedLabel);
+	}
+	else
+	{
+		gtk_label_set_text(GTK_LABEL(timeElapsedLabel), "00:00");
+	}
 
 	/* Add timer label to another event box so we can set a nice border.
 	 */
@@ -1544,8 +1571,17 @@ static void initGUI(int numframes, gchar *notefile)
 	gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(win_beamer)),
 			gdk_cursor_new(GDK_BLANK_CURSOR));
 
-	g_timeout_add(500, (GSourceFunc) printTimeElapsed,
-			(gpointer) timeElapsedLabel);
+	/* Show a clock or a timer? */
+	if (prefs.timer_is_clock)
+	{
+		g_timeout_add(500, (GSourceFunc)printCurrentTime,
+				(gpointer)timeElapsedLabel);
+	}
+	else
+	{
+		g_timeout_add(500, (GSourceFunc)printTimeElapsed,
+				(gpointer)timeElapsedLabel);
+	}
 }
 
 int main(int argc, char **argv)
@@ -1573,7 +1609,7 @@ int main(int argc, char **argv)
 	runpref.fit_mode = prefs.initial_fit_mode;
 
 	/* get options via getopt */
-	while ((i = getopt(argc, argv, "s:wnc:N:")) != -1)
+	while ((i = getopt(argc, argv, "s:wnc:N:CT")) != -1)
 	{
 		switch (i)
 		{
@@ -1603,6 +1639,16 @@ int main(int argc, char **argv)
 
 			case 'N':
 				notefile = g_strdup(optarg);
+				break;
+
+			case 'C':
+				/* Force the timer to be a clock. */
+				prefs.timer_is_clock = TRUE;
+				break;
+
+			case 'T':
+				/* Force the timer to be a timer (not a clock). */
+				prefs.timer_is_clock = FALSE;
 				break;
 
 			case '?':

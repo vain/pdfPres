@@ -48,6 +48,7 @@ void loadPreferences(void)
 	prefs.font_notes = g_strdup("Sans 12");
 	prefs.font_timer = g_strdup("Sans 35");
 	prefs.q_exits_fullscreen = 0;
+	prefs.timer_is_clock = 0;
 	/* We're using g_strdup() here so we can use g_free() all the time.
 	 */
 
@@ -173,6 +174,18 @@ void loadPreferences(void)
 			 * does it exit fullscreen mode (1)? */
 			tmp_i = atoi((char *)tmp);
 			prefs.q_exits_fullscreen = (tmp_i == 1 ? TRUE : FALSE);
+			xmlFree(tmp);
+		}
+
+		if (cur_node->type == XML_ELEMENT_NODE
+				&& !xmlStrcmp(cur_node->name, BAD_CAST "timer_is_clock")
+				&& (tmp = xmlGetProp(cur_node, BAD_CAST "v")) != NULL)
+		{
+			/* If set to 1, show the current time instead of a timer.
+			 * Furthermore, no buttons to control the timer shall be
+			 * visible. */
+			tmp_i = atoi((char *)tmp);
+			prefs.timer_is_clock = (tmp_i == 1 ? TRUE : FALSE);
 			xmlFree(tmp);
 		}
 	}
@@ -357,6 +370,9 @@ void savePreferences(void)
 
 	if (!writeElementBoolean(writer, "q_exits_fullscreen",
 				prefs.q_exits_fullscreen))
+		return;
+
+	if (!writeElementBoolean(writer, "timer_is_clock", prefs.timer_is_clock))
 		return;
 
 	/* Finish. */
