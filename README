@@ -1,0 +1,210 @@
+PDFPRES(1)              Dual head PDF presenter             PDFPRES(1)
+
+
+
+NAME
+       pdfpres - Dual head PDF presenter
+
+SYNOPSIS
+       pdfpres [-w] [-n] [-s slides] [-c cache] [-N notes] FILE
+
+DESCRIPTION
+       pdfpres  is  a  presentation  program  for PDF files. It uses a
+       “dual head”-layout: One window shows the previous, current  and
+       next  slides while another window only shows the current slide.
+       That additional window can be moved to an external screen (such
+       as  a  beamer).   Thus, you can present your slides on a beamer
+       while keeping an eye on what's coming up next.
+
+OPTIONS
+       -s slides
+              This parameter allows you to  specify  how  many  slides
+              before/after  the  current slide you wish to see, i.e. 3
+              means “preview the next 3 slides while still showing the
+              previous 3 slides”. The default is 1.
+
+              Attention: It is recommended to set the number of slides
+              not greater than 2 unless you have a large screen with a
+              high resolution.
+
+       -c cache
+              Specify the number of slides that can be cached/pre-ren‐
+              dered.
+
+              Be aware, though, that this  value  will  always  be  at
+              least  “number  of pdf viewports” × 2. This is needed so
+              that we can pre-render the current and  next  slide  for
+              each  viewport.  Hence, switching to the next (or previ‐
+              ous) slides will always be instant.
+
+       -w     Enables wrapping. When you're  on  the  last  slide  and
+              wrapping is enabled, switching to the “next” slide actu‐
+              ally switches to the very first slide.
+
+       -n     Enables “note control”. The number of the slide which is
+              currently  shown will be written to stdout. You can pipe
+              this information to another program. That'll  allow  you
+              to do fancy things.
+
+       -N notes
+              Allows  you  to  specify  a file with notes that will be
+              loaded on startup.  The file has to be in the same  for‐
+              mat that pdfpres uses when saving notes.
+
+KEYS
+       Full  customization  of all keybinds is planned. Currently, you
+       can only use the following fixed keybinds to control pdfpres:
+
+       Use the cursor keys to navigate. Space, Return, Right, Down and
+       Page  Down  also  go the next slide, Left, Up and Page Up go to
+       the previous slide. Left Mouse  switches  to  the  next  slide,
+       Right Mouse switches to the previous slide.
+
+       p switches to “fit page”, this is the default.
+
+       w  switches  to  “fit  width”  mode, h switches to “fit height”
+       mode.
+
+       F5 forces a full refresh.
+
+       Esc and q quit the program. If q_exits_fullscreen is  set  (see
+       CONFIGURATION),  those  keys only end fullscreen mode. You then
+       need a second keypress to exit pdfpres.
+
+       Sometimes you need  to  browse  your  slides  but  that  would,
+       inevitably, confuse the audience. So fixating the current slide
+       on the beamer while still allowing free navigation in the  pre‐
+       view  window  should  be quite handy. Lock it by pressing l and
+       unlock it with a capital L.
+
+       In locked mode, press J  to  jump  to  the  currently  selected
+       slide.
+
+       To  switch to fullscreen, press f. You could also use your win‐
+       dow manager for this purpose. That is, Alt + F11 would  do  the
+       same in Xfce.
+
+       s starts the timer, pauses it and continues if paused. r resets
+       the timer.
+
+       c toggles cursor visibility in presentation window.
+
+       i enters note edit mode, Esc leaves note edit mode.
+
+       Type a number and then G or Return to jump to  the  appropriate
+       slide.
+
+CONFIGURATION
+       pdfpres  writes  all  of its configuration variables to ~/.con‐
+       fig/pdfpres/config.xml on exit. This file will look like this:
+
+       <?xml version="1.0" encoding="UTF-8"?>
+       <config>
+            <initial_fit_mode v="2"/>
+            <slide_context v="1"/>
+            <do_wrapping v="0"/>
+            <do_notectrl v="0"/>
+            <cache_max v="32"/>
+            <font_notes v="Sans 12"/>
+            <font_timer v="Sans 35"/>
+            <q_exits_fullscreen v="0"/>
+       </config>
+
+       For now, you're supposed to directly edit this file except  for
+       font  settings. If you change fonts inside pdfpres, they'll get
+       saved automatically.
+
+       initial_fit_mode
+              Accepts 0, 1 or 2 meaning “fit width”, “fit  height”  or
+              “fit page”.
+
+       slide_context
+              Equivalent to the -s ... parameter.
+
+       cache_max
+              Equivalent to the -c ... parameter.
+
+       do_wrapping
+              Equivalent  to  the -w parameter. 1 enables wrapping and
+              everything else disables it.
+
+       do_notectrl
+              Equivalent to the -n parameter. 1 enables  note  control
+              and everything else disables it.
+
+       font_notes
+       font_timer
+              Set  the  font for notes and timer. This string will get
+              parsed  by  pango_font_description_from_string,  so  you
+              might want to have a look at the GNOME API documentation
+              ⟨http://library.gnome.org/devel/pango/unstable/pango-
+              Fonts.html#pango-font-description-from-string⟩   to  see
+              what's possible.
+
+       q_exits_fullscreen
+              If this is set to 1, then pressing q or Esc  only  exits
+              fullscreen  mode  and you'll need a second keypress on q
+              or Esc to exit the program. If it's 0 (default), then  a
+              single keypress on q or Esc always quits pdfpres (unless
+              you're currently editing slide notes).
+
+OLD FORMAT FOR SLIDE NOTES
+       If you already used an old version of pdfpres that didn't  save
+       the notes in XML, you can use the converter script to transform
+       those notes into XML:
+
+       $ ./legacy-notes-converter.py notes.txt > notes.xml
+
+       The resulting file notes.xml can be read in pdfpres.
+
+       Be aware that this script expects a file  encoded  with  UTF-8.
+       Use  the  editor of your choice or recode to transform any non-
+       UTF-8 files (you may adjust the input encoding) before you  run
+       the converter:
+
+       $ recode LATIN1..UTF8 < notes.txt > notes-utf8.txt
+
+FILES
+       ~/.config/pdfpres/config.xml
+              Local per user configuration.
+
+DEPENDENCIES AND BUILDING
+       If   you  need  to  manually  compile  pdfpres,  the  following
+       libraries and tools must be installed:
+
+       ·   SConstruct ⟨http://www.scons.org/⟩
+
+       ·   gtk2 ⟨http://www.gtk.org/⟩, minimum tested version: 2.16.1.
+
+       ·   poppler and poppler-glib ⟨http://poppler.freedesktop.org/⟩,
+           minimum tested version: 0.10.6.
+
+       ·   libxml2  ⟨http://www.xmlsoft.org/⟩, minimum tested version:
+           2.7.6.
+
+       Once those are installed, you can build pdfpres as follows:
+
+       $ cd /path/to/sources
+       $ scons
+
+BUGS
+       Currently, no bugs are known. If you find one, we invite you to
+       report      it      at     the     GitHub     Issue     tracker
+       ⟨http://github.com/vain/pdfpres/issues⟩.
+
+LICENSE
+       pdfpres is released as “GPL3+”. See  the  accompanying  LICENSE
+       file.
+
+AUTHORS
+       pdfpres  was  initially  written  by Peter Hofmann. Since then,
+       several people contributed code. Git tells you all the names:
+
+       $ git shortlog -s | sort -k1rn
+
+SEE ALSO
+       xpdf(1)
+
+
+
+pdfpres                      January 2012                   PDFPRES(1)
