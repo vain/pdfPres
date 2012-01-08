@@ -200,7 +200,7 @@ AUTHORS
        pdfpres  was  initially  written  by Peter Hofmann. Since then,
        several people contributed code. Git tells you all the names:
 
-       $ git shortlog -s | sort -k1rn
+       $ git shortlog -sn
 
 SEE ALSO
        xpdf(1)
