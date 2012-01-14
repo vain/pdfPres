@@ -74,28 +74,31 @@ KEYS
        w switches to “fit width” mode,  h  switches  to  “fit  height”
        mode.
 
-       F5 forces a full refresh.
+       F5  emulates “Start Presentation” like in LibreOffice. That is,
+       fullscreen is activated and the timer is started.
 
-       Esc  and  q quit the program. If q_exits_fullscreen is set (see
-       CONFIGURATION), those keys only end fullscreen mode.  You  then
+       F6 forces a full refresh.
+
+       Esc and q quit the program. If q_exits_fullscreen is  set  (see
+       CONFIGURATION),  those  keys only end fullscreen mode. You then
        need a second keypress to exit pdfpres.
 
-       Sometimes  you  need  to  browse  your  slides  but that would,
+       Sometimes you need  to  browse  your  slides  but  that  would,
        inevitably, confuse the audience. So fixating the current slide
-       on  the beamer while still allowing free navigation in the pre‐
-       view window should be quite handy. Lock it by  pressing  l  and
+       on the beamer while still allowing free navigation in the  pre‐
+       view  window  should  be quite handy. Lock it by pressing l and
        unlock it with a capital L.
 
-       In  locked  mode,  press  J  to  jump to the currently selected
+       In locked mode, press J  to  jump  to  the  currently  selected
        slide.
 
-       Alternatively, you can press b to blank  the  beamer  window  —
-       it'll  turn  into  a  plain black window. Pressing b again will
+       Alternatively,  you  can  press  b to blank the beamer window —
+       it'll turn into a plain black window.  Pressing  b  again  will
        return the current slide. Note: Even with a blank beamer window
        you can still browse your slides.
 
-       To  switch to fullscreen, press f. You could also use your win‐
-       dow manager for this purpose. That is, Alt + F11 would  do  the
+       To switch to fullscreen, press f. You could also use your  win‐
+       dow  manager  for this purpose. That is, Alt + F11 would do the
        same in Xfce.
 
        s starts the timer, pauses it and continues if paused. r resets
@@ -105,11 +108,11 @@ KEYS
 
        i enters note edit mode, Esc leaves note edit mode.
 
-       Type a number and then G or Return to jump to  the  appropriate
+       Type  a  number and then G or Return to jump to the appropriate
        slide.
 
 CONFIGURATION
-       pdfpres  writes  all  of its configuration variables to ~/.con‐
+       pdfpres writes all of its configuration  variables  to  ~/.con‐
        fig/pdfpres/config.xml on exit. This file will look like this:
 
        <?xml version="1.0" encoding="UTF-8"?>
@@ -125,12 +128,12 @@ CONFIGURATION
             <timer_is_clock v="0"/>
        </config>
 
-       For now, you're supposed to directly edit this file except  for
-       font  settings. If you change fonts inside pdfpres, they'll get
+       For  now, you're supposed to directly edit this file except for
+       font settings. If you change fonts inside pdfpres, they'll  get
        saved automatically.
 
        initial_fit_mode
-              Accepts 0, 1 or 2 meaning “fit width”, “fit  height”  or
+              Accepts  0,  1 or 2 meaning “fit width”, “fit height” or
               “fit page”.
 
        slide_context
@@ -140,37 +143,37 @@ CONFIGURATION
               Equivalent to the -c ... parameter.
 
        do_wrapping
-              Equivalent  to  the -w parameter. 1 enables wrapping and
+              Equivalent to the -w parameter. 1 enables  wrapping  and
               everything else disables it.
 
        do_notectrl
-              Equivalent to the -n parameter. 1 enables  note  control
+              Equivalent  to  the -n parameter. 1 enables note control
               and everything else disables it.
 
        font_notes
        font_timer
-              Set  the  font for notes and timer. This string will get
+              Set the font for notes and timer. This string  will  get
               parsed  by  pango_font_description_from_string,  so  you
               might want to have a look at the GNOME API documentation
               ⟨http://library.gnome.org/devel/pango/unstable/pango-
-              Fonts.html#pango-font-description-from-string⟩   to  see
+              Fonts.html#pango-font-description-from-string⟩  to   see
               what's possible.
 
        q_exits_fullscreen
-              If this is set to 1, then pressing q or Esc  only  exits
-              fullscreen  mode  and you'll need a second keypress on q
-              or Esc to exit the program. If it's 0 (default), then  a
+              If  this  is set to 1, then pressing q or Esc only exits
+              fullscreen mode and you'll need a second keypress  on  q
+              or  Esc to exit the program. If it's 0 (default), then a
               single keypress on q or Esc always quits pdfpres (unless
               you're currently editing slide notes).
 
        timer_is_clock
-              By default (0), a timer is shown. You can  start  it  or
+              By  default  (0),  a timer is shown. You can start it or
               stop it.  However, it's sometimes more useful to see the
-              current real time. This can  be  done  by  setting  this
+              current  real  time.  This  can  be done by setting this
               option to 1.
 
 OLD FORMAT FOR SLIDE NOTES
-       If  you already used an old version of pdfpres that didn't save
+       If you already used an old version of pdfpres that didn't  save
        the notes in XML, you can use the converter script to transform
        those notes into XML:
 
@@ -178,9 +181,9 @@ OLD FORMAT FOR SLIDE NOTES
 
        The resulting file notes.xml can be read in pdfpres.
 
-       Be  aware  that  this script expects a file encoded with UTF-8.
-       Use the editor of your choice or recode to transform  any  non-
-       UTF-8  files (you may adjust the input encoding) before you run
+       Be aware that this script expects a file  encoded  with  UTF-8.
+       Use  the  editor of your choice or recode to transform any non-
+       UTF-8 files (you may adjust the input encoding) before you  run
        the converter:
 
        $ recode LATIN1..UTF8 < notes.txt > notes-utf8.txt
@@ -190,7 +193,7 @@ FILES
               Local per user configuration.
 
 DEPENDENCIES AND BUILDING
-       If  you  need  to  manually  compile  pdfpres,  the   following
+       If   you  need  to  manually  compile  pdfpres,  the  following
        libraries and tools must be installed:
 
        ·   SConstruct ⟨http://www.scons.org/⟩
@@ -200,7 +203,7 @@ DEPENDENCIES AND BUILDING
        ·   poppler and poppler-glib ⟨http://poppler.freedesktop.org/⟩,
            minimum tested version: 0.10.6.
 
-       ·   libxml2 ⟨http://www.xmlsoft.org/⟩, minimum tested  version:
+       ·   libxml2  ⟨http://www.xmlsoft.org/⟩, minimum tested version:
            2.7.6.
 
        Once those are installed, you can build pdfpres as follows:
@@ -210,15 +213,15 @@ DEPENDENCIES AND BUILDING
 
 BUGS
        Currently, no bugs are known. If you find one, we invite you to
-       report     it     at     the     GitHub      Issue      tracker
+       report      it      at     the     GitHub     Issue     tracker
        ⟨http://github.com/vain/pdfpres/issues⟩.
 
 LICENSE
-       pdfpres  is  released  as “GPL3+”. See the accompanying LICENSE
+       pdfpres is released as “GPL3+”. See  the  accompanying  LICENSE
        file.
 
 AUTHORS
-       pdfpres was initially written by  Peter  Hofmann.  Since  then,
+       pdfpres  was  initially  written  by Peter Hofmann. Since then,
        several people contributed code. Git tells you all the names:
 
        $ git shortlog -sn

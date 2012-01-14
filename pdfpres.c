@@ -1086,6 +1086,15 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 			break;
 
 		case GDK_F5:
+			/* Switch to fullscreen (if needed) and start the timer
+			 * (unless it's already running). */
+			if (!isFullScreen)
+				toggleFullScreen();
+			if (timerMode != 1)
+				toggleTimer();
+			break;
+
+		case GDK_F6:
 			/* this shall trigger a hard refresh, so empty the cache. */
 			clearCache();
 			break;
