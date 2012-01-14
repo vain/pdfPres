@@ -63,6 +63,7 @@ static gboolean isCurserVisible = FALSE;
 static gboolean isInsideNotePad = FALSE;
 static gboolean isUserAction = FALSE;
 static gboolean isSaved = TRUE;
+static gboolean isBlank = FALSE;
 static char *savedAsFilename = NULL;
 static char *lastFolder = NULL;
 
@@ -608,6 +609,35 @@ static void toggleTimer()
 	}
 }
 
+
+static void toggleBlankBeamer()
+{
+	struct viewport *pp = NULL;
+	GList *it = ports;
+
+	while (it)
+	{
+		pp = (struct viewport *)(it->data);
+
+		if (pp->isBeamer)
+		{
+			if (isBlank)
+			{
+				gtk_widget_show(pp->image);
+			}
+			else
+			{
+				gtk_widget_hide(pp->image);
+			}
+
+			isBlank = !isBlank;
+			return;
+		}
+
+		it = g_list_next(it);
+	}
+}
+
 static void resetTimer()
 {
 	if (prefs.timer_is_clock)
@@ -1130,6 +1160,11 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 
 		case GDK_G:
 			executeJump();
+			break;
+
+		case GDK_b:
+			toggleBlankBeamer();
+			changed = FALSE;
 			break;
 
 		default:
