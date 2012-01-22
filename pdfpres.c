@@ -115,22 +115,22 @@ void setStatusText_strdup(gchar *msg)
 	gtk_statusbar_push(GTK_STATUSBAR(mainStatusbar), 0, curMsg);
 }
 
-static void saveLastFolderFrom(GtkWidget *widg)
+static void saveLastFolderFrom(GtkWidget *widget)
 {
 	if (lastFolder != NULL)
 		g_free(lastFolder);
 
 	lastFolder = gtk_file_chooser_get_current_folder(
-			GTK_FILE_CHOOSER(widg));
+			GTK_FILE_CHOOSER(widget));
 }
 
-static void setLastFolderOn(GtkWidget *widg)
+static void setLastFolderOn(GtkWidget *widget)
 {
 	if (lastFolder == NULL)
 		return;
 
 	gtk_file_chooser_set_current_folder(
-			GTK_FILE_CHOOSER(widg), lastFolder);
+			GTK_FILE_CHOOSER(widget), lastFolder);
 }
 
 static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
@@ -381,6 +381,9 @@ static void refreshFrames(void)
 
 static gboolean idleFillCaches(gpointer dummy)
 {
+	/* Unused parameters. */
+	(void)dummy;
+
 	/* do prerendering of next slides. this will only happen when
 	 * there's nothing else to do. */
 	struct viewport *pp = NULL;
@@ -783,6 +786,11 @@ static gboolean handleUnsavedNotes()
 
 static gboolean onQuit(GtkWidget *widget, GdkEvent *ev, gpointer dummy)
 {
+	/* Unused parameters. */
+	(void)widget;
+	(void)ev;
+	(void)dummy;
+
 	/* When there are unsaved notes, the user may chose not to quit. */
 	if (!handleUnsavedNotes())
 		return TRUE;
@@ -818,6 +826,10 @@ static void showNotesFromFile(gchar *notefile)
 
 static void onOpenClicked(GtkWidget *widget, gpointer data)
 {
+	/* Unused parameters. */
+	(void)widget;
+	(void)data;
+
 	GtkWidget *fileChooser = NULL;
 	gchar *filename;
 
@@ -845,6 +857,10 @@ static void onOpenClicked(GtkWidget *widget, gpointer data)
 
 static void onSaveAsClicked(GtkWidget *widget, gpointer data)
 {
+	/* Unused parameters. */
+	(void)widget;
+	(void)data;
+
 	gchar *msg = NULL;
 	GtkWidget *fileChooser = NULL;
 
@@ -886,6 +902,10 @@ static void onSaveAsClicked(GtkWidget *widget, gpointer data)
 
 static void onSaveClicked(GtkWidget *widget, gpointer data)
 {
+	/* Unused parameters. */
+	(void)widget;
+	(void)data;
+
 	gchar *msg = NULL;
 
 	if (savedAsFilename == NULL)
@@ -905,6 +925,10 @@ static void onSaveClicked(GtkWidget *widget, gpointer data)
 
 static void onFontSelectClick(GtkWidget *widget, gpointer data)
 {
+	/* Unused parameters. */
+	(void)widget;
+	(void)data;
+
 	GtkWidget *fontChooser = NULL;
 	PangoFontDescription *font_desc = NULL;
 
@@ -929,6 +953,10 @@ static void onFontSelectClick(GtkWidget *widget, gpointer data)
 
 static void onTimerFontSelectClick(GtkWidget *widget, gpointer data)
 {
+	/* Unused parameters. */
+	(void)widget;
+	(void)data;
+
 	GtkWidget *fontChooser = NULL;
 	PangoFontDescription *font_desc = NULL;
 
@@ -967,6 +995,9 @@ static void setEditingState(gboolean state)
 
 static void onEditToggled(GtkWidget *widget, gpointer data)
 {
+	/* Unused parameters. */
+	(void)data;
+
 	gboolean newState = FALSE;
 
 	if (gtk_toggle_tool_button_get_active(
@@ -986,16 +1017,28 @@ static void onEditToggled(GtkWidget *widget, gpointer data)
 
 static void onBeginUserAction(GtkTextBuffer *buf, gpointer dummy)
 {
+	/* Unused parameters. */
+	(void)buf;
+	(void)dummy;
+
 	isUserAction = TRUE;
 }
 
 static void onEndUserAction(GtkTextBuffer *buf, gpointer dummy)
 {
+	/* Unused parameters. */
+	(void)buf;
+	(void)dummy;
+
 	isUserAction = FALSE;
 }
 
 static void onEditing(GtkTextBuffer *buf, gpointer dummy)
 {
+	/* Unused parameters. */
+	(void)buf;
+	(void)dummy;
+
 	if (isUserAction)
 	{
 		isSaved = FALSE;
@@ -1005,9 +1048,13 @@ static void onEditing(GtkTextBuffer *buf, gpointer dummy)
 	}
 }
 
-static gboolean onPadKeyPressed(GtkWidget *widg, GdkEventKey *ev,
-		gpointer user_data)
+static gboolean onPadKeyPressed(GtkWidget *widget, GdkEventKey *ev,
+		gpointer data)
 {
+	/* Unused parameters. */
+	(void)widget;
+	(void)data;
+
 	switch (ev->keyval)
 	{
 		case GDK_Escape:
@@ -1053,9 +1100,12 @@ static int executeJump(void)
 	return retval;
 }
 
-static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
-		gpointer user_data)
+static gboolean onKeyPressed(GtkWidget *widget, GdkEventKey *ev,
+		gpointer data)
 {
+	/* Unused parameters. */
+	(void)data;
+
 	guint key = ev->keyval;
 	gchar *msg = NULL;
 
@@ -1186,7 +1236,7 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 
 		case GDK_i:
 			/* This must not work when we're on the beamer window. */
-			if (widg != win_beamer)
+			if (widget != win_beamer)
 				setEditingState(TRUE);
 
 			changed = FALSE;
@@ -1218,9 +1268,13 @@ static gboolean onKeyPressed(GtkWidget *widg, GdkEventKey *ev,
 	return TRUE;
 }
 
-static gboolean onMouseReleased(GtkWidget *widg, GdkEventButton *ev,
-		gpointer user_data)
+static gboolean onMouseReleased(GtkWidget *widget, GdkEventButton *ev,
+		gpointer data)
 {
+	/* Unused parameters. */
+	(void)widget;
+	(void)data;
+
 	/* forward on left click, backward on right click */
 
 	if (ev->type == GDK_BUTTON_RELEASE)
@@ -1240,9 +1294,12 @@ static gboolean onMouseReleased(GtkWidget *widg, GdkEventButton *ev,
 	return TRUE;
 }
 
-static void onResize(GtkWidget *widg, GtkAllocation *al,
+static void onResize(GtkWidget *widget, GtkAllocation *al,
 		struct viewport *port)
 {
+	/* Unused parameters. */
+	(void)widget;
+
 	int wOld = port->width;
 	int hOld = port->height;
 
