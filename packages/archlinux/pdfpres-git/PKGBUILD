@@ -6,10 +6,7 @@ pkgdesc="Dual head PDF presenter"
 arch=('i686' 'x86_64')
 url='http://www.uninformativ.de/projects/?q=pdfpres'
 license=('GPL3')
-
-# Actually, gtk2 and libxml2 are needed, too, but they're dependencies
-# of poppler-glib.
-depends=('poppler-glib')
+depends=('gtk2' 'poppler-glib')
 makedepends=('git' 'scons')
 
 _gitroot="git://github.com/vain/pdfPres.git"
