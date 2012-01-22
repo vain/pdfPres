@@ -99,7 +99,9 @@ KEYS
 
        To switch to fullscreen, press f. You could also use your  win‐
        dow  manager  for this purpose. That is, Alt + F11 would do the
-       same in Xfce.
+       same in Xfce. The beamer window is moved to the current monitor
+       (that  is,  that  monitor  the  mouse  pointer is currently on)
+       before fullscreen mode is activated.
 
        s starts the timer, pauses it and continues if paused. r resets
        the timer.

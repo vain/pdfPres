@@ -557,6 +557,35 @@ static void toggleCurserVisibility()
 	}
 }
 
+static void moveBeamerToMouseMonitor(void)
+{
+	GdkDisplay *dpy = NULL;
+	GdkScreen *scr = NULL;
+	GdkRectangle rect;
+	int mx = -1, my = -1, mon = -1;
+
+	/* Open default display. Then get the current position of the mouse
+	 * cursor and the screen that cursor is on. */
+	dpy = gdk_display_get_default();
+	if (dpy == NULL)
+	{
+		/* Actually, this should not happen because we are already able
+		 * to create windows on the default screen. */
+		fprintf(stderr, "Could not get default display.\n");
+		return;
+	}
+	gdk_display_get_pointer(dpy, &scr, &mx, &my, NULL);
+
+	/* Get the number of the monitor at the current mouse position, as
+	 * well as the geometry (offset, size) of that monitor. */
+	mon = gdk_screen_get_monitor_at_point(scr, mx, my);
+	gdk_screen_get_monitor_geometry(scr, mon, &rect);
+
+	/* Move the beamer window to the upper left corner of the current
+	 * monitor. */
+	gtk_window_move(GTK_WINDOW(win_beamer), rect.x, rect.y);
+}
+
 static void toggleFullScreen(void)
 {
 	/* Could happen right after startup ... dunno, better check it. */
@@ -567,6 +596,7 @@ static void toggleFullScreen(void)
 	 * on which object fullscreen must be toggled. */
 	if (isFullScreen == FALSE)
 	{
+		moveBeamerToMouseMonitor();
 		gdk_window_fullscreen(gtk_widget_get_window(win_beamer));
 		isFullScreen = TRUE;
 	}
