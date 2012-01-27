@@ -22,7 +22,7 @@ Thus, you can present your slides on a beamer while keeping an eye on
 what's coming up next.
 .SH OPTIONS
 .TP
-\fB-s\fP \fIslides\fP
+\fB\-s\fP \fIslides\fP
 This parameter allows you to specify how many slides before/after the
 current slide you wish to see, i.e. 3 means \(lqpreview the next 3
 slides while still showing the previous 3 slides\(rq. The default is 1.
@@ -30,7 +30,7 @@ slides while still showing the previous 3 slides\(rq. The default is 1.
 Attention: It is recommended to set the number of slides not greater
 than 2 unless you have a large screen with a high resolution.
 .TP
-\fB-c\fP \fIcache\fP
+\fB\-c\fP \fIcache\fP
 Specify the number of slides that can be cached/pre-rendered.
 
 Be aware, though, that this value will always be at least \(lqnumber of
@@ -38,28 +38,28 @@ pdf viewports\(rq \(mu 2. This is needed so that we can pre-render the
 current and next slide for each viewport. Hence, switching to the next
 (or previous) slides will always be instant.
 .TP
-\fB-w\fP
+\fB\-w\fP
 Enables wrapping. When you're on the last slide and wrapping is enabled,
 switching to the \(lqnext\(rq slide actually switches to the very first
 slide.
 .TP
-\fB-n\fP
+\fB\-n\fP
 Enables \(lqnote control\(rq. The number of the slide which is currently
 shown will be written to \fBstdout\fP. You can pipe this information to
 another program. That'll allow you to do fancy things.
 .TP
-\fB-N\fP \fInotes\fP
+\fB\-N\fP \fInotes\fP
 Allows you to specify a file with notes that will be loaded on startup.
 The file has to be in the same format that \fBpdfpres\fP uses when saving
 notes.
 .TP
-\fB-C\fP
+\fB\-C\fP
 Forces the timer to be a clock, so it shows the current time.
 .TP
-\fB-T\fP
-Opposite of \fB-C\fP, forces the timer to be a timer.
+\fB\-T\fP
+Opposite of \fB\-C\fP, forces the timer to be a timer.
 .TP
-\fB-v\fP
+\fB\-v\fP
 Show current version of \fBpdfpres\fP.
 .P
 Command line arguments take precedence over permanent settings (see
@@ -144,17 +144,17 @@ Accepts \fI0\fP, \fI1\fP or \fI2\fP meaning \fB\(lqfit width\(rq\fP,
 \fB\(lqfit height\(rq\fP or \fB\(lqfit page\(rq\fP.
 .TP
 .B slide_context
-Equivalent to the \fB-s ...\fP parameter.
+Equivalent to the \fB\-s ...\fP parameter.
 .TP
 .B cache_max
-Equivalent to the \fB-c ...\fP parameter.
+Equivalent to the \fB\-c ...\fP parameter.
 .TP
 .B do_wrapping 
-Equivalent to the \fB-w\fP parameter. \fI1\fP enables wrapping and
+Equivalent to the \fB\-w\fP parameter. \fI1\fP enables wrapping and
 everything else disables it.
 .TP
 .B do_notectrl
-Equivalent to the \fB-n\fP parameter. \fI1\fP enables note control and
+Equivalent to the \fB\-n\fP parameter. \fI1\fP enables note control and
 everything else disables it.
 .TP
 .B font_notes
