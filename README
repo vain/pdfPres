@@ -7,7 +7,7 @@ NAME
 
 SYNOPSIS
        pdfpres [-w] [-n] [-s slides] [-c cache] [-N notes] [-T] [-C]
-               FILE
+               [-v] FILE
 
 DESCRIPTION
        pdfpres is a presentation program for  PDF  files.  It  uses  a
@@ -56,6 +56,8 @@ OPTIONS
               time.
 
        -T     Opposite of -C, forces the timer to be a timer.
+
+       -v     Show current version of pdfpres.
 
        Command  line arguments take precedence over permanent settings
        (see CONFIGURATION).

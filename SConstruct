@@ -8,5 +8,9 @@ env = Environment(
 env.ParseConfig('pkg-config --cflags --libs gtk+-2.0 poppler-glib cairo')
 env.ParseConfig('xml2-config --cflags --libs')
 
+# Version number of pdfpres:
+env.Append(CPPDEFINES = {'PDFPRES_VERSION' : '\\"' +
+	os.popen('git describe').readline().strip() + '\\"'})
+
 # Build instructions
 env.Program('pdfpres', Glob('*.c'))

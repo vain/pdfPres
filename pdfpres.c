@@ -36,6 +36,10 @@
 #include "prefs.h"
 #include "notes.h"
 
+#ifndef PDFPRES_VERSION
+#define PDFPRES_VERSION "<version undefined>"
+#endif
+
 
 /* TODO: Clean up all that stuff. */
 
@@ -1740,7 +1744,7 @@ int main(int argc, char **argv)
 	runpref.fit_mode = prefs.initial_fit_mode;
 
 	/* get options via getopt */
-	while ((i = getopt(argc, argv, "s:wnc:N:CT")) != -1)
+	while ((i = getopt(argc, argv, "s:wnc:N:CTv")) != -1)
 	{
 		switch (i)
 		{
@@ -1780,6 +1784,11 @@ int main(int argc, char **argv)
 			case 'T':
 				/* Force the timer to be a timer (not a clock). */
 				prefs.timer_is_clock = FALSE;
+				break;
+
+			case 'v':
+				printf("pdfpres version: %s\n", PDFPRES_VERSION);
+				exit(EXIT_SUCCESS);
 				break;
 
 			case '?':
