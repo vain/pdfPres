@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <time.h>
 
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
@@ -694,11 +695,23 @@ static void resetTimer()
 
 static gboolean printCurrentTime(GtkWidget *timeElapsedLabel)
 {
-	GDateTime *now = g_date_time_new_now_local();
-	gchar *nowFmt = g_date_time_format(now, "%R");
+	char nowFmt[6] = "";
+	time_t t;
+	struct tm *tmp;
+
+	t = time(NULL);
+	tmp = localtime(&t);
+	if (tmp == NULL)
+	{
+		perror("localtime");
+		return TRUE;
+	}
+	if (strftime(nowFmt, sizeof(nowFmt), "%R", tmp) == 0)
+	{
+		fprintf(stderr, "strftime failed: 0\n");
+		return TRUE;
+	}
 	gtk_label_set_text(GTK_LABEL(timeElapsedLabel), nowFmt);
-	g_free(nowFmt);
-	g_date_time_unref(now);
 
 	return TRUE;
 }
