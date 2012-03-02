@@ -2,17 +2,16 @@
 .SH NAME
 pdfpres \- Dual head PDF presenter
 .SH SYNOPSIS
-.SY pdfpres
-.OP \-w
-.OP \-n
-.OP \-s slides
-.OP \-c cache
-.OP \-N notes
-.OP \-T
-.OP \-C
-.OP \-v
-.I FILE
-.YS
+\fBpdfpres\fP
+[\fB\-w\fP]
+[\fB\-n\fP]
+[\fB\-s\fP \fIslides\fP]
+[\fB\-c\fP \fIcache\fP]
+[\fB\-N\fP \fInotes\fP]
+[\fB\-T\fP]
+[\fB\-C\fP]
+[\fB\-V\fP]
+\fIFILE\fP
 .SH DESCRIPTION
 \fBpdfpres\fP is a presentation program for PDF files. It uses a
 \(lqdual head\(rq-layout: One window shows the previous, current and
@@ -120,7 +119,8 @@ appropriate slide.
 \fI~/.config/pdfpres/config.xml\fP on exit. This file will look
 like this:
 .P
-.EX
+.ft C
+.nf
 <?xml version="1.0" encoding="UTF-8"?>
 <config>
 	<initial_fit_mode v="2"/>
@@ -133,7 +133,8 @@ like this:
 	<q_exits_fullscreen v="0"/>
 	<timer_is_clock v="0"/>
 </config>
-.EE
+.fi
+.ft
 .P
 For now, you're supposed to directly edit this file except for font
 settings. If you change fonts inside \fBpdfpres\fP, they'll get saved
@@ -163,9 +164,8 @@ everything else disables it.
 Set the font for notes and timer. This string will get parsed by
 \fBpango_font_description_from_string\fP, so you might want to have a
 look at the
-.UR http://library.gnome.org\:/devel\:/pango\:/unstable\:/pango-Fonts.html\:#pango\:-font-description\:-from-string
 GNOME API documentation
-.UE
+(http://library.gnome.org\:/devel\:/pango\:/unstable\:/pango-Fonts.html\:#pango\:-font-description\:-from-string)
 to see what's possible.
 .TP
 .B q_exits_fullscreen
@@ -184,9 +184,11 @@ If you already used an old version of \fBpdfpres\fP that didn't save the
 notes in XML, you can use the converter script to transform those notes
 into XML:
 .P
-.EX
+.ft C
+.nf
 $ ./legacy-notes-converter.py notes.txt > notes.xml
-.EE
+.fi
+.ft
 .P
 The resulting file \fInotes.xml\fP can be read in \fBpdfpres\fP.
 .P
@@ -194,9 +196,11 @@ Be aware that this script expects a file encoded with UTF-8. Use the
 editor of your choice or \fBrecode\fP to transform any non-UTF-8 files
 (you may adjust the input encoding) before you run the converter:
 .P
-.EX
+.ft C
+.nf
 $ recode LATIN1..UTF8 < notes.txt > notes-utf8.txt
-.EE
+.fi
+.ft
 .P
 .SH FILES
 .TP
@@ -208,35 +212,29 @@ and tools must be installed:
 .IP \(bu 4
 make
 .IP \(bu 4
-.UR http://www.gtk.org/
-gtk2
-.UE ,
+gtk2 (http://www.gtk.org/),
 minimum tested version: 2.20.0,
 .IP \(bu 4
 glib, minimum tested version: 2.24.0,
 .IP \(bu 4
-.UR http://poppler.freedesktop.org/
-poppler and poppler-glib
-.UE ,
+poppler and poppler-glib (http://poppler.freedesktop.org/),
 minimum tested version: 0.12.4.
 .IP \(bu 4
-.UR http://www.xmlsoft.org/
-libxml2
-.UE ,
+libxml2 (http://www.xmlsoft.org/),
 minimum tested version: 2.7.6.
 .P
 Once those are installed, you can build \fBpdfpres\fP as follows:
 .P
-.EX
+.ft C
+.nf
 $ cd /path/to/sources
 $ make
-.EE
+.fi
+.ft
 .SH BUGS
 Currently, no bugs are known. If you find one, we invite you to report
 it at
-.UR http://github.com/vain/pdfpres/issues
-the GitHub Issue tracker
-.UE .
+the GitHub Issue tracker (http://github.com/vain/pdfpres/issues).
 .SH LICENSE
 \fBpdfpres\fP is released as \(lqGPL3+\(rq. See the accompanying
 \fILICENSE\fP file.
@@ -244,8 +242,10 @@ the GitHub Issue tracker
 \fBpdfpres\fP was initially written by Peter Hofmann. Since then,
 several people contributed code. Git tells you all the names:
 .P
-.EX
+.ft C
+.nf
 $ git shortlog -sn
-.EE
+.fi
+.ft
 .SH "SEE ALSO"
 .BR xpdf (1)
