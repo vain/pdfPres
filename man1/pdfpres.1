@@ -206,19 +206,19 @@ Local per user configuration.
 If you need to manually compile \fBpdfpres\fP, the following libraries
 and tools must be installed:
 .IP \(bu 4
-.UR http://www.scons.org/
-SConstruct
-.UE
+make
 .IP \(bu 4
 .UR http://www.gtk.org/
 gtk2
 .UE ,
-minimum tested version: 2.16.1.
+minimum tested version: 2.20.0,
+.IP \(bu 4
+glib, minimum tested version: 2.24.0,
 .IP \(bu 4
 .UR http://poppler.freedesktop.org/
 poppler and poppler-glib
 .UE ,
-minimum tested version: 0.10.6.
+minimum tested version: 0.12.4.
 .IP \(bu 4
 .UR http://www.xmlsoft.org/
 libxml2
@@ -229,7 +229,7 @@ Once those are installed, you can build \fBpdfpres\fP as follows:
 .P
 .EX
 $ cd /path/to/sources
-$ scons
+$ make
 .EE
 .SH BUGS
 Currently, no bugs are known. If you find one, we invite you to report

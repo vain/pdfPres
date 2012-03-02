@@ -200,12 +200,14 @@ DEPENDENCIES AND BUILDING
        If   you  need  to  manually  compile  pdfpres,  the  following
        libraries and tools must be installed:
 
-       ·   SConstruct ⟨http://www.scons.org/⟩
+       ·   make
 
-       ·   gtk2 ⟨http://www.gtk.org/⟩, minimum tested version: 2.16.1.
+       ·   gtk2 ⟨http://www.gtk.org/⟩, minimum tested version: 2.20.0,
+
+       ·   glib, minimum tested version: 2.24.0,
 
        ·   poppler and poppler-glib ⟨http://poppler.freedesktop.org/⟩,
-           minimum tested version: 0.10.6.
+           minimum tested version: 0.12.4.
 
        ·   libxml2  ⟨http://www.xmlsoft.org/⟩, minimum tested version:
            2.7.6.
@@ -213,7 +215,7 @@ DEPENDENCIES AND BUILDING
        Once those are installed, you can build pdfpres as follows:
 
        $ cd /path/to/sources
-       $ scons
+       $ make
 
 BUGS
        Currently, no bugs are known. If you find one, we invite you to
