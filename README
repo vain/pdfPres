@@ -6,8 +6,8 @@ NAME
        pdfpres - Dual head PDF presenter
 
 SYNOPSIS
-       pdfpres [-w] [-n] [-s slides] [-c cache] [-N notes] [-T] [-C]
-               [-v] FILE
+       pdfpres  [-w]  [-n] [-s slides] [-c cache] [-N notes] [-T] [-C]
+       [-V] FILE
 
 DESCRIPTION
        pdfpres is a presentation program for  PDF  files.  It  uses  a
@@ -159,8 +159,8 @@ CONFIGURATION
               Set the font for notes and timer. This string  will  get
               parsed  by  pango_font_description_from_string,  so  you
               might want to have a look at the GNOME API documentation
-              ⟨http://library.gnome.org/devel/pango/unstable/pango-
-              Fonts.html#pango-font-description-from-string⟩  to   see
+              (http://library.gnome.org/devel/pango/unstable/pango-
+              Fonts.html#pango-font-description-from-string)  to   see
               what's possible.
 
        q_exits_fullscreen
@@ -202,14 +202,14 @@ DEPENDENCIES AND BUILDING
 
        ·   make
 
-       ·   gtk2 ⟨http://www.gtk.org/⟩, minimum tested version: 2.20.0,
+       ·   gtk2 (http://www.gtk.org/), minimum tested version: 2.20.0,
 
        ·   glib, minimum tested version: 2.24.0,
 
-       ·   poppler and poppler-glib ⟨http://poppler.freedesktop.org/⟩,
+       ·   poppler and poppler-glib (http://poppler.freedesktop.org/),
            minimum tested version: 0.12.4.
 
-       ·   libxml2  ⟨http://www.xmlsoft.org/⟩, minimum tested version:
+       ·   libxml2  (http://www.xmlsoft.org/), minimum tested version:
            2.7.6.
 
        Once those are installed, you can build pdfpres as follows:
@@ -220,7 +220,7 @@ DEPENDENCIES AND BUILDING
 BUGS
        Currently, no bugs are known. If you find one, we invite you to
        report      it      at     the     GitHub     Issue     tracker
-       ⟨http://github.com/vain/pdfpres/issues⟩.
+       (http://github.com/vain/pdfpres/issues).
 
 LICENSE
        pdfpres is released as “GPL3+”. See  the  accompanying  LICENSE
