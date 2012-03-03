@@ -1471,7 +1471,14 @@ static void initGUI(int numframes, gchar *notefile)
 	gtk_box_pack_start(GTK_BOX(timeBox), timeToolbar,
 			FALSE, FALSE, 5);
 
-	timeFrame = gtk_frame_new("Timer");
+	if (prefs.timer_is_clock)
+	{
+		timeFrame = gtk_frame_new("Clock");
+	}
+	else
+	{
+		timeFrame = gtk_frame_new("Timer");
+	}
 	gtk_container_add(GTK_CONTAINER(timeFrame), timeBox);
 
 	/* create note pad inside a scrolled window */
