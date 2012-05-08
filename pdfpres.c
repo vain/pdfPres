@@ -1269,6 +1269,7 @@ static gboolean onKeyPressed(GtkWidget *widget, GdkEventKey *ev,
 			executeJump();
 			break;
 
+		case GDK_period:
 		case GDK_b:
 			toggleBlankBeamer();
 			changed = FALSE;
