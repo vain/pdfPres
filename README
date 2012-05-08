@@ -94,10 +94,10 @@ KEYS
        In locked mode, press J  to  jump  to  the  currently  selected
        slide.
 
-       Alternatively,  you  can  press  b to blank the beamer window —
-       it'll turn into a plain black window.  Pressing  b  again  will
-       return the current slide. Note: Even with a blank beamer window
-       you can still browse your slides.
+       Alternatively,  you  can  press  b  or  . (period) to blank the
+       beamer window — it'll turn into a plain black window.  Pressing
+       b  or  . again will return the current slide. Note: Even with a
+       blank beamer window you can still browse your slides.
 
        To switch to fullscreen, press f. You could also use your  win‐
        dow  manager  for this purpose. That is, Alt + F11 would do the
