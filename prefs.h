@@ -38,6 +38,7 @@ struct _prefs
 	char *font_timer;
 	gboolean q_exits_fullscreen;
 	gboolean timer_is_clock;
+	gboolean stop_timer_on_fs;
 };
 extern struct _prefs prefs;
 

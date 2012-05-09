@@ -49,6 +49,7 @@ void loadPreferences(void)
 	prefs.font_timer = g_strdup("Sans 35");
 	prefs.q_exits_fullscreen = 0;
 	prefs.timer_is_clock = 0;
+	prefs.stop_timer_on_fs = 0;
 	/* We're using g_strdup() here so we can use g_free() all the time.
 	 */
 
@@ -186,6 +187,17 @@ void loadPreferences(void)
 			 * visible. */
 			tmp_i = atoi((char *)tmp);
 			prefs.timer_is_clock = (tmp_i == 1 ? TRUE : FALSE);
+			xmlFree(tmp);
+		}
+
+		if (cur_node->type == XML_ELEMENT_NODE
+				&& !xmlStrcmp(cur_node->name, BAD_CAST "stop_timer_on_fs")
+				&& (tmp = xmlGetProp(cur_node, BAD_CAST "v")) != NULL)
+		{
+			/* When in fullscreen, does Q/Esc quit the program (0) or
+			 * does it exit fullscreen mode (1)? */
+			tmp_i = atoi((char *)tmp);
+			prefs.stop_timer_on_fs = (tmp_i == 1 ? TRUE : FALSE);
 			xmlFree(tmp);
 		}
 	}
@@ -370,6 +382,10 @@ void savePreferences(void)
 
 	if (!writeElementBoolean(writer, "q_exits_fullscreen",
 				prefs.q_exits_fullscreen))
+		return;
+
+	if (!writeElementBoolean(writer, "stop_timer_on_fs",
+				prefs.stop_timer_on_fs))
 		return;
 
 	if (!writeElementBoolean(writer, "timer_is_clock", prefs.timer_is_clock))

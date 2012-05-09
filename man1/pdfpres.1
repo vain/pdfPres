@@ -132,6 +132,7 @@ like this:
 	<font_timer v="Sans 35"/>
 	<q_exits_fullscreen v="0"/>
 	<timer_is_clock v="0"/>
+	<stop_timer_on_fs v="0"/>
 </config>
 .fi
 .ft
@@ -179,6 +180,12 @@ you're currently editing slide notes).
 By default (\fI0\fP), a timer is shown. You can start it or stop it.
 However, it's sometimes more useful to see the current real time. This
 can be done by setting this option to \fI1\fP.
+.TP
+.B stop_timer_on_fs
+By default (\fI0\fP), a running timer keeps running if you exit
+fullscreen mode. On some setups, however, it may be required for the
+timer to stop when fullscreen mode is being left. To do so, set this
+option to \fI1\fP.
 .SH "OLD FORMAT FOR SLIDE NOTES"
 If you already used an old version of \fBpdfpres\fP that didn't save the
 notes in XML, you can use the converter script to transform those notes

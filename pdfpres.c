@@ -1244,6 +1244,10 @@ static gboolean onKeyPressed(GtkWidget *widget, GdkEventKey *ev,
 			if (prefs.q_exits_fullscreen && isFullScreen)
 			{
 				toggleFullScreen();
+				if (prefs.stop_timer_on_fs)
+				{
+					toggleTimer();
+				}
 			}
 			else
 			{

@@ -130,6 +130,7 @@ CONFIGURATION
             <font_timer v="Sans 35"/>
             <q_exits_fullscreen v="0"/>
             <timer_is_clock v="0"/>
+            <stop_timer_on_fs v="0"/>
        </config>
 
        For  now, you're supposed to directly edit this file except for
@@ -176,8 +177,14 @@ CONFIGURATION
               current  real  time.  This  can  be done by setting this
               option to 1.
 
+       stop_timer_on_fs
+              By default (0), a running timer  keeps  running  if  you
+              exit fullscreen mode. On some setups, however, it may be
+              required for the timer to stop when fullscreen  mode  is
+              being left. To do so, set this option to 1.
+
 OLD FORMAT FOR SLIDE NOTES
-       If you already used an old version of pdfpres that didn't  save
+       If  you already used an old version of pdfpres that didn't save
        the notes in XML, you can use the converter script to transform
        those notes into XML:
 
@@ -185,9 +192,9 @@ OLD FORMAT FOR SLIDE NOTES
 
        The resulting file notes.xml can be read in pdfpres.
 
-       Be aware that this script expects a file  encoded  with  UTF-8.
-       Use  the  editor of your choice or recode to transform any non-
-       UTF-8 files (you may adjust the input encoding) before you  run
+       Be  aware  that  this script expects a file encoded with UTF-8.
+       Use the editor of your choice or recode to transform  any  non-
+       UTF-8  files (you may adjust the input encoding) before you run
        the converter:
 
        $ recode LATIN1..UTF8 < notes.txt > notes-utf8.txt
@@ -197,7 +204,7 @@ FILES
               Local per user configuration.
 
 DEPENDENCIES AND BUILDING
-       If   you  need  to  manually  compile  pdfpres,  the  following
+       If  you  need  to  manually  compile  pdfpres,  the   following
        libraries and tools must be installed:
 
        ·   make
@@ -209,7 +216,7 @@ DEPENDENCIES AND BUILDING
        ·   poppler and poppler-glib (http://poppler.freedesktop.org/),
            minimum tested version: 0.12.4.
 
-       ·   libxml2  (http://www.xmlsoft.org/), minimum tested version:
+       ·   libxml2 (http://www.xmlsoft.org/), minimum tested  version:
            2.7.6.
 
        Once those are installed, you can build pdfpres as follows:
@@ -219,15 +226,15 @@ DEPENDENCIES AND BUILDING
 
 BUGS
        Currently, no bugs are known. If you find one, we invite you to
-       report      it      at     the     GitHub     Issue     tracker
+       report     it     at     the     GitHub      Issue      tracker
        (http://github.com/vain/pdfpres/issues).
 
 LICENSE
-       pdfpres is released as “GPL3+”. See  the  accompanying  LICENSE
+       pdfpres  is  released  as “GPL3+”. See the accompanying LICENSE
        file.
 
 AUTHORS
-       pdfpres  was  initially  written  by Peter Hofmann. Since then,
+       pdfpres was initially written by  Peter  Hofmann.  Since  then,
        several people contributed code. Git tells you all the names:
 
        $ git shortlog -sn
