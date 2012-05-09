@@ -47,9 +47,9 @@ void loadPreferences(void)
 	prefs.cache_max = 32;
 	prefs.font_notes = g_strdup("Sans 12");
 	prefs.font_timer = g_strdup("Sans 35");
-	prefs.q_exits_fullscreen = 0;
-	prefs.timer_is_clock = 0;
-	prefs.stop_timer_on_fs = 0;
+	prefs.q_exits_fullscreen = FALSE;
+	prefs.timer_is_clock = FALSE;
+	prefs.stop_timer_on_fs = FALSE;
 	/* We're using g_strdup() here so we can use g_free() all the time.
 	 */
 
