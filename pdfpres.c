@@ -38,7 +38,7 @@
 #include "notes.h"
 
 #ifndef PDFPRES_VERSION
-/* If no version has been defined yet, show net milestone. */
+/* If no version has been defined yet, show next milestone. */
 #define PDFPRES_VERSION "pdfpres-0.3-pre (non-git)"
 #endif
 
