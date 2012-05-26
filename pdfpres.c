@@ -241,7 +241,7 @@ static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
 				/* unref pixbuf. */
 				ci = (struct cacheItem *)(it->data);
 				if (ci->pixbuf != NULL)
-					gdk_pixbuf_unref(ci->pixbuf);
+					g_object_unref(ci->pixbuf);
 
 				/* free memory alloc'd for the struct. */
 				free(ci);
@@ -456,7 +456,7 @@ static void clearCache(void)
 		/* unref pixbuf. */
 		ci = (struct cacheItem *)(it->data);
 		if (ci->pixbuf != NULL)
-			gdk_pixbuf_unref(ci->pixbuf);
+			g_object_unref(ci->pixbuf);
 
 		/* free memory alloc'd for the struct. */
 		free(ci);
