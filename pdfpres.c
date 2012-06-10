@@ -1364,7 +1364,19 @@ static void initGUI(int numframes, gchar *notefile)
 			  *evbox = NULL,
 			  *outerevbox = NULL,
 			  *timeFrame = NULL;
-	GtkWidget *mainVBox = NULL;
+	/*
+	 * grid like this:
+	 * +-------------------------------+
+	 * | notes   |           | preview |
+	 * |         | mainslide |         |
+	 * +---------+           +---------+
+	 * | preview |           | timer   |
+	 * |         |           |         |
+	 * +---------+-----------+---------+
+	 * | statusbar                     |
+	 * +-------------------------------+
+	 */
+	GtkGrid   *mainGrid = NULL;
 	GdkColor black;
 
 	GtkWidget *toolbar = NULL, *timeToolbar = NULL;
@@ -1685,16 +1697,16 @@ static void initGUI(int numframes, gchar *notefile)
 	 *
 	 * Note: It's important to use gtk_box_pack_* to add the statusbar
 	 * because gtk_container_add will pick unappropriate defaults. */
-	mainVBox = gtk_vbox_new(FALSE, 5);
-	gtk_container_add(GTK_CONTAINER(mainVBox), table);
+	mainGrid = GTK_GRID(gtk_grid_new());
+	gtk_widget_set_hexpand (table, TRUE);
+	gtk_grid_attach(mainGrid, table, 0, 0, 1, 1);
 
 	mainStatusbar = gtk_statusbar_new();
-	gtk_box_pack_end(GTK_BOX(mainVBox), mainStatusbar,
-			FALSE, FALSE, 0);
+	gtk_grid_attach(mainGrid, mainStatusbar, 0, 1, 1, 1);
 
 	setStatusText_strdup("Ready.");
 
-	gtk_container_add(GTK_CONTAINER(win_preview), mainVBox);
+	gtk_container_add(GTK_CONTAINER(win_preview), GTK_WIDGET(mainGrid));
 
 	/* in order to set the initially highlighted frame */
 	refreshFrames();
