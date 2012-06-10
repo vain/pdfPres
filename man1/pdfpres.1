@@ -19,6 +19,9 @@ next slides while another window only shows the current slide. That
 additional window can be moved to an external screen (such as a beamer).
 Thus, you can present your slides on a beamer while keeping an eye on
 what's coming up next.
+.P
+\fBNote:\fP This is the \(lqgtk3\(rq branch of \fBpdfpres\fP. See
+section \fBBUGS\fP below.
 .SH OPTIONS
 .TP
 \fB\-s\fP \fIslides\fP
@@ -219,16 +222,16 @@ and tools must be installed:
 .IP \(bu 4
 make
 .IP \(bu 4
-gtk2 (http://www.gtk.org/),
-minimum tested version: 2.20.0,
+gtk3 (http://www.gtk.org/),
+minimum tested version: 3.4.3,
 .IP \(bu 4
-glib, minimum tested version: 2.24.0,
+glib, minimum tested version: 2.32.3,
 .IP \(bu 4
 poppler and poppler-glib (http://poppler.freedesktop.org/),
-minimum tested version: 0.12.4.
+minimum tested version: 0.20,
 .IP \(bu 4
 libxml2 (http://www.xmlsoft.org/),
-minimum tested version: 2.7.6.
+minimum tested version: 2.7.8.
 .P
 Once those are installed, you can build \fBpdfpres\fP as follows:
 .P
@@ -239,9 +242,19 @@ $ make
 .fi
 .ft
 .SH BUGS
-Currently, no bugs are known. If you find one, we invite you to report
-it at
-the GitHub Issue tracker (http://github.com/vain/pdfpres/issues).
+This is the \(lqgtk3\(rq branch odf \fBpdfpres\fP. Some things may not
+work correctly, yet. Particularly, it has not been tested on FreeBSD or
+Ubuntu.
+.P
+The following bugs are known and being worked on:
+.P
+.IP \(bu 4
+Compilation warnings about GtkVBox being deprecated.
+.IP \(bu 4
+The window may change its size when you change slides.
+.P
+If you find more bugs, we invite you to report it at the GitHub Issue
+tracker (http://github.com/vain/pdfpres/issues).
 .SH LICENSE
 \fBpdfpres\fP is released as \(lqGPL3+\(rq. See the accompanying
 \fILICENSE\fP file.
