@@ -1306,12 +1306,12 @@ static gboolean onMouseReleased(GtkWidget *widget, GdkEventButton *ev,
 
 	if (ev->type == GDK_BUTTON_RELEASE)
 	{
-		if (ev->button == 1)
+		if (ev->button == GDK_BUTTON_PRIMARY)
 		{
 			nextSlide();
 			refreshPorts();
 		}
-		else if (ev->button == 3)
+		else if (ev->button == GDK_BUTTON_SECONDARY)
 		{
 			prevSlide();
 			refreshPorts();
