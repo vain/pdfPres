@@ -1013,7 +1013,7 @@ static gboolean onKeyPressed(GtkWidget *widget, GdkEventKey *ev,
 		target_page *= 10;
 		target_page += (int)key;
 
-		/* C)atch overflow and announce what would happen. */
+		/* Catch overflow and announce what would happen. */
 		if (target_page < 0)
 		{
 			target_page = -1;
