@@ -353,7 +353,7 @@ static void refreshFrames(void)
 		if (pp->isBeamer == FALSE)
 		{
 			/* reset background color */
-			gtk_widget_modify_bg(pp->frame->parent, GTK_STATE_NORMAL,
+			gtk_widget_modify_bg(gtk_widget_get_parent(pp->frame), GTK_STATE_NORMAL,
 					NULL);
 
 			/* lock mode: highlight the saved/current page */
@@ -361,12 +361,12 @@ static void refreshFrames(void)
 			{
 				if (doc_page + pp->offset == doc_page_mark)
 				{
-					gtk_widget_modify_bg(pp->frame->parent,
+					gtk_widget_modify_bg(gtk_widget_get_parent(pp->frame),
 							GTK_STATE_NORMAL, &col_marked);
 				}
 				else if (pp->offset == 0)
 				{
-					gtk_widget_modify_bg(pp->frame->parent,
+					gtk_widget_modify_bg(gtk_widget_get_parent(pp->frame),
 							GTK_STATE_NORMAL, &col_dim);
 				}
 			}
@@ -375,7 +375,7 @@ static void refreshFrames(void)
 			{
 				if (pp->offset == 0)
 				{
-					gtk_widget_modify_bg(pp->frame->parent,
+					gtk_widget_modify_bg(gtk_widget_get_parent(pp->frame),
 							GTK_STATE_NORMAL, &col_current);
 				}
 			}
@@ -570,6 +570,8 @@ static void moveBeamerToMouseMonitor(void)
 {
 	GdkDisplay *dpy = NULL;
 	GdkScreen *scr = NULL;
+	GdkDeviceManager *dma = NULL;
+	GdkDevice *cpo = NULL;
 	GdkRectangle rect;
 	int mx = -1, my = -1, mon = -1;
 
@@ -583,7 +585,9 @@ static void moveBeamerToMouseMonitor(void)
 		fprintf(stderr, "Could not get default display.\n");
 		return;
 	}
-	gdk_display_get_pointer(dpy, &scr, &mx, &my, NULL);
+	dma = gdk_display_get_device_manager(dpy);
+	cpo = gdk_device_manager_get_client_pointer(dma);
+	gdk_device_get_position(cpo, &scr, &mx, &my);
 
 	/* Get the number of the monitor at the current mouse position, as
 	 * well as the geometry (offset, size) of that monitor. */
@@ -950,17 +954,17 @@ static void onFontSelectClick(GtkWidget *widget, gpointer data)
 	GtkWidget *fontChooser = NULL;
 	PangoFontDescription *font_desc = NULL;
 
-	fontChooser = gtk_font_selection_dialog_new("Select Notes Font");
-	gtk_font_selection_dialog_set_font_name(
-			GTK_FONT_SELECTION_DIALOG(fontChooser), prefs.font_notes);
+	fontChooser = gtk_font_chooser_dialog_new("Select Notes Font", NULL);
+	gtk_font_chooser_set_font(
+			GTK_FONT_CHOOSER(fontChooser), prefs.font_notes);
 
 	if (gtk_dialog_run(GTK_DIALOG(fontChooser)) == GTK_RESPONSE_OK)
 	{
 		if (prefs.font_notes != NULL)
 			g_free(prefs.font_notes);
 
-		prefs.font_notes = gtk_font_selection_dialog_get_font_name(
-				GTK_FONT_SELECTION_DIALOG(fontChooser));
+		prefs.font_notes = gtk_font_chooser_get_font(
+				GTK_FONT_CHOOSER(fontChooser));
 		font_desc = pango_font_description_from_string(prefs.font_notes);
 		gtk_widget_modify_font(notePad, font_desc);
 		pango_font_description_free(font_desc);
@@ -978,17 +982,17 @@ static void onTimerFontSelectClick(GtkWidget *widget, gpointer data)
 	GtkWidget *fontChooser = NULL;
 	PangoFontDescription *font_desc = NULL;
 
-	fontChooser = gtk_font_selection_dialog_new("Select Timer Font");
-	gtk_font_selection_dialog_set_font_name(
-			GTK_FONT_SELECTION_DIALOG(fontChooser), prefs.font_timer);
+	fontChooser = gtk_font_chooser_dialog_new("Select Timer Font", NULL);
+	gtk_font_chooser_set_font(
+			GTK_FONT_CHOOSER(fontChooser), prefs.font_timer);
 
 	if (gtk_dialog_run(GTK_DIALOG(fontChooser)) == GTK_RESPONSE_OK)
 	{
 		if (prefs.font_timer != NULL)
 			g_free(prefs.font_timer);
 
-		prefs.font_timer = gtk_font_selection_dialog_get_font_name(
-				GTK_FONT_SELECTION_DIALOG(fontChooser));
+		prefs.font_timer = gtk_font_chooser_get_font(
+				GTK_FONT_CHOOSER(fontChooser));
 		font_desc = pango_font_description_from_string(prefs.font_timer);
 		gtk_widget_modify_font(timeElapsedLabel, font_desc);
 		pango_font_description_free(font_desc);
@@ -1075,7 +1079,7 @@ static gboolean onPadKeyPressed(GtkWidget *widget, GdkEventKey *ev,
 
 	switch (ev->keyval)
 	{
-		case GDK_Escape:
+		case GDK_KEY_Escape:
 			setEditingState(FALSE);
 			break;
 	}
@@ -1137,7 +1141,7 @@ static gboolean onKeyPressed(GtkWidget *widget, GdkEventKey *ev,
 	 *   1)  GDK_0 < GDK_1 < GDK_2 < ... < GDK_9
 	 *   2)  All of them must be >= 0.
 	 */
-	key -= GDK_0;
+	key -= GDK_KEY_0;
 	if (key <= 9)
 	{
 		/* The initial value is -1, so we have to reset this on the
@@ -1149,7 +1153,7 @@ static gboolean onKeyPressed(GtkWidget *widget, GdkEventKey *ev,
 		target_page *= 10;
 		target_page += (int)key;
 
-		/* Catch overflow and announce what would happen. */
+		/* C)atch overflow and announce what would happen. */
 		if (target_page < 0)
 		{
 			target_page = -1;
@@ -1170,20 +1174,20 @@ static gboolean onKeyPressed(GtkWidget *widget, GdkEventKey *ev,
 
 	switch (ev->keyval)
 	{
-		case GDK_Right:
-		case GDK_Down:
-		case GDK_Page_Down:
-		case GDK_space:
+		case GDK_KEY_Right:
+		case GDK_KEY_Down:
+		case GDK_KEY_Page_Down:
+		case GDK_KEY_space:
 			nextSlide();
 			break;
 
-		case GDK_Left:
-		case GDK_Up:
-		case GDK_Page_Up:
+		case GDK_KEY_Left:
+		case GDK_KEY_Up:
+		case GDK_KEY_Page_Up:
 			prevSlide();
 			break;
 
-		case GDK_F5:
+		case GDK_KEY_F5:
 			/* Switch to fullscreen (if needed) and start the timer
 			 * (unless it's already running). */
 			if (!isFullScreen)
@@ -1192,55 +1196,55 @@ static gboolean onKeyPressed(GtkWidget *widget, GdkEventKey *ev,
 				toggleTimer();
 			break;
 
-		case GDK_F6:
+		case GDK_KEY_F6:
 			/* this shall trigger a hard refresh, so empty the cache. */
 			clearCache();
 			break;
 
-		case GDK_w:
+		case GDK_KEY_w:
 			runpref.fit_mode = FIT_WIDTH;
 			break;
 
-		case GDK_h:
+		case GDK_KEY_h:
 			runpref.fit_mode = FIT_HEIGHT;
 			break;
 
-		case GDK_p:
+		case GDK_KEY_p:
 			runpref.fit_mode = FIT_PAGE;
 			break;
 
-		case GDK_l:
+		case GDK_KEY_l:
 			current_fixate();
 			break;
 
-		case GDK_L:
+		case GDK_KEY_L:
 			current_release(FALSE);
 			break;
 
-		case GDK_J:
+		case GDK_KEY_J:
 			current_release(TRUE);
 			break;
 
-		case GDK_f:
+		case GDK_KEY_f:
 			toggleFullScreen();
 			break;
 
-		case GDK_s:
+		case GDK_KEY_s:
 			toggleTimer();
 			changed = FALSE;
 			break;
 
-		case GDK_c:
+		case GDK_KEY_c:
 			toggleCurserVisibility();
 			break;
 
-		case GDK_r:
+		case GDK_KEY_r:
 			resetTimer();
 			changed = FALSE;
 			break;
 
-		case GDK_Escape:
-		case GDK_q:
+		case GDK_KEY_Escape:
+		case GDK_KEY_q:
 			if (prefs.q_exits_fullscreen && isFullScreen)
 			{
 				toggleFullScreen();
@@ -1256,7 +1260,7 @@ static gboolean onKeyPressed(GtkWidget *widget, GdkEventKey *ev,
 			}
 			break;
 
-		case GDK_i:
+		case GDK_KEY_i:
 			/* This must not work when we're on the beamer window. */
 			if (widget != win_beamer)
 				setEditingState(TRUE);
@@ -1264,17 +1268,17 @@ static gboolean onKeyPressed(GtkWidget *widget, GdkEventKey *ev,
 			changed = FALSE;
 			break;
 
-		case GDK_Return:
+		case GDK_KEY_Return:
 			if (executeJump() == 0)
 				nextSlide();
 			break;
 
-		case GDK_G:
+		case GDK_KEY_G:
 			executeJump();
 			break;
 
-		case GDK_period:
-		case GDK_b:
+		case GDK_KEY_period:
+		case GDK_KEY_b:
 			toggleBlankBeamer();
 			changed = FALSE;
 			break;
