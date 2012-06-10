@@ -570,6 +570,8 @@ static void moveBeamerToMouseMonitor(void)
 {
 	GdkDisplay *dpy = NULL;
 	GdkScreen *scr = NULL;
+	GdkDeviceManager *dma = NULL;
+	GdkDevice *cpo = NULL;
 	GdkRectangle rect;
 	int mx = -1, my = -1, mon = -1;
 
@@ -583,7 +585,9 @@ static void moveBeamerToMouseMonitor(void)
 		fprintf(stderr, "Could not get default display.\n");
 		return;
 	}
-	gdk_display_get_pointer(dpy, &scr, &mx, &my, NULL);
+	dma = gdk_display_get_device_manager(dpy);
+	cpo = gdk_device_manager_get_client_pointer(dma);
+	gdk_device_get_position(cpo, &scr, &mx, &my);
 
 	/* Get the number of the monitor at the current mouse position, as
 	 * well as the geometry (offset, size) of that monitor. */
