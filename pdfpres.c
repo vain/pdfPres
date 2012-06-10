@@ -954,17 +954,17 @@ static void onFontSelectClick(GtkWidget *widget, gpointer data)
 	GtkWidget *fontChooser = NULL;
 	PangoFontDescription *font_desc = NULL;
 
-	fontChooser = gtk_font_selection_dialog_new("Select Notes Font");
-	gtk_font_selection_dialog_set_font_name(
-			GTK_FONT_SELECTION_DIALOG(fontChooser), prefs.font_notes);
+	fontChooser = gtk_font_chooser_dialog_new("Select Notes Font", NULL);
+	gtk_font_chooser_set_font(
+			GTK_FONT_CHOOSER(fontChooser), prefs.font_notes);
 
 	if (gtk_dialog_run(GTK_DIALOG(fontChooser)) == GTK_RESPONSE_OK)
 	{
 		if (prefs.font_notes != NULL)
 			g_free(prefs.font_notes);
 
-		prefs.font_notes = gtk_font_selection_dialog_get_font_name(
-				GTK_FONT_SELECTION_DIALOG(fontChooser));
+		prefs.font_notes = gtk_font_chooser_get_font(
+				GTK_FONT_CHOOSER(fontChooser));
 		font_desc = pango_font_description_from_string(prefs.font_notes);
 		gtk_widget_modify_font(notePad, font_desc);
 		pango_font_description_free(font_desc);
@@ -982,17 +982,17 @@ static void onTimerFontSelectClick(GtkWidget *widget, gpointer data)
 	GtkWidget *fontChooser = NULL;
 	PangoFontDescription *font_desc = NULL;
 
-	fontChooser = gtk_font_selection_dialog_new("Select Timer Font");
-	gtk_font_selection_dialog_set_font_name(
-			GTK_FONT_SELECTION_DIALOG(fontChooser), prefs.font_timer);
+	fontChooser = gtk_font_chooser_dialog_new("Select Timer Font", NULL);
+	gtk_font_chooser_set_font(
+			GTK_FONT_CHOOSER(fontChooser), prefs.font_timer);
 
 	if (gtk_dialog_run(GTK_DIALOG(fontChooser)) == GTK_RESPONSE_OK)
 	{
 		if (prefs.font_timer != NULL)
 			g_free(prefs.font_timer);
 
-		prefs.font_timer = gtk_font_selection_dialog_get_font_name(
-				GTK_FONT_SELECTION_DIALOG(fontChooser));
+		prefs.font_timer = gtk_font_chooser_get_font(
+				GTK_FONT_CHOOSER(fontChooser));
 		font_desc = pango_font_description_from_string(prefs.font_timer);
 		gtk_widget_modify_font(timeElapsedLabel, font_desc);
 		pango_font_description_free(font_desc);
