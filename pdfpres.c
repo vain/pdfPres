@@ -30,10 +30,9 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkkeysyms.h>
 #include <glib.h>
-#include <glib/poppler.h>
+#include <poppler/glib/poppler.h>
 
 #include "pdfpres.h"
-#include "popplergdk.h"
 #include "prefs.h"
 #include "notes.h"
 
@@ -146,6 +145,8 @@ static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
 	double w = 0, h = 0;
 	double page_ratio = 1, screen_ratio = 1, scale = 1;
 	GdkPixbuf *targetBuf = NULL;
+	cairo_surface_t *surface;
+	cairo_t *targetContext = NULL;
 	PopplerPage *page = NULL;
 
 	GList *it = NULL;
@@ -224,8 +225,12 @@ static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
 		/* cache miss, render to a pixbuf. */
 		targetBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, w, h);
 		dieOnNull(targetBuf, __LINE__);
-		poppler_page_render_to_pixbuf(page, 0, 0, w, h, scale, 0,
-				targetBuf);
+		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
+		targetContext = cairo_create(surface);
+
+		poppler_page_render(page, targetContext);
+		// fit size TODO
+		targetBuf = gdk_pixbuf_get_from_surface(surface, 0, 0, w, h);
 
 		/* check if cache full. if so, kill the oldest item. */
 		if (g_list_length(cache) + 1 > runpref.cache_max)
