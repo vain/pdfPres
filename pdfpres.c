@@ -30,10 +30,9 @@
 #include <gdk/gdk.h>
 #include <gdk/gdkkeysyms.h>
 #include <glib.h>
-#include <glib/poppler.h>
+#include <poppler/glib/poppler.h>
 
 #include "pdfpres.h"
-#include "popplergdk.h"
 #include "prefs.h"
 #include "notes.h"
 
@@ -146,6 +145,8 @@ static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
 	double w = 0, h = 0;
 	double page_ratio = 1, screen_ratio = 1, scale = 1;
 	GdkPixbuf *targetBuf = NULL;
+	cairo_surface_t *surface;
+	cairo_t *targetContext = NULL;
 	PopplerPage *page = NULL;
 
 	GList *it = NULL;
@@ -224,8 +225,14 @@ static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
 		/* cache miss, render to a pixbuf. */
 		targetBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, w, h);
 		dieOnNull(targetBuf, __LINE__);
-		poppler_page_render_to_pixbuf(page, 0, 0, w, h, scale, 0,
-				targetBuf);
+		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
+		targetContext = cairo_create(surface);
+		cairo_surface_destroy(surface);
+
+		cairo_scale(targetContext, scale, scale);
+		poppler_page_render(page, targetContext);
+		targetBuf = gdk_pixbuf_get_from_surface(surface, 0, 0, w, h);
+		cairo_destroy(targetContext);
 
 		/* check if cache full. if so, kill the oldest item. */
 		if (g_list_length(cache) + 1 > runpref.cache_max)
@@ -1153,7 +1160,7 @@ static gboolean onKeyPressed(GtkWidget *widget, GdkEventKey *ev,
 		target_page *= 10;
 		target_page += (int)key;
 
-		/* C)atch overflow and announce what would happen. */
+		/* Catch overflow and announce what would happen. */
 		if (target_page < 0)
 		{
 			target_page = -1;
@@ -1306,12 +1313,12 @@ static gboolean onMouseReleased(GtkWidget *widget, GdkEventButton *ev,
 
 	if (ev->type == GDK_BUTTON_RELEASE)
 	{
-		if (ev->button == 1)
+		if (ev->button == GDK_BUTTON_PRIMARY)
 		{
 			nextSlide();
 			refreshPorts();
 		}
-		else if (ev->button == 3)
+		else if (ev->button == GDK_BUTTON_SECONDARY)
 		{
 			prevSlide();
 			refreshPorts();
@@ -1364,7 +1371,19 @@ static void initGUI(int numframes, gchar *notefile)
 			  *evbox = NULL,
 			  *outerevbox = NULL,
 			  *timeFrame = NULL;
-	GtkWidget *mainVBox = NULL;
+	/*
+	 * grid like this:
+	 * +-------------------------------+
+	 * | notes   |           | preview |
+	 * |         | mainslide |         |
+	 * +---------+           +---------+
+	 * | preview |           | timer   |
+	 * |         |           |         |
+	 * +---------+-----------+---------+
+	 * | statusbar                     |
+	 * +-------------------------------+
+	 */
+	GtkGrid   *mainGrid = NULL;
 	GdkColor black;
 
 	GtkWidget *toolbar = NULL, *timeToolbar = NULL;
@@ -1685,16 +1704,16 @@ static void initGUI(int numframes, gchar *notefile)
 	 *
 	 * Note: It's important to use gtk_box_pack_* to add the statusbar
 	 * because gtk_container_add will pick unappropriate defaults. */
-	mainVBox = gtk_vbox_new(FALSE, 5);
-	gtk_container_add(GTK_CONTAINER(mainVBox), table);
+	mainGrid = GTK_GRID(gtk_grid_new());
+	gtk_widget_set_hexpand (table, TRUE);
+	gtk_grid_attach(mainGrid, table, 0, 0, 1, 1);
 
 	mainStatusbar = gtk_statusbar_new();
-	gtk_box_pack_end(GTK_BOX(mainVBox), mainStatusbar,
-			FALSE, FALSE, 0);
+	gtk_grid_attach(mainGrid, mainStatusbar, 0, 1, 1, 1);
 
 	setStatusText_strdup("Ready.");
 
-	gtk_container_add(GTK_CONTAINER(win_preview), mainVBox);
+	gtk_container_add(GTK_CONTAINER(win_preview), GTK_WIDGET(mainGrid));
 
 	/* in order to set the initially highlighted frame */
 	refreshFrames();
