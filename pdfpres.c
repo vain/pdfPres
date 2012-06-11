@@ -227,10 +227,12 @@ static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
 		dieOnNull(targetBuf, __LINE__);
 		surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
 		targetContext = cairo_create(surface);
+		cairo_surface_destroy(surface);
 
+		cairo_scale(targetContext, scale, scale);
 		poppler_page_render(page, targetContext);
-		// fit size TODO
 		targetBuf = gdk_pixbuf_get_from_surface(surface, 0, 0, w, h);
+		cairo_destroy(targetContext);
 
 		/* check if cache full. if so, kill the oldest item. */
 		if (g_list_length(cache) + 1 > runpref.cache_max)
