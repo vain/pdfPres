@@ -6,7 +6,6 @@ pdfpres \- Dual head PDF presenter
 [\fB\-w\fP]
 [\fB\-n\fP]
 [\fB\-s\fP \fIslides\fP]
-[\fB\-c\fP \fIcache\fP]
 [\fB\-N\fP \fInotes\fP]
 [\fB\-T\fP]
 [\fB\-C\fP]
@@ -31,14 +30,6 @@ slides while still showing the previous 3 slides\(rq. The default is 1.
 
 Attention: It is recommended to set the number of slides not greater
 than 2 unless you have a large screen with a high resolution.
-.TP
-\fB\-c\fP \fIcache\fP
-Specify the number of slides that can be cached/pre-rendered.
-
-Be aware, though, that this value will always be at least \(lqnumber of
-pdf viewports\(rq \(mu 2. This is needed so that we can pre-render the
-current and next slide for each viewport. Hence, switching to the next
-(or previous) slides will always be instant.
 .TP
 \fB\-w\fP
 Enables wrapping. When you're on the last slide and wrapping is enabled,
@@ -130,7 +121,6 @@ like this:
 	<slide_context v="1"/>
 	<do_wrapping v="0"/>
 	<do_notectrl v="0"/>
-	<cache_max v="32"/>
 	<font_notes v="Sans 12"/>
 	<font_timer v="Sans 35"/>
 	<q_exits_fullscreen v="0"/>
@@ -150,9 +140,6 @@ Accepts \fI0\fP, \fI1\fP or \fI2\fP meaning \fB\(lqfit width\(rq\fP,
 .TP
 .B slide_context
 Equivalent to the \fB\-s ...\fP parameter.
-.TP
-.B cache_max
-Equivalent to the \fB\-c ...\fP parameter.
 .TP
 .B do_wrapping 
 Equivalent to the \fB\-w\fP parameter. \fI1\fP enables wrapping and

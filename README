@@ -6,40 +6,29 @@ NAME
        pdfpres - Dual head PDF presenter
 
 SYNOPSIS
-       pdfpres  [-w]  [-n] [-s slides] [-c cache] [-N notes] [-T] [-C]
-       [-V] FILE
+       pdfpres [-w] [-n] [-s slides] [-N notes] [-T] [-C] [-V] FILE
 
 DESCRIPTION
-       pdfpres is a presentation program for  PDF  files.  It  uses  a
-       “dual  head”-layout: One window shows the previous, current and
-       next slides while another window only shows the current  slide.
+       pdfpres  is  a  presentation  program  for PDF files. It uses a
+       “dual head”-layout: One window shows the previous, current  and
+       next  slides while another window only shows the current slide.
        That additional window can be moved to an external screen (such
-       as a beamer).  Thus, you can present your slides  on  a  beamer
+       as  a  beamer).   Thus, you can present your slides on a beamer
        while keeping an eye on what's coming up next.
 
-       Note:  This  is  the “gtk3” branch of pdfpres. See section BUGS
+       Note: This is the “gtk3” branch of pdfpres.  See  section  BUGS
        below.
 
 OPTIONS
        -s slides
-              This parameter allows you to  specify  how  many  slides
-              before/after  the  current slide you wish to see, i.e. 3
+              This  parameter  allows  you  to specify how many slides
+              before/after the current slide you wish to see,  i.e.  3
               means “preview the next 3 slides while still showing the
               previous 3 slides”. The default is 1.
 
               Attention: It is recommended to set the number of slides
               not greater than 2 unless you have a large screen with a
               high resolution.
-
-       -c cache
-              Specify the number of slides that can be cached/pre-ren‐
-              dered.
-
-              Be aware, though, that this  value  will  always  be  at
-              least  “number  of pdf viewports” × 2. This is needed so
-              that we can pre-render the current and  next  slide  for
-              each  viewport.  Hence, switching to the next (or previ‐
-              ous) slides will always be instant.
 
        -w     Enables wrapping. When you're  on  the  last  slide  and
               wrapping is enabled, switching to the “next” slide actu‐
@@ -128,7 +117,6 @@ CONFIGURATION
             <slide_context v="1"/>
             <do_wrapping v="0"/>
             <do_notectrl v="0"/>
-            <cache_max v="32"/>
             <font_notes v="Sans 12"/>
             <font_timer v="Sans 35"/>
             <q_exits_fullscreen v="0"/>
@@ -146,9 +134,6 @@ CONFIGURATION
 
        slide_context
               Equivalent to the -s ... parameter.
-
-       cache_max
-              Equivalent to the -c ... parameter.
 
        do_wrapping
               Equivalent  to  the -w parameter. 1 enables wrapping and

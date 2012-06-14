@@ -33,7 +33,6 @@ struct _prefs
 	int slide_context;
 	gboolean do_wrapping;
 	gboolean do_notectrl;
-	guint cache_max;
 	char *font_notes;
 	char *font_timer;
 	gboolean q_exits_fullscreen;

@@ -52,8 +52,6 @@ GtkWidget *win_preview = NULL;
 static GtkWidget *win_beamer = NULL;
 static GtkWidget *mainStatusbar = NULL;
 
-static GList *cache = NULL;
-
 static PopplerDocument *doc = NULL;
 
 int doc_n_pages = 0;
@@ -72,8 +70,6 @@ static gboolean isSaved = TRUE;
 static gboolean isBlank = FALSE;
 static char *savedAsFilename = NULL;
 static char *lastFolder = NULL;
-
-static gboolean preQueued = FALSE;
 
 static GTimer *timer = NULL;
 static int timerMode = 0; /* 0 = stopped, 1 = running, 2 = paused */
@@ -148,10 +144,6 @@ static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
 	GdkPixbuf *targetBuf = NULL;
 	PopplerPage *page = NULL;
 
-	GList *it = NULL;
-	struct cacheItem *ci = NULL;
-	gboolean found = FALSE;
-
 	/* limit boundaries of mypage_i -- just to be sure. */
 	if (mypage_i < 0)
 		mypage_i += doc_n_pages;
@@ -192,76 +184,11 @@ static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
 			break;
 	}
 
-	/* check if already in cache. */
-	it = cache;
-	found = FALSE;
-	while (it)
-	{
-		ci = (struct cacheItem *)(it->data);
-
-		if (ci->slidenum == mypage_i && ci->w == w && ci->h == h
-				&& ci->scale == scale)
-		{
-			/* cache hit. */
-			found = TRUE;
-			targetBuf = ci->pixbuf;
-
-			/* we need to increase this item's "score", that is marking
-			 * it as a "recent" item. we do so by placing it at the end
-			 * of the list. */
-			cache = g_list_remove(cache, ci);
-			cache = g_list_append(cache, ci);
-
-			/* now quit the loop. */
-			break;
-		}
-
-		it = g_list_next(it);
-	}
-
-	if (!found)
-	{
-		/* cache miss, render to a pixbuf. */
-		targetBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, w, h);
-		dieOnNull(targetBuf, __LINE__);
-		poppler_page_render_to_pixbuf(page, 0, 0, w, h, scale, 0,
-				targetBuf);
-
-		/* check if cache full. if so, kill the oldest item. */
-		if (g_list_length(cache) + 1 > runpref.cache_max)
-		{
-			it = g_list_first(cache);
-			if (it == NULL)
-			{
-				fprintf(stderr, "[Cache] No first item in list."
-						" cache_max too small?\n");
-			}
-			else
-			{
-				/* unref pixbuf. */
-				ci = (struct cacheItem *)(it->data);
-				if (ci->pixbuf != NULL)
-					g_object_unref(ci->pixbuf);
-
-				/* free memory alloc'd for the struct. */
-				free(ci);
-
-				/* remove the pointer which is now invalid from the
-				 * list.
-				 */
-				cache = g_list_remove(cache, ci);
-			}
-		}
-
-		/* add new item to cache. */
-		ci = (struct cacheItem *)malloc(sizeof(struct cacheItem));
-		ci->slidenum = mypage_i;
-		ci->w = w;
-		ci->h = h;
-		ci->scale = scale;
-		ci->pixbuf = targetBuf;
-		cache = g_list_append(cache, ci);
-	}
+	/* render to a pixbuf. */
+	targetBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, w, h);
+	dieOnNull(targetBuf, __LINE__);
+	poppler_page_render_to_pixbuf(page, 0, 0, w, h, scale, 0,
+			targetBuf);
 
 	/* cleanup */
 	g_object_unref(G_OBJECT(page));
@@ -328,15 +255,16 @@ static void updatePortPixbuf(struct viewport *pp)
 		}
 	}
 
-	/* get a pixbuf for this viewport. caching is behind
-	 * getRenderedPixbuf(). */
+	/* get a pixbuf for this viewport. */
+	if (pp->pixbuf != NULL)
+		g_object_unref(pp->pixbuf);
 	pp->pixbuf = getRenderedPixbuf(pp, mypage_i);
 
 	/* display the current page. */
 	if (pp->pixbuf != NULL)
 		gtk_image_set_from_pixbuf(GTK_IMAGE(pp->image), pp->pixbuf);
 	else
-		fprintf(stderr, "[Cache] Returned empty pixbuf."
+		fprintf(stderr, "getRenderedPixbuf returned an empty pixbuf."
 				" You're doing something wrong.\n");
 }
 
@@ -385,38 +313,6 @@ static void refreshFrames(void)
 	}
 }
 
-static gboolean idleFillCaches(gpointer dummy)
-{
-	/* Unused parameters. */
-	(void)dummy;
-
-	/* do prerendering of next slides. this will only happen when
-	 * there's nothing else to do. */
-	struct viewport *pp = NULL;
-	GList *it = ports;
-	int mypage_i = -1;
-
-	while (it)
-	{
-		pp = (struct viewport *)(it->data);
-		mypage_i = pagenumForPort(pp);
-
-		/* trigger some prerendering. the pointers are irrelevant for
-		 * now -- we just want the cache to be filled with all
-		 * previous and next slides. */
-		getRenderedPixbuf(pp, mypage_i + 1);
-		getRenderedPixbuf(pp, mypage_i - 1);
-
-		it = g_list_next(it);
-	}
-
-	/* save state. */
-	preQueued = FALSE;
-
-	/* do not call me again. */
-	return FALSE;
-}
-
 static void refreshPorts(void)
 {
 	struct viewport *pp = NULL;
@@ -431,42 +327,6 @@ static void refreshPorts(void)
 	}
 
 	refreshFrames();
-
-	/* queue prerendering of next slides unless this has already been
-	 * done.
-	 *
-	 * note: usually, it's not safe to use booleans for purposes like
-	 * this. however, we're in a singlethreaded program, so no other
-	 * thread can do concurrent modifications to this variable. hence
-	 * it's okay. */
-	if (!preQueued)
-	{
-		preQueued = TRUE;
-		g_idle_add(idleFillCaches, NULL);
-	}
-}
-
-static void clearCache(void)
-{
-	struct cacheItem *ci = NULL;
-	GList *it = cache;
-
-	while (it)
-	{
-		/* unref pixbuf. */
-		ci = (struct cacheItem *)(it->data);
-		if (ci->pixbuf != NULL)
-			g_object_unref(ci->pixbuf);
-
-		/* free memory alloc'd for the struct. */
-		free(ci);
-
-		it = g_list_next(it);
-	}
-
-	/* clear the list. */
-	g_list_free(cache);
-	cache = NULL;
 }
 
 static void current_fixate(void)
@@ -1196,11 +1056,6 @@ static gboolean onKeyPressed(GtkWidget *widget, GdkEventKey *ev,
 				toggleTimer();
 			break;
 
-		case GDK_KEY_F6:
-			/* this shall trigger a hard refresh, so empty the cache. */
-			clearCache();
-			break;
-
 		case GDK_KEY_w:
 			runpref.fit_mode = FIT_WIDTH;
 			break;
@@ -1348,7 +1203,7 @@ static void onResize(GtkWidget *widget, GtkAllocation *al,
 static void usage(char *exe)
 {
 	fprintf(stderr,
-			"Usage: %s [-c <cache items>] [-s <slides>] [-n] "
+			"Usage: %s [-s <slides>] [-n] "
 			"[-N <note file>] [-w] <file>\n", exe);
 }
 
@@ -1770,11 +1625,10 @@ int main(int argc, char **argv)
 	numframes = 2 * prefs.slide_context + 1;
 	runpref.do_wrapping = prefs.do_wrapping;
 	runpref.do_notectrl = prefs.do_notectrl;
-	runpref.cache_max = prefs.cache_max;
 	runpref.fit_mode = prefs.initial_fit_mode;
 
 	/* get options via getopt */
-	while ((i = getopt(argc, argv, "s:wnc:N:CTv")) != -1)
+	while ((i = getopt(argc, argv, "s:wnN:CTv")) != -1)
 	{
 		switch (i)
 		{
@@ -1794,12 +1648,6 @@ int main(int argc, char **argv)
 
 			case 'n':
 				runpref.do_notectrl = TRUE;
-				break;
-
-			case 'c':
-				/* don't care if that number is invalid. it'll get
-				 * re-adjusted anyway if it's too small. */
-				runpref.cache_max = atoi(optarg);
 				break;
 
 			case 'N':
@@ -1839,18 +1687,6 @@ int main(int argc, char **argv)
 		usage(argv[0]);
 		exit(EXIT_FAILURE);
 	}
-
-	/* for the cache to be useful, we'll need at least "some" items.
-	 * that is 2 items (prev and next) per preview viewport and 2
-	 * items for the beamer port.
-	 *
-	 * this means that switching to the previous and next slide will
-	 * always be fast.
-	 *
-	 * note: numframes is not negative (see above), so that cast is okay.
-	 */
-	if (runpref.cache_max < (guint)((numframes + 1) * 2))
-		runpref.cache_max = (guint)((numframes + 1) * 2);
 
 	/* try to load the file */
 	if (stat(filename, &statbuf) == -1)
@@ -1900,10 +1736,6 @@ int main(int argc, char **argv)
 	}
 
 	initGUI(numframes, notefile);
-
-	/* queue initial prerendering. */
-	preQueued = TRUE;
-	g_idle_add(idleFillCaches, NULL);
 
 	gtk_main();
 	exit(EXIT_SUCCESS);

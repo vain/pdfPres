@@ -36,15 +36,6 @@ struct viewport
 	gboolean isBeamer;
 };
 
-struct cacheItem
-{
-	GdkPixbuf *pixbuf;
-	int slidenum;
-	double w;
-	double h;
-	double scale;
-};
-
 /* These preferences are initially loaded by prefs.c but they can be
  * overriden by command line parameters. We separate them from the other
  * preferences because command line parameters must not have any effect
@@ -52,7 +43,6 @@ struct cacheItem
  */
 struct _runtimePreferences
 {
-	guint cache_max;
 	gboolean do_wrapping;
 	gboolean do_notectrl;
 	int fit_mode;

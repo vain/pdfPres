@@ -44,7 +44,6 @@ void loadPreferences(void)
 	prefs.slide_context = 1;
 	prefs.do_wrapping = FALSE;
 	prefs.do_notectrl = FALSE;
-	prefs.cache_max = 32;
 	prefs.font_notes = g_strdup("Sans 12");
 	prefs.font_timer = g_strdup("Sans 35");
 	prefs.q_exits_fullscreen = FALSE;
@@ -127,19 +126,6 @@ void loadPreferences(void)
 			/* Do note control? */
 			tmp_i = atoi((char *)tmp);
 			prefs.do_notectrl = (tmp_i == 1 ? TRUE : FALSE);
-			xmlFree(tmp);
-		}
-
-		if (cur_node->type == XML_ELEMENT_NODE
-				&& !xmlStrcmp(cur_node->name, BAD_CAST "cache_max")
-				&& (tmp = xmlGetProp(cur_node, BAD_CAST "v")) != NULL)
-		{
-			/* Cache maximum? */
-			tmp_i = atoi((char *)tmp);
-			if (tmp_i > 0)
-			{
-				prefs.cache_max = tmp_i;
-			}
 			xmlFree(tmp);
 		}
 
@@ -369,9 +355,6 @@ void savePreferences(void)
 		return;
 
 	if (!writeElementBoolean(writer, "do_notectrl", prefs.do_notectrl))
-		return;
-
-	if (!writeElementInt(writer, "cache_max", prefs.cache_max))
 		return;
 
 	if (!writeElement(writer, "font_notes", prefs.font_notes))
