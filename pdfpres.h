@@ -28,7 +28,7 @@ struct viewport
 	int width;
 	int height;
 
-	GtkWidget *image;
+	GtkWidget *canvas;
 	GtkWidget *frame;
 
 	GdkPixbuf *pixbuf;

@@ -33,7 +33,6 @@
 #include <glib/poppler.h>
 
 #include "pdfpres.h"
-#include "popplergdk.h"
 #include "prefs.h"
 #include "notes.h"
 
@@ -135,137 +134,12 @@ static void setLastFolderOn(GtkWidget *widget)
 			GTK_FILE_CHOOSER(widget), lastFolder);
 }
 
-static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
-{
-	int myfitmode = -1;
-	double pw = 0, ph = 0;
-	double w = 0, h = 0;
-	double page_ratio = 1, screen_ratio = 1, scale = 1;
-	GdkPixbuf *targetBuf = NULL;
-	PopplerPage *page = NULL;
-
-	/* limit boundaries of mypage_i -- just to be sure. */
-	if (mypage_i < 0)
-		mypage_i += doc_n_pages;
-	else
-		mypage_i %= doc_n_pages;
-
-	/* get this page and its ratio */
-	page = poppler_document_get_page(doc, mypage_i);
-	poppler_page_get_size(page, &pw, &ph);
-	page_ratio = pw / ph;
-	screen_ratio = (double)pp->width / (double)pp->height;
-
-	/* select fit mode */
-	if (runpref.fit_mode == FIT_PAGE)
-	{
-		/* that's it: compare screen and page ratio. this
-		 * will cover all 4 cases that could happen. */
-		if (screen_ratio > page_ratio)
-			myfitmode = FIT_HEIGHT;
-		else
-			myfitmode = FIT_WIDTH;
-	}
-	else
-		myfitmode = runpref.fit_mode;
-
-	switch (myfitmode)
-	{
-		case FIT_HEIGHT:
-			h = pp->height;
-			w = h * page_ratio;
-			scale = h / ph;
-			break;
-
-		case FIT_WIDTH:
-			w = pp->width;
-			h = w / page_ratio;
-			scale = w / pw;
-			break;
-	}
-
-	/* render to a pixbuf. */
-	targetBuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, w, h);
-	dieOnNull(targetBuf, __LINE__);
-	poppler_page_render_to_pixbuf(page, 0, 0, w, h, scale, 0,
-			targetBuf);
-
-	/* cleanup */
-	g_object_unref(G_OBJECT(page));
-
-	return targetBuf;
-}
-
 static int pagenumForPort(struct viewport *pp)
 {
 	if (pp->isBeamer == FALSE)
 		return doc_page + pp->offset;
 	else
 		return doc_page_beamer + pp->offset;
-}
-
-static void updatePortPixbuf(struct viewport *pp)
-{
-	int mypage_i;
-	gchar *title = NULL;
-
-	/* no valid target size? */
-	if (pp->width <= 0 || pp->height <= 0)
-		return;
-
-	/* decide which page to render - if any */
-	mypage_i = pagenumForPort(pp);
-
-	if (mypage_i < 0 || mypage_i >= doc_n_pages)
-	{
-		/* clear image and reset frame title */
-		gtk_image_clear(GTK_IMAGE(pp->image));
-
-		if (pp->frame != NULL)
-			gtk_frame_set_label(GTK_FRAME(pp->frame), "X");
-
-		return;
-	}
-	else
-	{
-		/* update frame title */
-		if (pp->frame != NULL)
-		{
-			title = g_strdup_printf("Slide %d / %d", mypage_i + 1,
-					doc_n_pages);
-			gtk_frame_set_label(GTK_FRAME(pp->frame), title);
-			g_free(title);
-		}
-	}
-
-	/* if note-control is active, print current page number if on
-	 * "main" frame. (don't do this on the beamer because it could be
-	 * locked.)
-	 * this allows you to attach any kind of other program or script
-	 * which can show notes for a specific slide. simply pipe the
-	 * output of pdfpres to your other tool.
-	 */
-	if (pp->offset == 0 && !pp->isBeamer)
-	{
-		printNote(doc_page + 1);
-		if (runpref.do_notectrl)
-		{
-			printf("%d\n", doc_page + 1);
-			fflush(stdout);
-		}
-	}
-
-	/* get a pixbuf for this viewport. */
-	if (pp->pixbuf != NULL)
-		g_object_unref(pp->pixbuf);
-	pp->pixbuf = getRenderedPixbuf(pp, mypage_i);
-
-	/* display the current page. */
-	if (pp->pixbuf != NULL)
-		gtk_image_set_from_pixbuf(GTK_IMAGE(pp->image), pp->pixbuf);
-	else
-		fprintf(stderr, "getRenderedPixbuf returned an empty pixbuf."
-				" You're doing something wrong.\n");
 }
 
 static void refreshFrames(void)
@@ -318,11 +192,11 @@ static void refreshPorts(void)
 	struct viewport *pp = NULL;
 	GList *it = ports;
 
-	/* display. */
+	/* Queue a draw signal for all ports. */
 	while (it)
 	{
 		pp = (struct viewport *)(it->data);
-		updatePortPixbuf(pp);
+		gtk_widget_queue_draw(pp->canvas);
 		it = g_list_next(it);
 	}
 
@@ -526,11 +400,11 @@ static void toggleBlankBeamer()
 		{
 			if (isBlank)
 			{
-				gtk_widget_show(pp->image);
+				gtk_widget_show(pp->canvas);
 			}
 			else
 			{
-				gtk_widget_hide(pp->image);
+				gtk_widget_hide(pp->canvas);
 			}
 
 			isBlank = !isBlank;
@@ -1182,22 +1056,131 @@ static void onResize(GtkWidget *widget, GtkAllocation *al,
 	/* Unused parameters. */
 	(void)widget;
 
-	int wOld = port->width;
-	int hOld = port->height;
-
 	port->width = al->width;
 	port->height = al->height;
 
-	/* if the new size differs from the old size, then
-	 * re-render this particular viewport. */
-	if (wOld != port->width || hOld != port->height)
-	{
-		/* be sure to save the current notes because the following
-		 * update will trigger a re-print of them. */
-		saveCurrentNote();
+	/* Save current note because it would get overwritten by the redraw
+	 * event. */
+	saveCurrentNote();
+}
 
-		updatePortPixbuf(port);
+static gboolean onCanvasDraw(GtkWidget *widget, cairo_t *cr,
+		struct viewport *pp)
+{
+	(void)widget;
+
+	int mypage_i, myfitmode = -1;
+	gdouble w = 0, h = 0;
+	gchar *title = NULL;
+	gdouble popwidth, popheight;
+	gdouble tx, ty;
+	gdouble screen_ratio, page_ratio, scale;
+	PopplerPage *page = NULL;
+
+	/* no valid target size? */
+	if (pp->width <= 0 || pp->height <= 0)
+		return TRUE;
+
+	/* decide which page to render - if any */
+	mypage_i = pagenumForPort(pp);
+
+	if (mypage_i < 0 || mypage_i >= doc_n_pages)
+	{
+		/* We don't do any drawing and set the frame's title to "X".
+		 * Thus, we'll end up with an "empty" frame. */
+		if (pp->frame != NULL)
+			gtk_frame_set_label(GTK_FRAME(pp->frame), "X");
+
+		return TRUE;
 	}
+	else
+	{
+		/* update frame title */
+		if (pp->frame != NULL)
+		{
+			title = g_strdup_printf("Slide %d / %d", mypage_i + 1,
+					doc_n_pages);
+			gtk_frame_set_label(GTK_FRAME(pp->frame), title);
+			g_free(title);
+		}
+	}
+
+	/* if note-control is active, print current page number if on
+	 * "main" frame. (don't do this on the beamer because it could be
+	 * locked.)
+	 * this allows you to attach any kind of other program or script
+	 * which can show notes for a specific slide. simply pipe the
+	 * output of pdfpres to your other tool.
+	 */
+	if (pp->offset == 0 && !pp->isBeamer)
+	{
+		printNote(doc_page + 1);
+		if (runpref.do_notectrl)
+		{
+			printf("%d\n", doc_page + 1);
+			fflush(stdout);
+		}
+	}
+
+	/* Get the page and it's size from the document. */
+	page = poppler_document_get_page(doc, mypage_i);
+	poppler_page_get_size(page, &popwidth, &popheight);
+
+	/* Select fit mode. */
+	page_ratio = popwidth / popheight;
+	screen_ratio = (double)pp->width / (double)pp->height;
+
+	if (runpref.fit_mode == FIT_PAGE)
+	{
+		/* That's it: Compare screen and page ratio. This
+		 * will cover all 4 cases that could happen. */
+		if (screen_ratio > page_ratio)
+			myfitmode = FIT_HEIGHT;
+		else
+			myfitmode = FIT_WIDTH;
+	}
+	else
+		myfitmode = runpref.fit_mode;
+
+	switch (myfitmode)
+	{
+		case FIT_HEIGHT:
+			/* Fit size. */
+			h = pp->height;
+			w = h * page_ratio;
+			scale = h / popheight;
+			/* Center page. */
+			tx = (pp->width - popwidth * scale) * 0.5;
+			ty = 0;
+			break;
+
+		case FIT_WIDTH:
+			w = pp->width;
+			h = w / page_ratio;
+			scale = w / popwidth;
+			tx = 0;
+			ty = (pp->height - popheight * scale) * 0.5;
+			break;
+	}
+
+	/* A white background, i.e. "paper color". Push and pop cairo
+	 * contexts, so we have a clean state afterwards. */
+	cairo_save(cr);
+	cairo_set_source_rgb(cr, 1, 1, 1);
+	cairo_rectangle(cr, 0, 0, pp->width, pp->height);
+	cairo_fill(cr);
+	cairo_restore(cr);
+
+	/* Render the page centered and scaled. */
+	cairo_translate(cr, tx, ty);
+	cairo_scale(cr, scale, scale);
+	poppler_page_render(page, cr);
+
+	/* We no longer need that page. */
+	g_object_unref(G_OBJECT(page));
+
+	/* Nobody else draws to this widget. */
+	return TRUE;
 }
 
 static void usage(char *exe)
@@ -1214,7 +1197,7 @@ static void initGUI(int numframes, gchar *notefile)
 			  *notePadBox = NULL,
 			  *notePadScroll = NULL,
 			  *table = NULL;
-	GtkWidget *image = NULL,
+	GtkWidget *canvas = NULL,
 			  *frame = NULL,
 			  *evbox = NULL,
 			  *outerevbox = NULL,
@@ -1278,6 +1261,9 @@ static void initGUI(int numframes, gchar *notefile)
 	gtk_container_set_border_width(GTK_CONTAINER(win_beamer), 0);
 
 	gtk_widget_modify_bg(win_beamer, GTK_STATE_NORMAL, &black);
+
+	/* That little "resize grip" is a no-go for our beamer window. */
+	gtk_window_set_has_resize_grip(GTK_WINDOW(win_beamer), FALSE);
 
 	/* create buttons */
 	timeToolbar = gtk_toolbar_new();
@@ -1455,17 +1441,17 @@ static void initGUI(int numframes, gchar *notefile)
 
 		/* create a new drawing area - the pdf will be rendered in
 		 * there */
-		image = gtk_image_new();
-		gtk_widget_set_size_request(image, 100, 100);
+		canvas = gtk_drawing_area_new();
+		gtk_widget_set_size_request(canvas, 100, 100);
 
-		/* add widgets to their parents. the image is placed in an
+		/* add widgets to their parents. the canvas is placed in an
 		 * eventbox, the box's size_allocate signal will be handled. so,
 		 * we know the exact width/height we can render into. (placing
-		 * the image into the frame would create the need of knowing the
+		 * the canvas into the frame would create the need of knowing the
 		 * frame's border size...)
 		 */
 		evbox = gtk_event_box_new();
-		gtk_container_add(GTK_CONTAINER(evbox), image);
+		gtk_container_add(GTK_CONTAINER(evbox), canvas);
 		gtk_container_add(GTK_CONTAINER(frame), evbox);
 
 		/* every frame will be placed in another eventbox so we can set a
@@ -1523,7 +1509,7 @@ static void initGUI(int numframes, gchar *notefile)
 		thisport = (struct viewport *)malloc(sizeof(struct viewport));
 		dieOnNull(thisport, __LINE__);
 		thisport->offset = transIndex;
-		thisport->image = image;
+		thisport->canvas = canvas;
 		thisport->frame = frame;
 		thisport->pixbuf = NULL;
 		thisport->width = -1;
@@ -1534,6 +1520,10 @@ static void initGUI(int numframes, gchar *notefile)
 		/* resize callback */
 		g_signal_connect(G_OBJECT(evbox), "size_allocate",
 				G_CALLBACK(onResize), thisport);
+
+		/* How to draw into this particular canvas: */
+		g_signal_connect(G_OBJECT(canvas), "draw",
+						 G_CALLBACK(onCanvasDraw), thisport);
 	}
 
 	/* Add main content and a status bar to preview window.
@@ -1555,16 +1545,16 @@ static void initGUI(int numframes, gchar *notefile)
 	refreshFrames();
 
 	/* add a rendering area to the beamer window */
-	image = gtk_image_new();
-	gtk_widget_set_size_request(image, 320, 240);
+	canvas = gtk_drawing_area_new();
+	gtk_widget_set_size_request(canvas, 320, 240);
 
-	gtk_container_add(GTK_CONTAINER(win_beamer), image);
+	gtk_container_add(GTK_CONTAINER(win_beamer), canvas);
 
 	/* save info of this rendering port */
 	thisport = (struct viewport *)malloc(sizeof(struct viewport));
 	dieOnNull(thisport, __LINE__);
 	thisport->offset = 0;
-	thisport->image = image;
+	thisport->canvas = canvas;
 	thisport->frame = NULL;
 	thisport->pixbuf = NULL;
 	thisport->width = -1;
@@ -1575,6 +1565,10 @@ static void initGUI(int numframes, gchar *notefile)
 	/* connect the on-resize-callback directly to the window */
 	g_signal_connect(G_OBJECT(win_beamer), "size_allocate",
 			G_CALLBACK(onResize), thisport);
+
+	/* How to draw into this particular canvas: */
+	g_signal_connect(G_OBJECT(canvas), "draw",
+					 G_CALLBACK(onCanvasDraw), thisport);
 
 	/* load notes if requested */
 	if (notefile)
