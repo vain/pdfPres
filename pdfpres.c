@@ -1315,7 +1315,7 @@ static void initGUI(int numframes, gchar *notefile)
 	gtk_container_set_border_width(GTK_CONTAINER(evbox), 10);
 
 	/* create timer */
-	timeBox = gtk_vbox_new(FALSE, 5);
+	timeBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
 	gtk_box_pack_start(GTK_BOX(timeBox), evbox,
 			TRUE, TRUE, 5);
 	gtk_box_pack_start(GTK_BOX(timeBox), timeToolbar,
@@ -1332,7 +1332,7 @@ static void initGUI(int numframes, gchar *notefile)
 	gtk_container_add(GTK_CONTAINER(timeFrame), timeBox);
 
 	/* create note pad inside a scrolled window */
-	notePadBox = gtk_vbox_new(FALSE, 2);
+	notePadBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
 	notePadScroll = gtk_scrolled_window_new(NULL, NULL);
 	gtk_container_set_border_width(GTK_CONTAINER(notePadScroll), 5);
 	notePadFrame = gtk_frame_new("Notes for current slide");
@@ -1530,7 +1530,7 @@ static void initGUI(int numframes, gchar *notefile)
 	 *
 	 * Note: It's important to use gtk_box_pack_* to add the statusbar
 	 * because gtk_container_add will pick unappropriate defaults. */
-	mainVBox = gtk_vbox_new(FALSE, 5);
+	mainVBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
 	gtk_container_add(GTK_CONTAINER(mainVBox), table);
 
 	mainStatusbar = gtk_statusbar_new();
