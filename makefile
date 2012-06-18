@@ -1,11 +1,15 @@
-pdfpres: *.c *.h
-	$(CC) -Wall -Wextra $(CFLAGS) $(CPPFLAGS) \
-	-o pdfpres *.c \
-	`./version.sh` \
-	`pkg-config --cflags --libs gtk+-2.0 poppler-glib cairo` \
-	`xml2-config --cflags --libs` \
-	 $(LDLIBS)
+EXECUTABLE=pdfpres
+OBJECTS=prefs.o notes.o popplergdk.o
+LIBS=gtk+-2.0 poppler-glib libxml-2.0
 
-.PHONY: clean
+CFLAGS+=-Wall -Wextra `./version.sh` `pkg-config --cflags $(LIBS)`
+LDFLAGS+=`pkg-config --libs $(LIBS)`
+
+.PHONY: clean all
+
+all: $(EXECUTABLE)
+
+$(EXECUTABLE): $(OBJECTS)
+
 clean:
-	rm -fv pdfpres
+	$(RM) $(OBJECTS) $(EXECUTABLE)
