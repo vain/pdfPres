@@ -28,3 +28,7 @@ install: all
 
 clean:
 	rm -vf $(OBJECTS) $(EXECUTABLE)
+
+dist:
+	@echo Generating `git describe`.tar.gz
+	git archive --prefix=`git describe`/ --format tar.gz HEAD > `git describe`.tar.gz
