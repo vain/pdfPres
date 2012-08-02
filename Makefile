@@ -11,6 +11,7 @@ exec_prefix=$(prefix)
 bindir=$(exec_prefix)/bin
 datarootdir=$(prefix)/share
 mandir=$(datarootdir)/man
+man1dir=$(mandir)/man1
 
 CFLAGS+=-Wall -Wextra `./version.sh` `pkg-config --cflags $(LIBS)`
 LDFLAGS+=`pkg-config --libs $(LIBS)`
@@ -22,9 +23,14 @@ all: $(EXECUTABLE)
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(CFLAGS) -o $(EXECUTABLE) $(OBJECTS) $(LDFLAGS)
 
-install: all
-	$(INSTALL_PROGRAM) -D $(EXECUTABLE) $(DESTDIR)$(bindir)/$(EXECUTABLE)
-	$(INSTALL_DATA) -D man1/$(EXECUTABLE).1 $(DESTDIR)$(mandir)/man1/$(EXECUTABLE).1
+install: all installdirs
+	$(INSTALL_PROGRAM) $(EXECUTABLE) $(DESTDIR)$(bindir)/$(EXECUTABLE)
+	$(INSTALL_DATA) man1/$(EXECUTABLE).1 $(DESTDIR)$(man1dir)/$(EXECUTABLE).1
+
+installdirs:
+	# Note: We only support GNU, OpenBSD and FreeBSD right now and all
+	# of them know "mkdir -p".
+	mkdir -p $(DESTDIR)$(bindir) $(DESTDIR)$(man1dir)
 
 clean:
 	rm -vf $(OBJECTS) $(EXECUTABLE)
