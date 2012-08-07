@@ -152,14 +152,16 @@ static GdkPixbuf * getRenderedPixbuf(struct viewport *pp, int mypage_i)
 	struct cacheItem *ci = NULL;
 	gboolean found = FALSE;
 
-	/* limit boundaries of mypage_i -- just to be sure. */
-	if (mypage_i < 0)
-		mypage_i += doc_n_pages;
-	else
-		mypage_i %= doc_n_pages;
+	/* Limit boundaries of mypage_i -- just to be sure. */
+	if (mypage_i < 0 || mypage_i >= doc_n_pages)
+		return NULL;
 
-	/* get this page and its ratio */
+	/* Get this page and its ratio. That function should never return
+	 * NULL because we already took care of it. Catch it nontheless. */
 	page = poppler_document_get_page(doc, mypage_i);
+	if (page == NULL)
+		return NULL;
+
 	poppler_page_get_size(page, &pw, &ph);
 	page_ratio = pw / ph;
 	screen_ratio = (double)pp->width / (double)pp->height;
@@ -401,9 +403,10 @@ static gboolean idleFillCaches(gpointer dummy)
 		pp = (struct viewport *)(it->data);
 		mypage_i = pagenumForPort(pp);
 
-		/* trigger some prerendering. the pointers are irrelevant for
+		/* Trigger some prerendering. The pointers are irrelevant for
 		 * now -- we just want the cache to be filled with all
-		 * previous and next slides. */
+		 * previous and next slides. getRenderedPixbuf() will simply
+		 * return NULL for invalid page numbers. */
 		getRenderedPixbuf(pp, mypage_i + 1);
 		getRenderedPixbuf(pp, mypage_i - 1);
 
