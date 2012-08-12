@@ -282,7 +282,6 @@ static int pagenumForPort(struct viewport *pp)
 static void updatePortPixbuf(struct viewport *pp)
 {
 	int mypage_i;
-	gchar *title = NULL;
 
 	/* no valid target size? */
 	if (pp->width <= 0 || pp->height <= 0)
@@ -293,24 +292,10 @@ static void updatePortPixbuf(struct viewport *pp)
 
 	if (mypage_i < 0 || mypage_i >= doc_n_pages)
 	{
-		/* clear image and reset frame title */
+		/* This port does not show anything right now, so clear its
+		 * content and quit. */
 		gtk_image_clear(GTK_IMAGE(pp->image));
-
-		if (pp->frame != NULL)
-			gtk_frame_set_label(GTK_FRAME(pp->frame), "X");
-
 		return;
-	}
-	else
-	{
-		/* update frame title */
-		if (pp->frame != NULL)
-		{
-			title = g_strdup_printf("Slide %d / %d", mypage_i + 1,
-					doc_n_pages);
-			gtk_frame_set_label(GTK_FRAME(pp->frame), title);
-			g_free(title);
-		}
 	}
 
 	/* if note-control is active, print current page number if on
@@ -346,6 +331,8 @@ static void refreshFrames(void)
 {
 	struct viewport *pp = NULL;
 	GList *it = ports;
+	int mypage_i;
+	gchar *title = NULL;
 
 	while (it)
 	{
@@ -379,6 +366,23 @@ static void refreshFrames(void)
 				{
 					gtk_widget_modify_bg(pp->frame->parent,
 							GTK_STATE_NORMAL, &col_current);
+				}
+			}
+
+			/* Refresh labels. */
+			if (pp->frame != NULL)
+			{
+				mypage_i = pagenumForPort(pp);
+				if (mypage_i < 0 || mypage_i >= doc_n_pages)
+				{
+					gtk_frame_set_label(GTK_FRAME(pp->frame), "X");
+				}
+				else
+				{
+					title = g_strdup_printf("Slide %d / %d", mypage_i + 1,
+							doc_n_pages);
+					gtk_frame_set_label(GTK_FRAME(pp->frame), title);
+					g_free(title);
 				}
 			}
 		}
