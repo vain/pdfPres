@@ -1330,22 +1330,23 @@ static void onResize(GtkWidget *widget, GtkAllocation *al,
 	/* Unused parameters. */
 	(void)widget;
 
-	int wOld = port->width;
-	int hOld = port->height;
-
 	port->width = al->width;
 	port->height = al->height;
+}
 
-	/* if the new size differs from the old size, then
-	 * re-render this particular viewport. */
-	if (wOld != port->width || hOld != port->height)
-	{
-		/* be sure to save the current notes because the following
-		 * update will trigger a re-print of them. */
-		saveCurrentNote();
+static gboolean onExpose(GtkWidget *widget, GdkEvent *event,
+		struct viewport *port)
+{
+	/* Unused parameters. */
+	(void)widget;
+	(void)event;
 
-		updatePortPixbuf(port);
-	}
+	/* Be sure to save the current notes because the following
+	 * update will trigger a re-print of them. */
+	saveCurrentNote();
+	updatePortPixbuf(port);
+
+	return FALSE;
 }
 
 static void usage(char *exe)
@@ -1680,6 +1681,8 @@ static void initGUI(int numframes, gchar *notefile)
 		/* resize callback */
 		g_signal_connect(G_OBJECT(evbox), "size_allocate",
 				G_CALLBACK(onResize), thisport);
+		g_signal_connect(G_OBJECT(evbox), "expose_event",
+				G_CALLBACK(onExpose), thisport);
 	}
 
 	/* Add main content and a status bar to preview window.
@@ -1720,6 +1723,8 @@ static void initGUI(int numframes, gchar *notefile)
 	/* connect the on-resize-callback directly to the window */
 	g_signal_connect(G_OBJECT(win_beamer), "size_allocate",
 			G_CALLBACK(onResize), thisport);
+	g_signal_connect(G_OBJECT(win_beamer), "expose_event",
+			G_CALLBACK(onExpose), thisport);
 
 	/* load notes if requested */
 	if (notefile)
