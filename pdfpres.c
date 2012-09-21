@@ -1324,6 +1324,30 @@ static gboolean onMouseReleased(GtkWidget *widget, GdkEventButton *ev,
 	return TRUE;
 }
 
+static gboolean onScroll(GtkWidget *widget, GdkEventScroll *ev,
+		gpointer data)
+{
+	/* Unused parameters. */
+	(void)widget;
+	(void)data;
+
+	/* forward on down/right scroll, backward on up/left scroll */
+
+	if (ev->direction == GDK_SCROLL_DOWN
+	 || ev->direction == GDK_SCROLL_RIGHT)
+	{
+		nextSlide();
+		refreshPorts();
+	} else if (ev->direction == GDK_SCROLL_UP
+		|| ev->direction == GDK_SCROLL_LEFT)
+	{
+		prevSlide();
+		refreshPorts();
+	}
+
+	return TRUE;
+}
+
 static void onResize(GtkWidget *widget, GtkAllocation *al,
 		struct viewport *port)
 {
@@ -1417,11 +1441,15 @@ static void initGUI(int numframes, gchar *notefile)
 					| GDK_SCROLL_MASK);
 	g_signal_connect(G_OBJECT(win_beamer), "button_release_event",
 			G_CALLBACK(onMouseReleased), NULL);
+	g_signal_connect(G_OBJECT(win_beamer), "scroll_event",
+			G_CALLBACK(onScroll), NULL);
 
 	gtk_widget_add_events(win_preview, GDK_BUTTON_RELEASE_MASK
 					 | GDK_SCROLL_MASK);
 	g_signal_connect(G_OBJECT(win_preview), "button_release_event",
 			G_CALLBACK(onMouseReleased), NULL);
+	g_signal_connect(G_OBJECT(win_preview), "scroll_event",
+			G_CALLBACK(onScroll), NULL);
 
 	gtk_container_set_border_width(GTK_CONTAINER(win_preview), 0);
 	gtk_container_set_border_width(GTK_CONTAINER(win_beamer), 0);
