@@ -1413,13 +1413,13 @@ static void initGUI(int numframes, gchar *notefile)
 	g_signal_connect(G_OBJECT(win_beamer), "key_press_event",
 			G_CALLBACK(onKeyPressed), NULL);
 
-	gtk_widget_add_events(win_beamer, GDK_BUTTON_PRESS_MASK);
-	gtk_widget_add_events(win_beamer, GDK_BUTTON_RELEASE_MASK);
+	gtk_widget_add_events(win_beamer, GDK_BUTTON_RELEASE_MASK
+					| GDK_SCROLL_MASK);
 	g_signal_connect(G_OBJECT(win_beamer), "button_release_event",
 			G_CALLBACK(onMouseReleased), NULL);
 
-	gtk_widget_add_events(win_preview, GDK_BUTTON_PRESS_MASK);
-	gtk_widget_add_events(win_preview, GDK_BUTTON_RELEASE_MASK);
+	gtk_widget_add_events(win_preview, GDK_BUTTON_RELEASE_MASK
+					 | GDK_SCROLL_MASK);
 	g_signal_connect(G_OBJECT(win_preview), "button_release_event",
 			G_CALLBACK(onMouseReleased), NULL);
 
